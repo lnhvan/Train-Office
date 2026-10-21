@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/admin-layout :: layout('Create Train Trip', ~{::section}, 'trips')}">
+<section>
+    <div class="admin-page-hero">
+        <div>
+            <span class="admin-page-kicker"><i class="fas fa-calendar-plus mr-1"></i> Schedule Trip</span>
+            <h2>Create Train Trip</h2>
+            <p>Schedule a train on an existing route with departure, arrival, and pricing.</p>
+        </div>
+        <a class="btn btn-outline-primary" th:href="@{/admin/trips}">
+            <i class="fas fa-arrow-left mr-1"></i> Back to trips
+        </a>
+    </div>
+
+    <div class="alert alert-danger" th:if="${error}" th:text="${error}"></div>
+
+    <div class="card admin-form-card trip-form-card">
+        <div class="card-header">
+            <span class="admin-card-title">Trip Information</span>
+            <small>Choose a train and route before setting the schedule.</small>
+        </div>
+        <form th:action="@{/admin/trips/save}" th:object="${trip}" method="post">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Train</label>
+                        <select class="form-control" name="train.trainId" required>
+                            <option value="">Select train</option>
+                            <option th:each="train : ${trains}" th:value="${train.trainId}" th:text="${train.trainCode + ' - ' + train.trainName}"></option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Route</label>
+                        <select class="form-control" name="route.routeId" required>
+                            <option value="">Select route</option>
+                            <option th:each="route : ${routes}" th:value="${route.routeId}" th:text="${route.routeCode + ' - ' + route.routeName}"></option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Departure time</label>
+                        <input class="form-control" type="datetime-local" th:field="*{departureTime}" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Arrival time</label>
+                        <input class="form-control" type="datetime-local" th:field="*{arrivalTime}" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Base price</label>
+                        <input class="form-control" type="number" step="1000" min="0" th:field="*{basePrice}" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Status</label>
+                        <select class="form-control" th:field="*{status}" required>
+                            <option th:each="status : ${statuses}" th:value="${status}" th:text="${status}"></option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer d-flex justify-content-end gap-2">
+                <a class="btn btn-outline-secondary" th:href="@{/admin/trips}">Cancel</a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save mr-1"></i> Save Trip
+                </button>
+            </div>
+        </form>
+    </div>
+</section>
+</html>

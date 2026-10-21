@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/customer-layout :: layout('Refund Request', ~{::section}, 'tickets')}">
+
+<section class="rail-ticket-page rail-refund-page">
+    <link rel="stylesheet" th:href="@{/css/rail-ticket-pages.css}">
+    <link rel="stylesheet" th:href="@{/css/rail-booking-flow.css}">
+
+    <div class="rail-ticket-container">
+        <header class="rail-page-head">
+            <div>
+                <span class="rail-page-eyebrow">Refund Request</span>
+
+                <h1 class="rail-page-title">Refund Information</h1>
+
+                <p class="rail-page-subtitle">
+                    Please provide your customer and bank information for the refund.
+                </p>
+            </div>
+        </header>
+
+        <div class="rail-alert danger"
+             th:if="${errorMessage}"
+             th:text="${errorMessage}">
+        </div>
+
+        <form class="rail-glass-card rail-refund-form"
+              th:action="@{/tickets/{id}/refund(id=${ticketId})}"
+              th:object="${refundRequestForm}"
+              method="post"
+              novalidate>
+
+            <div class="rail-refund-section">
+                <div class="rail-refund-section-head">
+                    <div class="rail-refund-icon">
+                        <i class="bi bi-person-vcard"></i>
+                    </div>
+
+                    <div>
+                        <h2>Customer Information</h2>
+                        <p>We use this information to verify your refund request.</p>
+                    </div>
+                </div>
+
+                <div class="rail-form-grid">
+                    <div class="rail-form-field">
+                        <label class="rail-form-label">Customer Name</label>
+
+                        <input class="rail-input"
+                               th:classappend="${#fields.hasErrors('customerName')} ? ' is-invalid'"
+                               th:field="*{customerName}"
+                               placeholder="Enter customer name">
+
+                        <div class="rail-field-error show"
+                             th:if="${#fields.hasErrors('customerName')}"
+                             th:errors="*{customerName}">
+                            Customer name is required
+                        </div>
+                    </div>
+
+                    <div class="rail-form-field">
+                        <label class="rail-form-label">Customer Phone</label>
+
+                        <input class="rail-input"
+                               th:classappend="${#fields.hasErrors('customerPhone')} ? ' is-invalid'"
+                               th:field="*{customerPhone}"
+                               placeholder="Enter phone number">
+
+                        <div class="rail-field-error show"
+                             th:if="${#fields.hasErrors('customerPhone')}"
+                             th:errors="*{customerPhone}">
+                            Customer phone is required
+                        </div>
+                    </div>
+
+                    <div class="rail-form-field full">
+                        <label class="rail-form-label">Customer Email</label>
+
+                        <input class="rail-input"
+                               th:classappend="${#fields.hasErrors('customerEmail')} ? ' is-invalid'"
+                               type="email"
+                               th:field="*{customerEmail}"
+                               placeholder="Enter email address">
+
+                        <div class="rail-field-error show"
+                             th:if="${#fields.hasErrors('customerEmail')}"
+                             th:errors="*{customerEmail}">
+                            Customer email is invalid
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rail-refund-section">
+                <div class="rail-refund-section-head">
+                    <div class="rail-refund-icon">
+                        <i class="bi bi-bank"></i>
+                    </div>
+
+                    <div>
+                        <h2>Bank Information</h2>
+                        <p>Please enter the bank account that will receive the refund.</p>
+                    </div>
+                </div>
+
+                <div class="rail-form-grid">
+                    <div class="rail-form-field">
+                        <label class="rail-form-label">Bank Name</label>
+
+                        <input class="rail-input"
+                               th:classappend="${#fields.hasErrors('bankName')} ? ' is-invalid'"
+                               th:field="*{bankName}"
+                               placeholder="Example: Vietcombank">
+
+                        <div class="rail-field-error show"
+                             th:if="${#fields.hasErrors('bankName')}"
+                             th:errors="*{bankName}">
+                            Bank name is required
+                        </div>
+                    </div>
+
+                    <div class="rail-form-field">
+                        <label class="rail-form-label">Bank Account Number</label>
+
+                        <input class="rail-input"
+                               th:classappend="${#fields.hasErrors('bankAccountNumber')} ? ' is-invalid'"
+                               th:field="*{bankAccountNumber}"
+                               placeholder="Enter bank account number">
+
+                        <div class="rail-field-error show"
+                             th:if="${#fields.hasErrors('bankAccountNumber')}"
+                             th:errors="*{bankAccountNumber}">
+                            Bank account number is required
+                        </div>
+                    </div>
+
+                    <div class="rail-form-field full">
+                        <label class="rail-form-label">Bank Account Holder</label>
+
+                        <input class="rail-input"
+                               th:classappend="${#fields.hasErrors('bankAccountHolder')} ? ' is-invalid'"
+                               th:field="*{bankAccountHolder}"
+                               placeholder="Enter account holder name">
+
+                        <div class="rail-field-error show"
+                             th:if="${#fields.hasErrors('bankAccountHolder')}"
+                             th:errors="*{bankAccountHolder}">
+                            Bank account holder is required
+                        </div>
+                    </div>
+
+                    <div class="rail-form-field full">
+                        <label class="rail-form-label">Refund Reason</label>
+
+                        <textarea class="rail-input rail-refund-textarea"
+                                  th:classappend="${#fields.hasErrors('reason')} ? ' is-invalid'"
+                                  th:field="*{reason}"
+                                  rows="4"
+                                  placeholder="Please tell us why you want a refund"></textarea>
+
+                        <div class="rail-field-error show"
+                             th:if="${#fields.hasErrors('reason')}"
+                             th:errors="*{reason}">
+                            Refund reason is required
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rail-form-actions rail-refund-actions">
+                <a class="rail-secondary-btn" th:href="@{/tickets}">
+                    <i class="bi bi-arrow-left"></i>
+                    Back to Tickets
+                </a>
+
+                <button class="rail-primary-btn" type="submit">
+                    Submit Refund Request
+                    <i class="bi bi-arrow-right"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+</section>
+</html>

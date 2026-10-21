@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/admin-layout :: layout('Station Form', ~{::section}, 'stations')}">
+<section>
+    <div class="admin-page-hero">
+        <div>
+            <span class="admin-page-kicker"><i class="fas fa-map-pin mr-1"></i> Station Profile</span>
+            <h2 th:text="${station.stationId == null ? 'Add Station' : 'Edit Station'}">Station Form</h2>
+            <p>Create or update station information used across route planning.</p>
+        </div>
+        <a th:href="@{/admin/stations}" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left mr-1"></i> Back to stations
+        </a>
+    </div>
+
+    <div class="alert alert-danger" th:if="${errorMessage}">
+        <span th:text="${errorMessage}"></span>
+    </div>
+
+    <div class="card admin-form-card">
+        <div class="card-header">
+            <span class="admin-card-title">Station Information</span>
+            <small>Station code should stay short and unique.</small>
+        </div>
+        <form th:action="@{/admin/stations/save}" th:object="${station}" method="post">
+            <input type="hidden" th:field="*{stationId}">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Station Code</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-hashtag"></i></span></div>
+                            <input class="form-control" th:field="*{stationCode}" required>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Station Name</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-train"></i></span></div>
+                            <input class="form-control" th:field="*{stationName}" required>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">City</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-city"></i></span></div>
+                            <input class="form-control" th:field="*{city}" required>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer d-flex justify-content-end gap-2">
+                <a th:href="@{/admin/stations}" class="btn btn-outline-secondary">
+                    Cancel
+                </a>
+                <button class="btn btn-primary" type="submit">
+                    <i class="fas fa-save mr-1"></i> Save Station
+                </button>
+            </div>
+        </form>
+    </div>
+</section>
+</html>

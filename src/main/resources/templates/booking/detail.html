@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/customer-layout :: layout('Booking Information', ~{::section}, 'history')}">
+
+<section class="rail-booking-page">
+    <link rel="stylesheet" th:href="@{/css/rail-booking-summary.css}">
+
+    <div class="rail-booking-container">
+        <a class="rail-booking-back"
+           th:if="${guestMode != true}"
+           th:href="@{/booking/history}">
+            <i class="bi bi-arrow-left"></i>
+            Back to Bookings
+        </a>
+
+        <a class="rail-booking-back"
+           th:if="${guestMode == true}"
+           th:href="@{/booking/lookup}">
+            <i class="bi bi-arrow-left"></i>
+            Back to Guest Lookup
+        </a>
+
+        <header class="rail-booking-head">
+            <div>
+                <span class="rail-booking-eyebrow"
+                      th:text="${booking != null ? 'Booking Ref: ' + booking.bookingNumber : 'Booking'}">
+                    Booking Ref
+                </span>
+
+                <h1 class="rail-booking-title">Booking Information</h1>
+
+                <p class="rail-booking-subtitle">
+                    Review trip, route, passengers, tickets, selected seats, and total amount.
+                </p>
+            </div>
+
+            <div class="rail-booking-actions">
+                <a class="rail-primary-btn"
+                   th:if="${guestMode != true and booking.bookingStatus != null and booking.bookingStatus.name() == 'PENDING_PAYMENT'}"
+                   th:href="@{/payments/bookings/{id}(id=${booking.bookingId})}">
+                    <i class="bi bi-wallet2"></i>
+                    Pay with VNPay
+                </a>
+            </div>
+        </header>
+
+        <div class="rail-alert success" th:if="${successMessage}" th:text="${successMessage}"></div>
+        <div class="rail-alert danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+        <div class="rail-alert danger" th:if="${error}" th:text="${error}"></div>
+
+        <div class="rail-booking-detail-grid">
+            <aside class="rail-glass-card rail-booking-side">
+                <h2 class="rail-booking-side-title">Booking Summary</h2>
+
+                <div class="rail-booking-summary-box">
+                    <span class="rail-summary-label">Booking Code</span>
+
+                    <strong class="rail-booking-summary-value"
+                            th:text="${booking.bookingNumber}">
+                        RJ0001
+                    </strong>
+
+                    <div class="mt-3">
+                        <span class="rail-chip success"
+                              th:if="${booking.bookingStatus != null and booking.bookingStatus.name() == 'PAID'}"
+                              th:text="${booking.bookingStatus}">
+                            PAID
+                        </span>
+
+                        <span class="rail-chip danger"
+                              th:if="${booking.bookingStatus != null and booking.bookingStatus.name() == 'CANCELLED'}"
+                              th:text="${booking.bookingStatus}">
+                            CANCELLED
+                        </span>
+
+                        <span class="rail-chip warning"
+                              th:if="${booking.bookingStatus == null or (booking.bookingStatus.name() != 'PAID' and booking.bookingStatus.name() != 'CANCELLED')}"
+                              th:text="${booking.bookingStatus != null ? booking.bookingStatus : 'UNKNOWN'}">
+                            PENDING_PAYMENT
+                        </span>
+                    </div>
+                </div>
+
+                <div class="rail-booking-line">
+                    <span>Booking Date</span>
+                    <strong th:text="${booking.bookingDate}">2026-06-28T08:00</strong>
+                </div>
+
+                <div class="rail-booking-line">
+                    <span>Train</span>
+                    <strong th:text="${booking.trainTrip != null and booking.trainTrip.train != null ? booking.trainTrip.train.trainName : '-'}">
+                        SE1
+                    </strong>
+                </div>
+
+                <div class="rail-booking-line">
+                    <span>Departure</span>
+                    <strong th:text="${booking.departureStation != null ? booking.departureStation.stationName : '-'}">
+                        -
+                    </strong>
+                </div>
+
+                <div class="rail-booking-line">
+                    <span>Arrival</span>
+                    <strong th:text="${booking.arrivalStation != null ? booking.arrivalStation.stationName : '-'}">
+                        -
+                    </strong>
+                </div>
+
+                <div class="rail-booking-line">
+                    <span>Tickets</span>
+                    <strong th:text="${tickets != null ? #lists.size(tickets) : 0}">
+                        0
+                    </strong>
+                </div>
+
+                <div class="rail-booking-line rail-booking-total">
+                    <span>Total Amount</span>
+
+                    <strong th:if="${booking.totalAmount != null}"
+                            th:text="${#numbers.formatDecimal(booking.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' VND'">
+                        0 VND
+                    </strong>
+
+                    <strong th:if="${booking.totalAmount == null}">
+                        0 VND
+                    </strong>
+                </div>
+
+                <div class="rail-booking-action-stack">
+                    <a class="rail-primary-btn"
+                       th:if="${guestMode != true and booking.bookingStatus != null and booking.bookingStatus.name() == 'PENDING_PAYMENT'}"
+                       th:href="@{/payments/bookings/{id}(id=${booking.bookingId})}">
+                        <i class="bi bi-wallet2"></i>
+                        Pay with VNPay
+                    </a>
+
+                    <form th:if="${guestMode != true and booking.bookingStatus != null and booking.bookingStatus.name() == 'PENDING_PAYMENT'}"
+                          th:action="@{/booking/{bookingId}/cancel(bookingId=${booking.bookingId})}"
+                          method="post"
+                          onsubmit="return confirm('Cancel this booking?')">
+                        <button type="submit" class="rail-danger-btn">
+                            Cancel Booking
+                        </button>
+                    </form>
+
+                    <form th:if="${guestMode == true and booking.bookingStatus != null and booking.bookingStatus.name() == 'PENDING_PAYMENT'}"
+                          th:action="@{/booking/guest/{bookingId}/cancel(bookingId=${booking.bookingId})}"
+                          method="post"
+                          onsubmit="return confirm('Cancel this guest booking?')">
+                        <button type="submit" class="rail-danger-btn">
+                            Cancel Guest Booking
+                        </button>
+                    </form>
+
+                    <a class="rail-secondary-btn"
+                       th:if="${guestMode != true}"
+                       th:href="@{/booking/history}">
+                        My Bookings
+                    </a>
+
+                    <a class="rail-secondary-btn"
+                       th:if="${guestMode == true}"
+                       th:href="@{/booking/lookup}">
+                        Guest Lookup
+                    </a>
+                </div>
+            </aside>
+
+            <main class="rail-booking-main">
+                <section class="rail-glass-card rail-booking-section-card">
+                    <h2>
+                        <i class="bi bi-train-front"></i>
+                        Journey
+                    </h2>
+
+                    <div class="rail-booking-route">
+                        <div class="rail-booking-station">
+                            <span class="rail-summary-label">Departure</span>
+
+                            <h3 th:text="${booking.departureStation != null ? booking.departureStation.stationName : '-'}">
+                                Ha Noi
+                            </h3>
+
+                            <p th:text="${booking.trainTrip != null ? booking.trainTrip.departureTime : '-'}">
+                                -
+                            </p>
+                        </div>
+
+                        <div class="rail-booking-route-visual">
+                            <div class="rail-booking-route-line">
+                                <span class="rail-booking-dot"></span>
+                                <span class="rail-booking-train">
+                                    <i class="bi bi-train-front"></i>
+                                </span>
+                                <span class="rail-booking-dot end"></span>
+                            </div>
+
+                            <span th:text="${booking.trainTrip != null and booking.trainTrip.train != null ? booking.trainTrip.train.trainName : 'RailJet'}">
+                                RailJet
+                            </span>
+                        </div>
+
+                        <div class="rail-booking-station end">
+                            <span class="rail-summary-label">Arrival</span>
+
+                            <h3 th:text="${booking.arrivalStation != null ? booking.arrivalStation.stationName : '-'}">
+                                Sai Gon
+                            </h3>
+
+                            <p th:text="${booking.trainTrip != null ? booking.trainTrip.arrivalTime : '-'}">
+                                -
+                            </p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="rail-glass-card rail-booking-section-card">
+                    <h2>
+                        <i class="bi bi-people"></i>
+                        Passengers
+                    </h2>
+
+                    <div class="rail-booking-mini-grid"
+                         th:if="${passengers != null and !#lists.isEmpty(passengers)}">
+                        <div class="rail-booking-mini-cell"
+                             th:each="passenger : ${passengers}">
+                            <small>Passenger</small>
+                            <strong th:text="${passenger.fullName}">Passenger</strong>
+
+                            <small class="mt-2">Identity</small>
+                            <strong th:text="${passenger.identityNumber != null ? passenger.identityNumber : '-'}">
+                                -
+                            </strong>
+                        </div>
+                    </div>
+
+                    <div class="rail-empty-state py-4"
+                         th:if="${passengers == null or #lists.isEmpty(passengers)}">
+                        <p>No passenger data.</p>
+                    </div>
+                </section>
+
+                <section class="rail-glass-card rail-booking-section-card">
+                    <h2>
+                        <i class="bi bi-ticket-perforated"></i>
+                        Tickets
+                    </h2>
+
+                    <div class="rail-booking-ticket-list"
+                         th:if="${tickets != null and !#lists.isEmpty(tickets)}">
+
+                        <article class="rail-booking-ticket-row"
+                                 th:each="ticket : ${tickets}">
+                            <div class="rail-booking-ticket-main">
+                                <strong th:text="${ticket.passenger != null ? ticket.passenger.fullName : '-'}">
+                                    Passenger
+                                </strong>
+
+                                <small th:text="${ticket.ticketCode}">
+                                    RJ-T001
+                                </small>
+                            </div>
+
+                            <div class="rail-booking-ticket-field">
+                                <small>Coach</small>
+
+                                <strong th:text="${ticket.seat != null and ticket.seat.coach != null ? ticket.seat.coach.coachNumber : '-'}">
+                                    1
+                                </strong>
+                            </div>
+                            <div class="rail-booking-ticket-field">
+                                <small>Compartment</small>
+
+                                <strong th:text="${ticket.seat != null and ticket.seat.compartment != null ? ticket.seat.compartment.compartmentNumber : '-'}">
+                                    K01
+                                </strong>
+                            </div>
+                            <div class="rail-booking-ticket-field">
+                                <small>Compartment</small>
+
+                                <strong th:text="${ticket.seat != null and ticket.seat.compartment != null ? ticket.seat.compartment.compartmentNumber : '-'}">
+                                    K01
+                                </strong>
+                            </div>
+
+                            <div>
+                                <span class="rail-chip neutral"
+                                      th:if="${ticket.ticketStatus == null}">
+                                    UNKNOWN
+                                </span>
+
+                                <span class="rail-chip success"
+                                      th:if="${ticket.ticketStatus != null and ticket.ticketStatus.name() == 'CONFIRMED'}"
+                                      th:text="${ticket.ticketStatus}">
+                                    CONFIRMED
+                                </span>
+
+                                <span class="rail-chip success"
+                                      th:if="${ticket.ticketStatus != null and ticket.ticketStatus.name() == 'REFUNDED'}">
+                                    REFUNDED
+                                </span>
+
+                                <span class="rail-chip neutral"
+                                      th:if="${ticket.ticketStatus != null and ticket.ticketStatus.name() != 'CONFIRMED' and ticket.ticketStatus.name() != 'REFUNDED'}"
+                                      th:text="${ticket.ticketStatus}">
+                                    BOOKED
+                                </span>
+                            </div>
+
+                            <div class="rail-booking-ticket-actions">
+                                <a th:if="${guestMode != true}"
+                                   class="rail-secondary-btn"
+                                   th:href="@{/tickets/{id}(id=${ticket.ticketId})}">
+                                    Details
+                                </a>
+
+                                <a th:if="${guestMode != true and ticket.ticketStatus != null and ticket.ticketStatus.name() != 'REFUNDED'}"
+                                   class="rail-icon-btn"
+                                   th:href="@{/tickets/{id}/print(id=${ticket.ticketId})}"
+                                   title="Print">
+                                    <i class="bi bi-printer"></i>
+                                </a>
+
+                                <form th:if="${guestMode != true and ticket.ticketStatus != null and ticket.ticketStatus.name() == 'CONFIRMED'}"
+                                      th:action="@{/tickets/{id}/refund(id=${ticket.ticketId})}"
+                                      method="post"
+                                      onsubmit="return confirm('Send refund request for this ticket?')">
+                                    <input type="hidden" name="reason" value="Customer requested refund">
+
+                                    <button type="submit" class="rail-danger-btn">
+                                        Refund
+                                    </button>
+                                </form>
+                            </div>
+                        </article>
+                    </div>
+
+                    <div class="rail-empty-state py-4"
+                         th:if="${tickets == null or #lists.isEmpty(tickets)}">
+                        <p>No ticket data.</p>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+</section>
+</html>

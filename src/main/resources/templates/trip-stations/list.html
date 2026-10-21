@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/admin-layout :: layout('Trip Stations', ~{::section}, 'trips')}">
+<section>
+    <div class="admin-page-hero">
+        <div>
+            <span class="admin-page-kicker"><i class="fas fa-map-signs mr-1"></i> Stop Sequence</span>
+            <h2>Trip Stations</h2>
+            <p>
+                <span th:text="${trip.train != null ? trip.train.trainName : 'Trip'}">Trip</span>
+                <span class="mx-1 text-muted">·</span>
+                <span th:text="${trip.departureTime}">Departure</span>
+            </p>
+        </div>
+        <div class="admin-page-actions">
+            <a class="btn btn-outline-secondary" th:href="@{/admin/trips/{id}(id=${trip.tripId})}">
+                <i class="fas fa-arrow-left mr-1"></i> Back to Trip
+            </a>
+            <a class="btn btn-primary" th:href="@{/admin/trips/{tripId}/stations/create(tripId=${trip.tripId})}">
+                <i class="fas fa-plus mr-1"></i> Add Station
+            </a>
+        </div>
+    </div>
+
+    <div class="alert alert-success" th:if="${success}" th:text="${success}"></div>
+    <div class="alert alert-danger" th:if="${error}" th:text="${error}"></div>
+
+    <div class="card admin-table-card">
+        <div class="card-header d-flex align-items-center justify-content-between">
+            <div>
+                <span class="admin-card-title">Station Timeline</span>
+                <small th:text="${#lists.size(tripStations)} + ' stops scheduled'">0 stops scheduled</small>
+            </div>
+            <span class="badge badge-info" th:text="${trip.route != null ? trip.route.routeCode : 'Trip'}">Trip</span>
+        </div>
+        <div class="card-body">
+            <div class="trip-timeline">
+                <div class="trip-timeline-item" th:each="tripStation : ${tripStations}">
+                    <span class="trip-timeline-order" th:text="${tripStation.stationOrder}">1</span>
+                    <div class="trip-timeline-main">
+                        <strong th:text="${tripStation.station != null ? tripStation.station.stationName : '-'}">Station</strong>
+                        <small>
+                            <span th:text="${tripStation.station != null ? tripStation.station.stationCode : '-'}">HN</span>
+                            <span class="mx-1">·</span>
+                            <span th:text="${tripStation.station != null ? tripStation.station.city : '-'}">City</span>
+                        </small>
+                    </div>
+                    <div class="trip-time-block">
+                        <span><i class="fas fa-sign-in-alt mr-1 text-primary"></i><span th:text="${tripStation.arrivalTime}">Arrival</span></span>
+                        <small><i class="fas fa-sign-out-alt mr-1 text-primary"></i><span th:text="${tripStation.departureTime}">Departure</span></small>
+                    </div>
+                    <div class="text-right">
+                        <a class="btn btn-sm btn-outline-warning" th:href="@{/admin/trips/{tripId}/stations/{id}/edit(tripId=${trip.tripId},id=${tripStation.tripStationId})}">
+                            <i class="fas fa-edit"></i><span>Edit</span>
+                        </a>
+                        <form th:action="@{/admin/trips/{tripId}/stations/{id}/delete(tripId=${trip.tripId},id=${tripStation.tripStationId})}" method="post" class="d-inline">
+                            <button class="btn btn-sm btn-outline-danger" type="submit" onclick="return confirm('Delete this trip station?')">
+                                <i class="fas fa-trash"></i><span>Delete</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="admin-empty-state mt-3" th:if="${tripStations == null or #lists.isEmpty(tripStations)}">
+                <i class="fas fa-map-signs"></i>
+                <strong>No stations have been added to this trip</strong>
+                <span>Add stops to define the trip timeline.</span>
+            </div>
+        </div>
+    </div>
+</section>
+</html>

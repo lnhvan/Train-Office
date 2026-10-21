@@ -1,0 +1,2 @@
+﻿<div xmlns:th="http://www.thymeleaf.org" th:fragment="statCard(title, value, icon, color, subtitle)" class="col-12 col-sm-6 col-xl-3"><div class="small-box" th:classappend="${color ?: ' bg-info'}"><div class="inner"><h3 th:text="${value ?: 0}">0</h3><p th:text="${title}">Statistic</p><small th:if="${subtitle != null}" th:text="${subtitle}">Subtitle</small></div><div class="icon"><i th:class="${icon ?: 'fas fa-chart-line'}"></i></div></div></div>
+

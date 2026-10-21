@@ -1,0 +1,1 @@
+﻿document.addEventListener('DOMContentLoaded',function(){document.querySelectorAll('.toast.show').forEach(function(el){if(window.bootstrap&&bootstrap.Toast){new bootstrap.Toast(el,{delay:3500}).show();}});});

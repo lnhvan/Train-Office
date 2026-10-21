@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/customer-layout :: layout('Chi tiết hóa đơn', ~{::section}, 'payments')}">
+<section class="container customer-page">
+    <div class="page-hero">
+        <span class="page-eyebrow">Invoice</span>
+        <h1 class="page-title">Chi tiết hóa đơn</h1>
+        <p class="page-subtitle">Theo dõi thông tin thanh toán, mã giao dịch và tổng tiền của booking.</p>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="railjet-card card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>Thông tin hóa đơn</span>
+                    <span class="badge text-bg-success">PAID</span>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="summary-box">
+                                <div class="text-muted small fw-bold text-uppercase">Mã hóa đơn</div>
+                                <div class="fs-4 fw-bold" th:text="${detail != null ? detail.invoiceCode : 'INV0001'}">INV0001</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="summary-box">
+                                <div class="text-muted small fw-bold text-uppercase">Booking</div>
+                                <div class="fs-4 fw-bold" th:text="${detail != null ? detail.booking : 'RJ0001'}">RJ0001</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="summary-box">
+                                <div class="text-muted small fw-bold text-uppercase">Thanh toán</div>
+                                <div class="fw-bold" th:text="${detail != null ? detail.payment : 'TXN001'}">TXN001</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="summary-box">
+                                <div class="text-muted small fw-bold text-uppercase">Ngày phát hành</div>
+                                <div class="fw-bold" th:text="${detail != null ? detail.issuedAt : '2026-06-27'}">2026-06-27</div>
+                            </div>
+                        </div>
+                    </div>
+                    <hr class="my-4">
+                    <div class="d-flex justify-content-between align-items-end gap-3">
+                        <div>
+                            <div class="text-muted small fw-bold text-uppercase">Tổng tiền</div>
+                            <div class="display-6 fw-bold" th:text="${detail != null ? detail.totalAmount : '900,000 VND'}">900,000 VND</div>
+                        </div>
+                        <a class="btn btn-primary" th:href="@{/invoices/1/print}">
+                            <i class="bi bi-printer me-1"></i> In hóa đơn
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="railjet-card card h-100">
+                <div class="card-body p-4">
+                    <h3 class="h5 fw-bold">Tác vụ nhanh</h3>
+                    <div class="d-grid gap-2 mt-3">
+                        <a class="btn btn-outline-primary" th:href="@{/booking/history}">Lịch sử đặt vé</a>
+                        <a class="btn btn-outline-primary" th:href="@{/tickets}">Danh sách vé</a>
+                        <a class="btn btn-primary" th:href="@{/booking/search}">Đặt chuyến mới</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+</html>

@@ -1,0 +1,8 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/admin-layout :: layout('Edit Payment', ~{::section}, 'payments')}">
+
+<section>
+    <div th:replace="~{payments/form-fragment :: paymentForm('Edit Payment')}"></div>
+</section>
+</html>

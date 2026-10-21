@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/admin-layout :: layout('Group Discount Policies', ~{::section}, 'group-discounts')}">
+<section>
+    <div class="admin-page-hero">
+        <div>
+            <span class="admin-page-kicker">
+                <i class="fas fa-users mr-1"></i>
+                Group Fare Policy
+            </span>
+
+            <h2>Group Discount Policies</h2>
+
+            <p>Manage booking-level discounts based on passenger count.</p>
+        </div>
+
+        <a class="btn btn-primary" th:href="@{/admin/group-discount-policies/new}">
+            <i class="fas fa-plus mr-1"></i>
+            Add Policy
+        </a>
+    </div>
+
+    <div class="alert alert-success" th:if="${successMessage}" th:text="${successMessage}"></div>
+    <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+
+    <div class="card admin-table-card">
+        <div class="card-header d-flex align-items-center justify-content-between">
+            <div>
+                <span class="admin-card-title">Group Policy Directory</span>
+                <small th:text="${#lists.size(policies)} + ' policies'">0 policies</small>
+            </div>
+
+            <span class="badge badge-info">Dynamic Group Rules</span>
+        </div>
+
+        <div class="card-body table-responsive p-0">
+            <table class="table table-hover mb-0">
+                <thead>
+                <tr>
+                    <th>Order</th>
+                    <th>Code</th>
+                    <th>Name</th>
+                    <th>Passenger Range</th>
+                    <th>Discount</th>
+                    <th>Status</th>
+                    <th class="text-right">Actions</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                <tr th:each="policy : ${policies}">
+                    <td th:text="${policy.displayOrder}">1</td>
+
+                    <td>
+                        <span class="badge badge-primary admin-badge-soft"
+                              th:text="${policy.policyCode}">
+                            GROUP
+                        </span>
+                    </td>
+
+                    <td>
+                        <strong th:text="${policy.policyName}">Group Ticket</strong>
+                        <small class="d-block text-muted" th:text="${policy.description}"></small>
+                    </td>
+
+                    <td>
+                        <span th:if="${policy.maxPassengers != null}"
+                              th:text="${policy.minPassengers + ' - ' + policy.maxPassengers + ' passengers'}">
+                            3 - 5 passengers
+                        </span>
+
+                        <span th:if="${policy.maxPassengers == null}"
+                              th:text="${policy.minPassengers + '+ passengers'}">
+                            10+ passengers
+                        </span>
+                    </td>
+
+                    <td>
+                        <strong th:text="${policy.discountPercent + '%'}">0%</strong>
+                    </td>
+
+                    <td>
+                        <span th:if="${policy.active == true}" class="badge badge-success">ACTIVE</span>
+                        <span th:if="${policy.active != true}" class="badge badge-secondary">INACTIVE</span>
+                    </td>
+
+                    <td class="text-right">
+                        <a class="btn btn-sm btn-outline-warning"
+                           th:href="@{/admin/group-discount-policies/edit/{id}(id=${policy.policyId})}">
+                            <i class="fas fa-edit"></i>
+                            <span>Edit</span>
+                        </a>
+
+                        <a class="btn btn-sm btn-outline-danger"
+                           onclick="return confirm('Delete this group discount policy?')"
+                           th:href="@{/admin/group-discount-policies/delete/{id}(id=${policy.policyId})}">
+                            <i class="fas fa-trash"></i>
+                            <span>Delete</span>
+                        </a>
+                    </td>
+                </tr>
+
+                <tr th:if="${#lists.isEmpty(policies)}">
+                    <td colspan="7">
+                        <div class="admin-empty-state">
+                            <i class="fas fa-users"></i>
+                            <strong>No group discount policies</strong>
+                            <span>Create group or combo fare rules for multi-passenger bookings.</span>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+</html>

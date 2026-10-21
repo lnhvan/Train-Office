@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/admin-layout :: layout('Seat Form', ~{::section}, 'seats')}">
+<section>
+    <div class="admin-page-hero">
+        <div>
+            <span class="admin-page-kicker"><i class="fas fa-chair mr-1"></i> Seat Profile</span>
+            <h2 th:text="${seat.seatId == null ? 'Add New Seat' : 'Edit Seat'}">Seat Form</h2>
+            <p>Configure seat number, coach assignment, type, and extra price.</p>
+        </div>
+        <a th:href="@{/admin/seats(coachId=${selectedCoachId})}" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left mr-1"></i> Back to seats
+        </a>
+    </div>
+
+    <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+
+    <div class="card admin-form-card">
+        <div class="card-header">
+            <span class="admin-card-title">Seat Information</span>
+            <small>Seat number should be unique inside the selected coach.</small>
+        </div>
+        <form th:action="@{/admin/seats/save}" th:object="${seat}" method="post">
+            <input type="hidden" th:field="*{seatId}">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Coach</label>
+                        <select class="form-control" th:field="*{coach.coachId}">
+                            <option value="">Select Coach</option>
+                            <option th:each="coach : ${allCoaches}"
+                                    th:value="${coach.coachId}"
+                                    th:text="${coach.train != null ? coach.train.trainCode + ' / ' + coach.coachNumber : coach.coachNumber}">
+                            </option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Seat Number</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-hashtag"></i></span></div>
+                            <input class="form-control" th:field="*{seatNumber}">
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Seat Type</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-tag"></i></span></div>
+                            <input class="form-control" th:field="*{seatType}">
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Extra Price</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-dollar-sign"></i></span></div>
+                            <input type="number" step="0.01" class="form-control" th:field="*{extraPrice}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer d-flex justify-content-end gap-2">
+                <a th:href="@{/admin/seats(coachId=${selectedCoachId})}" class="btn btn-outline-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save mr-1"></i> Save Seat
+                </button>
+            </div>
+        </form>
+    </div>
+</section>
+</html>

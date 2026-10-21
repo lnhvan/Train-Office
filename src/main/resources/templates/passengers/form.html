@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/admin-layout :: layout('Passenger form', ~{::section}, 'passengers')}">
+<section>
+    <div class="admin-page-hero">
+        <div>
+            <span class="admin-page-kicker"><i class="fas fa-id-card mr-1"></i> Passenger Profile</span>
+            <h2 th:text="${passenger.passengerId == null ? 'Create passenger' : 'Edit passenger'}">Passenger form</h2>
+            <p>Maintain basic passenger identity information used by bookings and tickets.</p>
+        </div>
+        <a class="btn btn-outline-primary" th:href="@{/admin/passengers}">
+            <i class="fas fa-arrow-left mr-1"></i> Back to passengers
+        </a>
+    </div>
+
+    <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+
+    <div class="card admin-form-card">
+        <div class="card-header">
+            <span class="admin-card-title">Passenger Information</span>
+            <small>All fields stay editable for the existing admin workflow.</small>
+        </div>
+        <form th:action="@{/admin/passengers/save}" th:object="${passenger}" method="post">
+            <input type="hidden" th:field="*{passengerId}">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Full name</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-user"></i></span></div>
+                            <input class="form-control" th:field="*{fullName}" maxlength="100" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Identity number</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-address-card"></i></span></div>
+                            <input class="form-control" th:field="*{identityNumber}" maxlength="30">
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Date of birth</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-calendar"></i></span></div>
+                            <input class="form-control" th:field="*{dateOfBirth}" type="date">
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Gender</label>
+                        <select class="form-control" th:field="*{gender}">
+                            <option value="">Select gender</option>
+                            <option th:each="gender : ${genders}" th:value="${gender}" th:text="${gender}"></option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer d-flex justify-content-end">
+                <button class="btn btn-primary" type="submit">
+                    <i class="fas fa-save mr-1"></i> Save
+                </button>
+            </div>
+        </form>
+    </div>
+</section>
+</html>

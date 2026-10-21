@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/admin-layout :: layout('Train Detail', ~{::section}, 'trains')}">
+<section>
+    <div class="admin-page-hero">
+        <div>
+            <span class="admin-page-kicker"><i class="fas fa-train mr-1"></i> Train Detail</span>
+            <h2 th:text="${detail.trainName}">Train</h2>
+            <p th:text="${detail.trainCode}">SE1</p>
+        </div>
+        <div class="admin-page-actions">
+            <a class="btn btn-outline-primary" th:href="@{/admin/trains}">
+                <i class="fas fa-arrow-left mr-1"></i> Back
+            </a>
+            <a class="btn btn-outline-info" th:href="@{/admin/coaches(trainId=${detail.trainId})}">
+                <i class="fas fa-subway mr-1"></i> Coaches
+            </a>
+            <a class="btn btn-warning" th:href="@{/admin/trains/edit/{id}(id=${detail.trainId})}">
+                <i class="fas fa-edit mr-1"></i> Edit
+            </a>
+        </div>
+    </div>
+
+    <div class="card admin-detail-card">
+        <div class="card-header">
+            <span class="admin-card-title">Train Information</span>
+            <small>Fleet reference data</small>
+        </div>
+        <div class="card-body">
+            <dl class="admin-detail-grid">
+                <dt>ID</dt><dd th:text="${detail.trainId}">1</dd>
+                <dt>Code</dt><dd th:text="${detail.trainCode}">SE1</dd>
+                <dt>Name</dt><dd th:text="${detail.trainName}">Train</dd>
+                <dt>Type</dt><dd th:text="${detail.trainType}">Express</dd>
+            </dl>
+        </div>
+    </div>
+</section>
+</html>

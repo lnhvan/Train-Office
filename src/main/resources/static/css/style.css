@@ -1,0 +1,52 @@
+.page-container {
+    border: 1px solid #000;
+    min-height: 90vh;
+    margin: 60px;
+}
+
+.page-header {
+    padding: 40px 60px;
+    border-bottom: 1px solid #000;
+}
+
+.form-section {
+    padding: 30px 60px;
+}
+
+.form-title {
+    font-weight: bold;
+    margin-bottom: 40px;
+}
+
+.form-label {
+    font-size: 1.5rem;
+    text-align: right;
+    padding-right: 20px;
+}
+
+.form-control,
+.form-select {
+    border-radius: 0;
+}
+
+.btn-custom {
+    min-width: 180px;
+    font-size: 1.5rem;
+}
+
+.note {
+    margin-top: 40px;
+    font-size: 1.2rem;
+}
+
+h1 {
+    font-weight: bold;
+}
+body{
+    margin:50px !important;
+}
+
+.custom-header th {
+    background-color: #6f42c1 !important; /* Custom Purple */
+    color: #ffffff !important;
+}

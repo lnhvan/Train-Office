@@ -1,0 +1,7 @@
+﻿<span xmlns:th="http://www.thymeleaf.org"
+      th:fragment="statusBadge(status)"
+      th:with="s=${status == null ? 'UNKNOWN' : #strings.toUpperCase(status.toString())}"
+      class="badge"
+      th:classappend="${s == 'SUCCESS' or s == 'PAID' or s == 'ACTIVE' or s == 'CONFIRMED' or s == 'APPROVED'} ? ' bg-success' : (${s == 'PENDING' or s == 'SCHEDULED' or s == 'PROCESSING'} ? ' bg-warning text-dark' : (${s == 'FAILED' or s == 'CANCELLED' or s == 'REJECTED' or s == 'INACTIVE'} ? ' bg-danger' : ' bg-secondary'))"
+      th:text="${s}">STATUS</span>
+

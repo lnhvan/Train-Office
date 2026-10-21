@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/admin-layout :: layout('Station Management', ~{::section}, 'stations')}">
+<section>
+    <div class="admin-page-hero">
+        <div>
+            <span class="admin-page-kicker"><i class="fas fa-map-marker-alt mr-1"></i> Railway Infrastructure</span>
+            <h2>Station Management</h2>
+            <p>Maintain station codes, names, and cities used by routes and train trips.</p>
+        </div>
+        <a th:href="@{/admin/stations/new}" class="btn btn-primary">
+            <i class="fas fa-plus mr-1"></i> Add Station
+        </a>
+    </div>
+
+    <div class="alert alert-success alert-dismissible fade show" th:if="${successMessage}">
+        <span th:text="${successMessage}"></span>
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span>&times;</span></button>
+    </div>
+    <div class="alert alert-danger alert-dismissible fade show" th:if="${errorMessage}">
+        <span th:text="${errorMessage}"></span>
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span>&times;</span></button>
+    </div>
+
+    <div class="card admin-filter-card">
+        <div class="card-header">
+            <form th:action="@{/admin/stations}" method="get" class="row g-2">
+                <div class="col-lg-10 col-md-12">
+                    <label class="form-label">Search station</label>
+                    <input class="form-control" type="text" name="keyword"
+                           placeholder="Search by station code, name, or city"
+                           th:value="${keyword}">
+                </div>
+                <div class="col-lg-2 col-md-12 d-flex align-items-end">
+                    <button class="btn btn-outline-primary w-100" type="submit">
+                        <i class="fas fa-search mr-1"></i> Search
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card admin-table-card">
+        <div class="card-header d-flex align-items-center justify-content-between">
+            <div>
+                <span class="admin-card-title">Station Directory</span>
+                <small th:text="${totalItems} + ' total stations'">0 total stations</small>
+            </div>
+            <span class="badge badge-info">Stations</span>
+        </div>
+        <div class="card-body table-responsive p-0">
+            <table class="table table-hover mb-0">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Station</th>
+                    <th>Code</th>
+                    <th>City</th>
+                    <th class="text-right">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="station : ${stations}">
+                    <td><span class="text-muted" th:text="'#' + ${station.stationId}">#1</span></td>
+                    <td>
+                        <div class="admin-identity">
+                            <span class="admin-avatar"><i class="fas fa-building"></i></span>
+                            <span>
+                                <strong th:text="${station.stationName}">Station</strong>
+                                <small th:text="${station.city}">City</small>
+                            </span>
+                        </div>
+                    </td>
+                    <td><span class="badge badge-primary admin-badge-soft" th:text="${station.stationCode}">HN</span></td>
+                    <td th:text="${station.city}">City</td>
+                    <td class="text-right">
+                        <a class="btn btn-sm btn-outline-warning"
+                           th:href="@{'/admin/stations/edit/' + ${station.stationId}}">
+                            <i class="fas fa-edit"></i><span>Edit</span>
+                        </a>
+                        <a class="btn btn-sm btn-outline-danger"
+                           onclick="return confirm('Delete this station?')"
+                           th:href="@{'/admin/stations/delete/' + ${station.stationId}}">
+                            <i class="fas fa-trash"></i><span>Delete</span>
+                        </a>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(stations)}">
+                    <td colspan="5">
+                        <div class="admin-empty-state">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <strong>No stations found</strong>
+                            <span>Try another keyword or create the first station.</span>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <nav class="mt-4" th:if="${totalPages > 1}">
+        <ul class="pagination justify-content-center">
+            <li class="page-item" th:classappend="${currentPage == 1} ? 'disabled'">
+                <a class="page-link" th:href="@{/admin/stations(page=${currentPage - 1}, keyword=${keyword})}">
+                    Previous
+                </a>
+            </li>
+            <li class="page-item"
+                th:each="i : ${#numbers.sequence(1,totalPages)}"
+                th:classappend="${currentPage == i} ? 'active'">
+                <a class="page-link"
+                   th:text="${i}"
+                   th:href="@{/admin/stations(page=${i}, keyword=${keyword})}">1</a>
+            </li>
+            <li class="page-item" th:classappend="${currentPage == totalPages} ? 'disabled'">
+                <a class="page-link" th:href="@{/admin/stations(page=${currentPage + 1}, keyword=${keyword})}">
+                    Next
+                </a>
+            </li>
+        </ul>
+    </nav>
+</section>
+</html>

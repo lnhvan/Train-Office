@@ -1,0 +1,12 @@
+﻿<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" th:replace="~{layouts/admin-layout :: layout('Detail Schedules / Lịch trình', ~{::section}, 'schedules')}">
+<section>
+<div th:replace="~{fragments/breadcrumb :: breadcrumb(${breadcrumbs})}"></div><div class="card"><div class="card-header d-flex justify-content-between"><span>Schedules / Lịch trình detail / Chi tiết</span><span th:replace="~{fragments/status-badge :: statusBadge(${detail.status})}"></span></div><div class="card-body table-responsive"><table class="table table-bordered"><tr><th>tripId</th><td th:text="${detail.tripId}">tripId</td></tr>
+<tr><th>train</th><td th:text="${detail.train}">train</td></tr>
+<tr><th>route</th><td th:text="${detail.route}">route</td></tr>
+<tr><th>departureTime</th><td th:text="${detail.departureTime}">departureTime</td></tr>
+<tr><th>arrivalTime</th><td th:text="${detail.arrivalTime}">arrivalTime</td></tr>
+<tr><th>status</th><td th:text="${detail.status}">status</td></tr></table></div><div class="card-footer"><a class="btn btn-secondary" th:href="@{'/admin/schedules'}">Back</a> <a class="btn btn-warning" th:href="@{'/admin/schedules/' + ${detail.id} + '/edit'}">Edit</a></div></div>
+</section>
+</html>
+

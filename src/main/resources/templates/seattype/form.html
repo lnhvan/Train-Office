@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" th:replace="~{layouts/admin-layout :: layout('Seat Type Form', ~{::section}, 'seat-types')}">
+<section>
+
+    <div class="container-fluid">
+
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+
+            <div>
+
+                <h2 class="fw-bold text-primary"
+                    th:text="${seatType.id == null ? 'Add Seat Type' : 'Edit Seat Type'}">
+                </h2>
+
+                <p class="text-muted mb-0">
+                    Enter seat type information.
+                </p>
+
+            </div>
+
+            <a th:href="@{/seat-types}"
+               class="btn btn-outline-secondary">
+
+                <i class="fas fa-arrow-left"></i>
+
+                Back
+
+            </a>
+
+        </div>
+
+        <div class="card shadow-sm border-0">
+
+            <div class="card-header bg-primary text-white">
+
+                <h5 class="mb-0">
+                    Seat Type Information
+                </h5>
+
+            </div>
+
+            <div class="card-body">
+
+                <form th:action="@{/seat-types/save}"
+                      th:object="${seatType}"
+                      method="post">
+
+                    <input type="hidden" th:field="*{id}">
+
+                    <!-- Name -->
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+
+                            Seat Type Name
+
+                        </label>
+
+                        <input type="text"
+                               class="form-control"
+                               th:field="*{name}"
+                               placeholder="Example: VIP">
+
+                        <div class="text-danger small"
+                             th:if="${#fields.hasErrors('name')}"
+                             th:errors="*{name}">
+                        </div>
+
+                    </div>
+
+                    <!-- Price -->
+
+                    <div class="mb-4">
+
+                        <label class="form-label">
+
+                            Price Per Km
+
+                        </label>
+
+                        <input type="number"
+                               step="0.01"
+                               min="0"
+                               class="form-control"
+                               th:field="*{pricePerKm}"
+                               placeholder="1000">
+
+                        <div class="text-danger small"
+                             th:if="${#fields.hasErrors('pricePerKm')}"
+                             th:errors="*{pricePerKm}">
+                        </div>
+
+                    </div>
+
+                    <!-- Button -->
+
+                    <div class="d-flex justify-content-end">
+
+                        <a th:href="@{/seat-types}"
+                           class="btn btn-secondary me-2">
+
+                            Cancel
+
+                        </a>
+
+                        <button class="btn btn-primary"
+                                type="submit">
+
+                            <i class="fas fa-check-circle"></i>
+
+                            Save
+
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+</html>

@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/admin-layout :: layout('Coach Form', ~{::section}, 'coaches')}">
+
+<section>
+    <div class="admin-page-hero">
+        <div>
+            <span class="admin-page-kicker">
+                <i class="fas fa-subway mr-1"></i>
+                Coach Profile
+            </span>
+
+            <h2 th:text="${coach != null and coach.coachId != null ? 'Edit Coach' : 'Add Coach'}">
+                Coach Form
+            </h2>
+
+            <p>Normal coaches generate seats directly. Sleeper coaches generate compartments and berths.</p>
+        </div>
+
+        <a class="btn btn-outline-primary"
+           th:href="@{/admin/coaches(trainId=${selectedTrainId})}">
+            <i class="fas fa-arrow-left mr-1"></i>
+            Back to coaches
+        </a>
+    </div>
+
+    <div class="alert alert-danger"
+         th:if="${errorMessage}"
+         th:text="${errorMessage}">
+    </div>
+
+    <div class="alert alert-success"
+         th:if="${successMessage}"
+         th:text="${successMessage}">
+    </div>
+
+    <div class="alert alert-info">
+        <strong>Seat code guide:</strong>
+        Normal coaches use seat codes like <strong>01A, 01B, 02A</strong>.
+        Sleeper coaches use compartment berth codes like <strong>K01-L1A</strong>,
+        where <strong>K01</strong> is the compartment,
+        <strong>L1</strong> means lower level,
+        and <strong>A/B</strong> is the berth position.
+    </div>
+
+    <div class="card admin-form-card">
+        <div class="card-header">
+            <span class="admin-card-title">Coach Information</span>
+            <small>Coach number should be unique inside the selected train.</small>
+        </div>
+
+        <form th:action="@{/admin/coaches/save}" th:object="${coach}" method="post">
+            <input type="hidden"
+                   name="coachId"
+                   th:value="${coach != null ? coach.coachId : ''}">
+
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label" for="trainId">Train</label>
+
+                        <select id="trainId"
+                                name="train.trainId"
+                                class="form-control"
+                                required>
+                            <option value="">Select train</option>
+
+                            <option th:each="train : ${allTrains}"
+                                    th:value="${train.trainId}"
+                                    th:text="${train.trainCode + ' - ' + train.trainName}"
+                                    th:selected="${coach != null and coach.train != null and coach.train.trainId == train.trainId}">
+                                Train
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label" for="coachNumber">Coach Number</label>
+
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">
+                                    <i class="fas fa-hashtag"></i>
+                                </span>
+                            </div>
+
+                            <input id="coachNumber"
+                                   name="coachNumber"
+                                   class="form-control"
+                                   th:value="${coach != null ? coach.coachNumber : ''}"
+                                   placeholder="Example: C01"
+                                   required>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label" for="selectedCoachType">Coach Type</label>
+
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">
+                                    <i class="fas fa-tags"></i>
+                                </span>
+                            </div>
+
+                            <select id="selectedCoachType"
+                                    name="selectedCoachType"
+                                    class="form-control"
+                                    th:attr="data-other-value=${otherCoachTypeValue}"
+                                    required>
+                                <option value="">Select coach type</option>
+                                <option th:each="type : ${availableCoachTypes}"
+                                        th:value="${type}"
+                                        th:text="${type}"
+                                        th:selected="${selectedCoachType == type}">Soft Seat</option>
+                                <option th:value="${otherCoachTypeValue}"
+                                        th:selected="${selectedCoachType == otherCoachTypeValue}">Other...</option>
+                            </select>
+                        </div>
+                        <div class="text-danger small" th:if="${#fields.hasErrors('coachType')}" th:errors="*{coachType}"></div>
+                    </div>
+
+                    <div class="col-md-6 mb-3" id="newCoachTypeGroup"
+                         th:style="${selectedCoachType == otherCoachTypeValue ? '' : 'display:none;'}">
+                        <label class="form-label" for="newCoachType">New Coach Type</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text"><i class="fas fa-plus"></i></span>
+                            </div>
+                            <input id="newCoachType" name="newCoachType" class="form-control"
+                                   th:value="${newCoachType}">
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label" for="capacity">Capacity</label>
+
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">
+                                    <i class="fas fa-users"></i>
+                                </span>
+                            </div>
+
+                            <input id="capacity"
+                                   name="capacity"
+                                   type="number"
+                                   min="1"
+                                   class="form-control"
+                                   th:value="${coach != null ? coach.capacity : ''}"
+                                   placeholder="Example: 40"
+                                   required>
+                        </div>
+
+                        <small class="form-text text-muted">
+                            For sleeper coaches, capacity is calculated from compartment count × berths per compartment.
+                        </small>
+                    </div>
+
+                    <div class="col-12 mb-3">
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox"
+                                   class="custom-control-input"
+                                   id="sleeperCoachSwitch"
+                                   name="sleeperCoach"
+                                   value="true"
+                                   th:checked="${coach != null and coach.sleeperCoach == true}">
+
+                            <label class="custom-control-label font-weight-bold"
+                                   for="sleeperCoachSwitch">
+                                This coach has sleeper compartments
+                            </label>
+                        </div>
+
+                        <small class="form-text text-muted">
+                            Tick this only for sleeper coaches. Normal seat coaches do not use compartments.
+                        </small>
+                    </div>
+
+                    <div class="col-md-6 mb-3 sleeper-field">
+                        <label class="form-label" for="compartmentCount">Compartment Count</label>
+
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">
+                                    <i class="fas fa-door-closed"></i>
+                                </span>
+                            </div>
+
+                            <input id="compartmentCount"
+                                   name="compartmentCount"
+                                   type="number"
+                                   min="1"
+                                   class="form-control"
+                                   th:value="${coach != null ? coach.compartmentCount : ''}"
+                                   placeholder="Example: 6">
+                        </div>
+
+                        <small class="form-text text-muted">
+                            Example: 6 compartments in one sleeper coach.
+                        </small>
+                    </div>
+
+                    <div class="col-md-6 mb-3 sleeper-field">
+                        <label class="form-label" for="berthsPerCompartment">Berths Per Compartment</label>
+
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">
+                                    <i class="fas fa-bed"></i>
+                                </span>
+                            </div>
+
+                            <select id="berthsPerCompartment"
+                                    name="berthsPerCompartment"
+                                    class="form-control">
+                                <option value="">Select berth count</option>
+
+                                <option value="2"
+                                        th:selected="${coach != null and coach.berthsPerCompartment == 2}">
+                                    2 berths per compartment
+                                </option>
+
+                                <option value="4"
+                                        th:selected="${coach != null and coach.berthsPerCompartment == 4}">
+                                    4 berths per compartment
+                                </option>
+
+                                <option value="6"
+                                        th:selected="${coach != null and coach.berthsPerCompartment == 6}">
+                                    6 berths per compartment
+                                </option>
+                            </select>
+                        </div>
+
+                        <small class="form-text text-muted">
+                            Recommended values are 2, 4, or 6. One berth per compartment is not allowed.
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-footer d-flex justify-content-end gap-2">
+                <a class="btn btn-outline-secondary"
+                   th:href="@{/admin/coaches(trainId=${selectedTrainId})}">
+                    Cancel
+                </a>
+
+                <button class="btn btn-primary" type="submit">
+                    <i class="fas fa-save mr-1"></i>
+                    Save Coach
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <style>
+        .sleeper-field.is-disabled {
+            opacity: .45;
+            pointer-events: none;
+        }
+    </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const sleeperSwitch = document.getElementById('sleeperCoachSwitch');
+            const capacity = document.getElementById('capacity');
+            const compartmentCount = document.getElementById('compartmentCount');
+            const berthsPerCompartment = document.getElementById('berthsPerCompartment');
+            const sleeperFields = document.querySelectorAll('.sleeper-field');
+            const typeSelect = document.getElementById('selectedCoachType');
+            const newTypeGroup = document.getElementById('newCoachTypeGroup');
+            const newTypeInput = document.getElementById('newCoachType');
+            const otherValue = typeSelect ? typeSelect.dataset.otherValue : '';
+
+            function updateNewTypeVisibility() {
+                if (!typeSelect || !newTypeGroup || !newTypeInput) {
+                    return;
+                }
+                const isOther = typeSelect.value === otherValue;
+                newTypeGroup.style.display = isOther ? '' : 'none';
+                newTypeInput.required = isOther;
+            }
+
+            function updateCapacityFromSleeperFields() {
+                if (!sleeperSwitch.checked) {
+                    capacity.readOnly = false;
+                    return;
+                }
+
+                const compartmentValue = Number(compartmentCount.value || 0);
+                const berthValue = Number(berthsPerCompartment.value || 0);
+
+                capacity.readOnly = true;
+
+                if (compartmentValue > 0 && berthValue > 0) {
+                    capacity.value = compartmentValue * berthValue;
+                }
+            }
+
+            function setSleeperMode(enabled) {
+                sleeperSwitch.checked = enabled;
+
+                compartmentCount.disabled = !enabled;
+                berthsPerCompartment.disabled = !enabled;
+
+                compartmentCount.required = enabled;
+                berthsPerCompartment.required = enabled;
+
+                sleeperFields.forEach(function (field) {
+                    field.classList.toggle('is-disabled', !enabled);
+                });
+
+                if (!enabled) {
+                    compartmentCount.value = '';
+                    berthsPerCompartment.value = '';
+                    capacity.readOnly = false;
+                }
+
+                updateCapacityFromSleeperFields();
+            }
+
+            sleeperSwitch.addEventListener('change', function () {
+                setSleeperMode(this.checked);
+            });
+
+            compartmentCount.addEventListener('input', updateCapacityFromSleeperFields);
+            berthsPerCompartment.addEventListener('change', updateCapacityFromSleeperFields);
+
+            if (typeSelect) {
+                typeSelect.addEventListener('change', updateNewTypeVisibility);
+            }
+
+            setSleeperMode(sleeperSwitch.checked);
+            updateNewTypeVisibility();
+        });
+    </script>
+</section>
+</html>

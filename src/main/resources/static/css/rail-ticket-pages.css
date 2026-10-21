@@ -1,0 +1,1297 @@
+/* =========================================================
+   RailJet Ticket Pages
+   Used by:
+   - tickets/list.html
+   - tickets/detail.html
+   - tickets/print.html
+   ========================================================= */
+
+:root{
+    --rj-bg:#051424;
+    --rj-bg-deep:#010f1f;
+    --rj-surface:#122131;
+    --rj-surface-low:#0d1c2d;
+    --rj-surface-high:#1c2b3c;
+    --rj-surface-highest:#273647;
+    --rj-text:#d4e4fa;
+    --rj-muted:#bdc8d1;
+    --rj-outline:#87929a;
+    --rj-outline-soft:rgba(255,255,255,.10);
+    --rj-primary:#38bdf8;
+    --rj-primary-soft:#8ed5ff;
+    --rj-success:#34d399;
+    --rj-warning:#f59e0b;
+    --rj-danger:#ffb4ab;
+}
+
+/* =========================================================
+   Shared ticket layout
+   ========================================================= */
+
+.rail-ticket-page{
+    min-height:calc(100vh - 72px);
+    margin:-36px 0 -52px;
+    padding:44px clamp(16px,4vw,40px) 78px;
+    color:var(--rj-text);
+    background:
+            linear-gradient(180deg,rgba(1,15,31,.72),rgba(5,20,36,.96)),
+            url('https://images.unsplash.com/photo-1474487548417-781cb71495f3?auto=format&fit=crop&w=1800&q=80') center/cover fixed;
+}
+
+.rail-ticket-container{
+    width:100%;
+    max-width:1280px;
+    margin:0 auto;
+}
+
+.rail-glass-card{
+    border:1px solid var(--rj-outline-soft);
+    border-radius:18px;
+    background:rgba(18,33,49,.82);
+    backdrop-filter:blur(20px);
+    box-shadow:0 24px 70px rgba(0,0,0,.30);
+}
+
+.rail-back-link{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    margin-bottom:22px;
+    color:var(--rj-primary-soft);
+    text-decoration:none;
+    font-size:12px;
+    font-weight:900;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+}
+
+.rail-back-link:hover{
+    color:#ffffff;
+}
+
+.rail-page-head{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:24px;
+    margin-bottom:34px;
+}
+
+.rail-page-eyebrow{
+    display:block;
+    margin-bottom:8px;
+    color:var(--rj-primary-soft);
+    font-size:12px;
+    font-weight:900;
+    text-transform:uppercase;
+    letter-spacing:.10em;
+}
+
+.rail-page-title{
+    margin:0;
+    color:#ffffff;
+    font-size:clamp(38px,5vw,62px);
+    line-height:1.04;
+    font-weight:900;
+    letter-spacing:-.055em;
+}
+
+.rail-page-subtitle{
+    margin:12px 0 0;
+    max-width:680px;
+    color:var(--rj-muted);
+    font-size:17px;
+    line-height:1.6;
+    font-weight:600;
+}
+
+.rail-page-actions{
+    display:flex;
+    flex-wrap:wrap;
+    gap:12px;
+}
+
+.rail-summary-label{
+    display:block;
+    margin-bottom:6px;
+    color:var(--rj-muted);
+    font-size:11px;
+    font-weight:900;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+}
+
+.rail-alert{
+    margin-bottom:18px;
+    padding:14px 16px;
+    border-radius:12px;
+    font-weight:800;
+}
+
+.rail-alert.success{
+    color:#d1fae5;
+    border:1px solid rgba(52,211,153,.35);
+    background:rgba(52,211,153,.10);
+}
+
+.rail-alert.danger{
+    color:#ffd7d3;
+    border:1px solid rgba(255,180,171,.38);
+    background:rgba(147,0,10,.25);
+}
+
+/* =========================================================
+   Buttons / chips
+   ========================================================= */
+
+.rail-primary-btn,
+.rail-secondary-btn,
+.rail-danger-btn,
+.rail-icon-btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    min-height:42px;
+    padding:0 18px;
+    border-radius:999px;
+    font-size:13px;
+    font-weight:900;
+    text-decoration:none;
+    letter-spacing:.02em;
+    border:1px solid transparent;
+    transition:.18s ease;
+    white-space:nowrap;
+}
+
+.rail-primary-btn{
+    background:var(--rj-primary);
+    border-color:var(--rj-primary);
+    color:#001e2c;
+    box-shadow:0 10px 28px rgba(56,189,248,.24);
+}
+
+.rail-primary-btn:hover{
+    color:#001e2c;
+    filter:brightness(1.07);
+    box-shadow:0 10px 36px rgba(56,189,248,.42);
+}
+
+.rail-secondary-btn{
+    color:var(--rj-primary-soft);
+    border-color:rgba(142,213,255,.45);
+    background:rgba(18,33,49,.55);
+}
+
+.rail-secondary-btn:hover{
+    color:#ffffff;
+    background:rgba(56,189,248,.10);
+}
+
+.rail-danger-btn{
+    color:var(--rj-danger);
+    border-color:rgba(255,180,171,.70);
+    background:transparent;
+}
+
+.rail-danger-btn:hover{
+    color:#ffffff;
+    background:rgba(255,180,171,.10);
+}
+
+.rail-icon-btn{
+    width:42px;
+    padding:0;
+    color:var(--rj-muted);
+    border-color:rgba(255,255,255,.08);
+    background:rgba(13,28,45,.55);
+}
+
+.rail-icon-btn:hover{
+    color:var(--rj-primary-soft);
+    border-color:rgba(142,213,255,.35);
+}
+
+.rail-chip{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    min-height:28px;
+    padding:0 12px;
+    border-radius:999px;
+    color:var(--rj-primary-soft);
+    border:1px solid rgba(56,189,248,.28);
+    background:rgba(56,189,248,.10);
+    font-size:11px;
+    font-weight:900;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+}
+
+.rail-chip.neutral{
+    color:var(--rj-muted);
+    border-color:rgba(255,255,255,.12);
+    background:rgba(255,255,255,.04);
+}
+
+.rail-chip.success{
+    color:#bbf7d0;
+    border-color:rgba(52,211,153,.30);
+    background:rgba(52,211,153,.10);
+}
+
+.rail-chip.warning{
+    color:#fde68a;
+    border-color:rgba(245,158,11,.35);
+    background:rgba(245,158,11,.12);
+}
+
+.rail-chip.danger{
+    color:var(--rj-danger);
+    border-color:rgba(255,180,171,.40);
+    background:rgba(255,180,171,.08);
+}
+
+/* =========================================================
+   Ticket list
+   ========================================================= */
+
+.rail-ticket-list{
+    display:grid;
+    gap:16px;
+}
+
+.rail-family-ticket{
+    position:relative;
+    overflow:hidden;
+    display:grid;
+    grid-template-columns:minmax(220px,1.45fr) 120px 120px 120px auto;
+    gap:22px;
+    align-items:center;
+    padding:24px 26px 24px 30px;
+    border-radius:16px;
+}
+
+.rail-family-ticket::before{
+    content:"";
+    position:absolute;
+    left:0;
+    top:0;
+    bottom:0;
+    width:4px;
+    background:var(--rj-primary);
+    box-shadow:0 0 18px rgba(56,189,248,.45);
+}
+
+.rail-family-ticket.muted::before{
+    background:rgba(255,255,255,.18);
+    box-shadow:none;
+}
+
+.rail-history-code{
+    color:#ffffff;
+    font-size:20px;
+    font-weight:900;
+    word-break:break-word;
+}
+
+.rail-ticket-code{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-top:5px;
+    color:var(--rj-muted);
+    font-family:"Courier New", monospace;
+    font-size:13px;
+    font-weight:800;
+}
+
+.rail-ticket-field small{
+    display:block;
+    color:var(--rj-muted);
+    font-size:11px;
+    font-weight:900;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+}
+
+.rail-ticket-field strong{
+    display:block;
+    margin-top:5px;
+    color:#ffffff;
+    font-size:20px;
+    font-weight:900;
+}
+
+.rail-ticket-class{
+    display:inline-flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    min-width:76px;
+    min-height:48px;
+    padding:4px 12px;
+    border-radius:999px;
+    color:#ffffff;
+    background:rgba(44,58,76,.60);
+    border:1px solid rgba(255,255,255,.08);
+}
+
+.rail-ticket-class small{
+    color:var(--rj-primary-soft);
+    font-size:10px;
+    font-weight:900;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+}
+
+.rail-ticket-class strong{
+    margin-top:2px;
+    color:#ffffff;
+    font-size:13px;
+}
+
+.rail-ticket-list-actions{
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    gap:10px;
+    flex-wrap:wrap;
+}
+
+/* =========================================================
+   Ticket detail
+   ========================================================= */
+
+.rail-ticket-detail-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:24px;
+    margin-bottom:28px;
+}
+
+.rail-ticket-detail-card{
+    position:relative;
+    overflow:hidden;
+    padding:34px;
+}
+
+.rail-ticket-detail-card::after{
+    content:"";
+    position:absolute;
+    right:-80px;
+    top:-80px;
+    width:220px;
+    height:220px;
+    border-radius:50%;
+    background:rgba(56,189,248,.10);
+    filter:blur(42px);
+}
+
+.rail-title-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:14px;
+    margin-bottom:24px;
+}
+
+.rail-ticket-detail-route{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) minmax(160px,260px) minmax(0,1fr);
+    gap:22px;
+    align-items:center;
+    margin:38px 0 44px;
+}
+
+.rail-station-block h2{
+    margin:0;
+    color:#ffffff;
+    font-size:38px;
+    font-weight:900;
+    letter-spacing:-.04em;
+    font-variant-numeric:tabular-nums;
+}
+
+.rail-station-block h3{
+    margin:12px 0 6px;
+    color:#ffffff;
+    font-size:24px;
+    font-weight:900;
+}
+
+.rail-station-block p{
+    margin:0;
+    color:var(--rj-muted);
+    font-size:14px;
+    line-height:1.55;
+}
+
+.rail-station-block.end{
+    text-align:right;
+}
+
+.rail-route-visual{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    color:var(--rj-muted);
+}
+
+.rail-route-line{
+    width:100%;
+    display:flex;
+    align-items:center;
+    gap:8px;
+}
+
+.rail-route-line::before,
+.rail-route-line::after{
+    content:"";
+    flex:1;
+    border-top:1px dashed rgba(142,213,255,.45);
+}
+
+.rail-route-dot{
+    width:9px;
+    height:9px;
+    border-radius:50%;
+    background:var(--rj-primary-soft);
+}
+
+.rail-route-dot.end{
+    background:transparent;
+    border:2px solid var(--rj-primary-soft);
+}
+
+.rail-route-train{
+    width:34px;
+    height:34px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--rj-primary-soft);
+    background:rgba(5,20,36,.80);
+    border:1px solid rgba(142,213,255,.20);
+}
+
+.rail-ticket-detail-grid{
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:18px;
+    padding-top:28px;
+    border-top:1px solid rgba(255,255,255,.08);
+}
+
+.rail-mini-cell{
+    padding:16px;
+    border-radius:12px;
+    background:rgba(13,28,45,.55);
+    border:1px solid rgba(255,255,255,.06);
+}
+
+.rail-mini-cell small{
+    display:block;
+    color:var(--rj-muted);
+    font-size:11px;
+    font-weight:900;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+}
+
+.rail-mini-cell strong{
+    display:block;
+    margin-top:6px;
+    color:#ffffff;
+    font-size:16px;
+    font-weight:900;
+}
+
+.rail-ticket-refund-box{
+    margin-top:24px;
+    padding:24px;
+    border-radius:16px;
+    border:1px solid rgba(255,180,171,.22);
+    background:rgba(147,0,10,.14);
+}
+
+.rail-ticket-refund-box h2{
+    margin:0 0 10px;
+    color:var(--rj-danger);
+    font-size:22px;
+    font-weight:900;
+}
+
+.rail-refund-form{
+    display:flex;
+    gap:12px;
+    margin-top:16px;
+}
+
+.rail-refund-form input{
+    flex:1;
+    min-height:44px;
+    padding:0 14px;
+    border-radius:10px;
+    border:1px solid rgba(255,255,255,.10);
+    background:#020617;
+    color:var(--rj-text);
+}
+
+/* =========================================================
+   Print ticket
+   ========================================================= */
+
+.rail-print-page{
+    min-height:100vh;
+    padding:28px clamp(16px,4vw,40px) 70px;
+    color:var(--rj-text);
+    background:
+            linear-gradient(180deg,rgba(1,15,31,.72),rgba(5,20,36,.96)),
+            url('https://images.unsplash.com/photo-1474487548417-781cb71495f3?auto=format&fit=crop&w=1800&q=80') center/cover fixed;
+}
+
+.rail-print-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:16px;
+    max-width:1100px;
+    margin:0 auto 56px;
+}
+
+.rail-print-brand{
+    color:var(--rj-primary-soft);
+    font-size:48px;
+    font-weight:900;
+    letter-spacing:-.06em;
+}
+
+.rail-print-ticket{
+    position:relative;
+    max-width:820px;
+    margin:0 auto;
+    overflow:hidden;
+    border-radius:18px;
+    background:rgba(18,33,49,.82);
+    border:1px solid rgba(255,255,255,.10);
+    box-shadow:0 28px 86px rgba(0,0,0,.42);
+    backdrop-filter:blur(20px);
+}
+
+.rail-print-ticket::before,
+.rail-print-ticket::after{
+    content:"";
+    position:absolute;
+    top:50%;
+    width:34px;
+    height:34px;
+    border-radius:50%;
+    background:rgba(5,20,36,.98);
+    transform:translateY(-50%);
+    z-index:2;
+}
+
+.rail-print-ticket::before{
+    left:-17px;
+}
+
+.rail-print-ticket::after{
+    right:-17px;
+}
+
+.rail-print-ticket-body{
+    padding:56px 68px 52px;
+}
+
+.rail-print-top{
+    display:grid;
+    grid-template-columns:1fr 1fr auto;
+    gap:28px;
+    align-items:start;
+    margin-bottom:44px;
+}
+
+.rail-summary-value{
+    display:block;
+    color:#ffffff;
+    font-size:18px;
+    font-weight:900;
+    word-break:break-word;
+}
+
+.rail-print-route{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) minmax(180px,1fr) minmax(0,1fr);
+    gap:20px;
+    align-items:center;
+    margin-bottom:48px;
+}
+
+.rail-print-station small,
+.rail-print-meta small{
+    display:block;
+    color:var(--rj-muted);
+    font-size:11px;
+    font-weight:900;
+    text-transform:uppercase;
+    letter-spacing:.10em;
+}
+
+.rail-print-station h2{
+    margin:8px 0 6px;
+    color:#ffffff;
+    font-size:38px;
+    font-weight:900;
+}
+
+.rail-print-station p{
+    margin:0;
+    color:var(--rj-muted);
+    font-size:15px;
+}
+
+.rail-print-station strong{
+    display:block;
+    margin-top:12px;
+    color:var(--rj-primary-soft);
+    font-size:20px;
+    font-weight:900;
+}
+
+.rail-print-station.end{
+    text-align:right;
+}
+
+.rail-print-line{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+}
+
+.rail-print-line-main{
+    display:flex;
+    align-items:center;
+    width:100%;
+    gap:8px;
+}
+
+.rail-print-line-main::before,
+.rail-print-line-main::after{
+    content:"";
+    flex:1;
+    height:1px;
+    background:rgba(142,213,255,.30);
+}
+
+.rail-print-train-icon{
+    width:38px;
+    height:38px;
+    border-radius:8px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--rj-primary-soft);
+    background:rgba(5,20,36,.74);
+}
+
+.rail-print-line span{
+    margin-top:8px;
+    color:var(--rj-muted);
+    font-size:12px;
+    font-weight:800;
+}
+
+.rail-print-meta-grid{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:18px;
+    padding:18px;
+    border-radius:12px;
+    background:rgba(39,54,71,.38);
+    border:1px solid rgba(255,255,255,.08);
+}
+
+.rail-print-meta strong{
+    display:block;
+    margin-top:6px;
+    color:#ffffff;
+    font-size:18px;
+    font-weight:900;
+}
+
+.rail-print-meta .highlight{
+    color:var(--rj-primary-soft);
+}
+
+.rail-print-actions{
+    padding:38px 68px 48px;
+    background:rgba(13,28,45,.82);
+    display:grid;
+    gap:12px;
+}
+
+.rail-print-actions .rail-primary-btn,
+.rail-print-actions .rail-secondary-btn{
+    border-radius:8px;
+    width:100%;
+}
+
+/* =========================================================
+   Responsive
+   ========================================================= */
+
+@media(max-width:1000px){
+    .rail-family-ticket{
+        grid-template-columns:1fr 1fr;
+    }
+
+    .rail-ticket-list-actions{
+        justify-content:flex-start;
+    }
+}
+
+@media(max-width:720px){
+    .rail-ticket-page{
+        padding:34px 16px 62px;
+    }
+
+    .rail-page-head,
+    .rail-ticket-detail-head{
+        flex-direction:column;
+        align-items:flex-start;
+    }
+
+    .rail-ticket-detail-grid{
+        grid-template-columns:1fr;
+    }
+
+    .rail-family-ticket{
+        grid-template-columns:1fr;
+    }
+
+    .rail-ticket-detail-route,
+    .rail-print-route{
+        grid-template-columns:1fr;
+    }
+
+    .rail-station-block.end,
+    .rail-print-station.end{
+        text-align:left;
+    }
+
+    .rail-route-visual,
+    .rail-print-line{
+        align-items:flex-start;
+    }
+
+    .rail-print-top,
+    .rail-print-meta-grid{
+        grid-template-columns:1fr;
+    }
+
+    .rail-print-ticket-body,
+    .rail-print-actions{
+        padding:30px 22px;
+    }
+
+    .rail-print-brand{
+        font-size:34px;
+    }
+
+    .rail-refund-form{
+        flex-direction:column;
+    }
+}
+
+/* =========================================================
+   Print mode
+   ========================================================= */
+
+@media print{
+    .rail-print-page{
+        background:#ffffff !important;
+        color:#071a33;
+        padding:0;
+    }
+
+    .rail-print-header,
+    .rail-print-actions{
+        display:none !important;
+    }
+
+    .rail-print-ticket{
+        box-shadow:none;
+        border:1px solid #d9e3ef;
+        background:#ffffff;
+        color:#071a33;
+    }
+
+    .rail-print-ticket *{
+        color:#071a33 !important;
+    }
+
+    .rail-print-ticket-body{
+        padding:32px;
+    }
+}
+
+/* =========================================================
+   My Tickets page polish
+   ========================================================= */
+
+.rail-my-ticket-page {
+    min-height: calc(100vh - 72px);
+    padding-top: 72px;
+}
+
+.rail-my-ticket-container {
+    max-width: 1120px;
+}
+
+.rail-my-ticket-head {
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.rail-my-ticket-head .rail-page-title {
+    font-size: clamp(42px, 5vw, 64px);
+}
+
+.rail-my-ticket-head .rail-page-subtitle {
+    max-width: 640px;
+}
+
+.rail-ticket-row {
+    grid-template-columns: minmax(240px, 1.6fr) 110px 110px 140px auto;
+    min-height: 118px;
+}
+
+.rail-ticket-main-info {
+    min-width: 0;
+}
+
+.rail-ticket-status-block {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.rail-ticket-empty-state {
+    width: min(100%, 680px);
+    margin: 46px auto 0;
+    padding: 44px 36px;
+    text-align: center;
+    border-radius: 22px;
+    background:
+            radial-gradient(circle at top, rgba(56, 189, 248, .12), transparent 34%),
+            rgba(18, 33, 49, .86);
+    border: 1px solid rgba(142, 213, 255, .16);
+    box-shadow: 0 28px 86px rgba(0, 0, 0, .36);
+}
+
+.rail-ticket-empty-state .rail-empty-icon {
+    width: 72px;
+    height: 72px;
+    margin: 0 auto 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    color: var(--rj-primary-soft);
+    background: rgba(56, 189, 248, .10);
+    border: 1px solid rgba(142, 213, 255, .22);
+    box-shadow: 0 0 34px rgba(56, 189, 248, .14);
+}
+
+.rail-ticket-empty-state .rail-empty-icon i {
+    font-size: 32px;
+}
+
+.rail-ticket-empty-state h2 {
+    margin: 0;
+    color: #ffffff;
+    font-size: 34px;
+    font-weight: 900;
+    letter-spacing: -.04em;
+}
+
+.rail-ticket-empty-state p {
+    max-width: 470px;
+    margin: 12px auto 26px;
+    color: var(--rj-muted);
+    font-size: 16px;
+    line-height: 1.6;
+    font-weight: 600;
+}
+
+@media (max-width: 992px) {
+    .rail-my-ticket-head {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .rail-ticket-row {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .rail-ticket-list-actions {
+        grid-column: 1 / -1;
+        justify-content: flex-start;
+    }
+}
+
+@media (max-width: 640px) {
+    .rail-my-ticket-page {
+        padding-top: 44px;
+    }
+
+    .rail-ticket-row {
+        grid-template-columns: 1fr;
+    }
+
+    .rail-ticket-empty-state {
+        padding: 34px 22px;
+    }
+
+    .rail-ticket-empty-state h2 {
+        font-size: 28px;
+    }
+}
+
+/* =========================================================
+   My Tickets Page Fix
+   ========================================================= */
+
+.rail-my-ticket-page {
+    min-height: calc(100vh - 72px);
+    padding-top: 64px;
+}
+
+.rail-my-ticket-container {
+    max-width: 1080px;
+}
+
+.rail-my-ticket-head {
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.rail-my-ticket-head .rail-page-title {
+    font-size: clamp(42px, 5vw, 64px);
+}
+
+.rail-my-ticket-head .rail-page-subtitle {
+    max-width: 620px;
+}
+
+.rail-ticket-row {
+    grid-template-columns: minmax(240px, 1.5fr) 110px 110px 150px auto;
+    min-height: 118px;
+}
+
+.rail-ticket-main-info,
+.rail-ticket-status-block {
+    min-width: 0;
+}
+
+.rail-ticket-status-block {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.rail-ticket-empty-state {
+    width: min(100%, 760px);
+    margin: 30px auto 0;
+    padding: 52px 32px;
+    text-align: center;
+    border-radius: 22px;
+    background:
+            radial-gradient(circle at top, rgba(56, 189, 248, .12), transparent 36%),
+            rgba(18, 33, 49, .84);
+    border: 1px solid rgba(142, 213, 255, .16);
+    box-shadow: 0 28px 86px rgba(0, 0, 0, .36);
+}
+
+.rail-ticket-empty-state .rail-empty-icon {
+    width: 76px;
+    height: 76px;
+    margin: 0 auto 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    color: var(--rj-primary-soft);
+    background: rgba(56, 189, 248, .10);
+    border: 1px solid rgba(142, 213, 255, .22);
+    box-shadow: 0 0 34px rgba(56, 189, 248, .14);
+}
+
+.rail-ticket-empty-state .rail-empty-icon i {
+    font-size: 34px;
+}
+
+.rail-ticket-empty-state h2 {
+    margin: 0;
+    color: #ffffff;
+    font-size: 34px;
+    font-weight: 900;
+    letter-spacing: -.04em;
+}
+
+.rail-ticket-empty-state p {
+    max-width: 480px;
+    margin: 12px auto 26px;
+    color: var(--rj-muted);
+    font-size: 16px;
+    line-height: 1.6;
+    font-weight: 700;
+}
+
+.rail-ticket-empty-state .rail-primary-btn {
+    min-height: 46px;
+    padding: 0 22px;
+}
+
+@media (max-width: 992px) {
+    .rail-my-ticket-head {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .rail-ticket-row {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .rail-ticket-list-actions {
+        grid-column: 1 / -1;
+        justify-content: flex-start;
+    }
+}
+
+@media (max-width: 640px) {
+    .rail-my-ticket-page {
+        padding-top: 44px;
+    }
+
+    .rail-ticket-row {
+        grid-template-columns: 1fr;
+    }
+
+    .rail-ticket-empty-state {
+        padding: 38px 22px;
+    }
+
+    .rail-ticket-empty-state h2 {
+        font-size: 28px;
+    }
+}
+
+/* =========================================================
+   Refund request form
+   ========================================================= */
+
+.rail-refund-page .rail-ticket-container {
+    max-width: 1280px;
+}
+
+.rail-refund-form {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr);
+    gap: 34px;
+    padding: 40px;
+    border-radius: 24px;
+    background:
+            radial-gradient(circle at top left, rgba(56, 189, 248, .12), transparent 38%),
+            rgba(18, 33, 49, .90);
+    border: 1px solid rgba(142, 213, 255, .20);
+    box-shadow: 0 30px 90px rgba(0, 0, 0, .38);
+}
+
+.rail-refund-section {
+    min-width: 0;
+    padding: 26px;
+    border-radius: 20px;
+    background: rgba(5, 20, 36, .38);
+    border: 1px solid rgba(255, 255, 255, .075);
+}
+
+.rail-refund-section-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 26px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, .08);
+}
+
+.rail-refund-icon {
+    width: 48px;
+    height: 48px;
+    flex: 0 0 48px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 16px;
+    color: #001e2c;
+    background: linear-gradient(135deg, #7dd3fc, #38bdf8);
+    box-shadow: 0 14px 30px rgba(56, 189, 248, .22);
+    font-size: 22px;
+}
+
+.rail-refund-section-head h2 {
+    margin: 0;
+    color: #ffffff;
+    font-size: 26px;
+    font-weight: 900;
+    letter-spacing: -.035em;
+    line-height: 1.1;
+}
+
+.rail-refund-section-head p {
+    max-width: 420px;
+    margin: 8px 0 0;
+    color: var(--rj-muted, #bdc8d1);
+    font-size: 14px;
+    line-height: 1.55;
+    font-weight: 700;
+}
+
+.rail-refund-form .rail-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px 28px;
+}
+
+.rail-refund-form .rail-form-field.full {
+    grid-column: 1 / -1;
+}
+
+.rail-refund-form .rail-form-label {
+    margin-bottom: 9px;
+    color: rgba(212, 228, 250, .82);
+    font-size: 11px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+}
+
+.rail-refund-form .rail-input,
+.rail-refund-form textarea.rail-input {
+    width: 100%;
+    min-height: 54px;
+    padding: 0 17px;
+    border-radius: 12px;
+    border: 1px solid rgba(142, 213, 255, .16);
+    color: #ffffff;
+    background: rgba(3, 9, 25, .82);
+    outline: none;
+    font-size: 14px;
+    font-weight: 800;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .035);
+}
+
+.rail-refund-form .rail-input::placeholder {
+    color: rgba(189, 200, 209, .62);
+    font-weight: 700;
+}
+
+.rail-refund-form .rail-input:focus,
+.rail-refund-form textarea.rail-input:focus {
+    border-color: rgba(56, 189, 248, .82);
+    box-shadow:
+            0 0 0 4px rgba(56, 189, 248, .12),
+            inset 0 1px 0 rgba(255, 255, 255, .04);
+}
+
+.rail-refund-textarea {
+    min-height: 132px !important;
+    padding-top: 15px !important;
+    line-height: 1.5;
+    resize: vertical;
+}
+
+.rail-refund-form .rail-field-error {
+    margin-top: 8px;
+    color: #ffb4ab;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.rail-refund-actions {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 16px;
+    margin-top: 4px;
+    padding-top: 26px;
+    border-top: 1px solid rgba(255, 255, 255, .08);
+}
+
+.rail-refund-actions .rail-primary-btn,
+.rail-refund-actions .rail-secondary-btn {
+    min-height: 50px;
+    padding: 0 24px;
+    white-space: nowrap;
+}
+
+@media (max-width: 1050px) {
+    .rail-refund-form {
+        grid-template-columns: 1fr;
+        padding: 30px;
+    }
+
+    .rail-refund-section {
+        padding: 24px;
+    }
+}
+
+@media (max-width: 640px) {
+    .rail-refund-form {
+        padding: 22px;
+    }
+
+    .rail-refund-section {
+        padding: 20px;
+    }
+
+    .rail-refund-form .rail-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .rail-refund-section-head {
+        align-items: flex-start;
+    }
+
+    .rail-refund-actions {
+        display: grid;
+        grid-template-columns: 1fr;
+    }
+
+    .rail-refund-actions .rail-primary-btn,
+    .rail-refund-actions .rail-secondary-btn {
+        width: 100%;
+        justify-content: center;
+    }
+    .rail-refund-form .rail-field-error {
+        display: block;
+        margin-top: 8px;
+        color: #ffb4ab;
+        font-size: 12px;
+        font-weight: 900;
+        line-height: 1.35;
+    }
+
+    .rail-refund-form .rail-input.input-validation-error,
+    .rail-refund-form .rail-input.is-invalid {
+        border-color: rgba(255, 180, 171, .85);
+        box-shadow: 0 0 0 4px rgba(255, 180, 171, .12);
+    }
+}

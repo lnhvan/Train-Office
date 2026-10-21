@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/customer-layout :: layout('Passenger Details', ~{::section}, 'booking')}">
+
+<section class="rail-flow-page">
+    <link rel="stylesheet" th:href="@{/css/rail-booking-flow.css}">
+
+    <div class="rail-flow-container">
+        <div class="rail-flow-progress passenger">
+            <div class="rail-flow-step done">
+                <span><i class="bi bi-check-lg"></i></span>
+                Journey
+            </div>
+
+            <div class="rail-flow-step done">
+                <span><i class="bi bi-check-lg"></i></span>
+                Seats
+            </div>
+
+            <div class="rail-flow-step active">
+                <span>3</span>
+                Passengers
+            </div>
+
+            <div class="rail-flow-step">
+                <span>4</span>
+                Payment
+            </div>
+        </div>
+
+        <div class="rail-flow-grid">
+            <main class="rail-flow-main">
+                <div class="rail-flow-title">
+                    <h1>Passenger Details</h1>
+                    <p>Please provide the details for all passengers travelling.</p>
+                </div>
+
+                <div class="rail-alert"
+                     th:if="${error}"
+                     th:text="${error}">
+                </div>
+
+                <div class="rail-alert"
+                     th:if="${errorMessage}"
+                     th:text="${errorMessage}">
+                </div>
+
+                <form th:action="@{/booking/passenger-info}"
+                      method="post"
+                      class="rail-passenger-info-form"
+                      th:attr="data-draft-key=|railPassengerDraft:${bookingSession.trainTripId}:${bookingSession.departureStationId}:${bookingSession.arrivalStationId}:${bookingSession.passengerCount}|">
+                    <input type="hidden"
+                           name="contactName"
+                           th:value="${passengerInfoForm != null ? passengerInfoForm.contactName : ''}">
+
+                    <input type="hidden"
+                           name="contactPhone"
+                           th:value="${passengerInfoForm != null ? passengerInfoForm.contactPhone : 'N/A'}">
+
+                    <input type="hidden"
+                           name="contactEmail"
+                           th:value="${passengerInfoForm != null ? passengerInfoForm.contactEmail : ''}">
+
+                    <div class="rail-passenger-list">
+                        <article class="rail-glass-card rail-passenger-card"
+                                 th:each="passenger, stat : ${passengerInfoForm.passengers}">
+
+                            <div class="rail-passenger-heading">
+                                <i class="bi bi-person"></i>
+
+                                <h2 th:text="|Passenger ${stat.count}|">
+                                    Passenger 1
+                                </h2>
+                            </div>
+
+                            <div class="rail-form-grid">
+                                <div class="rail-form-field full">
+                                    <label class="rail-form-label">
+                                        Full Name
+                                    </label>
+
+                                    <input class="rail-input"
+                                           type="text"
+                                           th:name="|passengers[${stat.index}].fullName|"
+                                           th:value="${passenger.fullName}"
+                                           placeholder="e.g. Eleanor Vance"
+                                           required>
+                                </div>
+
+                                <div class="rail-form-field">
+                                    <label class="rail-form-label">
+                                        Date of Birth
+                                    </label>
+
+                                    <div class="rail-input-wrap">
+                                        <i class="bi bi-calendar3 rail-input-icon"></i>
+
+                                        <input class="rail-input has-icon dob-input"
+                                               type="date"
+                                               th:name="|passengers[${stat.index}].dateOfBirth|"
+                                               th:value="${passenger.dateOfBirth}"
+                                               required>
+                                    </div>
+                                </div>
+
+                                <div class="rail-form-field">
+                                    <label class="rail-form-label">
+                                        Gender
+                                    </label>
+
+                                    <select class="rail-select"
+                                            th:name="|passengers[${stat.index}].gender|">
+                                        <option value="">Select Gender</option>
+
+                                        <option th:each="gender : ${genders}"
+                                                th:value="${gender}"
+                                                th:text="${gender}"
+                                                th:selected="${passenger.gender != null and passenger.gender == gender}">
+                                            MALE
+                                        </option>
+                                    </select>
+                                </div>
+
+                                <div class="rail-form-field">
+                                    <label class="rail-form-label">
+                                        Passenger Type
+                                    </label>
+
+                                    <select class="rail-select passenger-type-display" disabled>
+                                        <option value="DEFAULT"
+                                                th:selected="${passenger.passengerType == null or passenger.passengerType == 'DEFAULT'}"
+                                                th:text="${passenger.dateOfBirth == null ? 'Enter date of birth' : 'Default - 0%'}">Enter date of birth</option>
+
+                                        <option th:each="policy : ${discountPolicies}"
+                                                th:value="${policy.policyCode}"
+                                                th:selected="${passenger.passengerType != null and passenger.passengerType == policy.policyCode}"
+                                                th:attr="data-min-age=${policy.minAge},
+                     data-max-age=${policy.maxAge},
+                     data-discount=${policy.discountPercent}"
+                                                th:text="${policy.policyName + ' - ' + policy.discountPercent + '%'}">
+                                            Child - 25%
+                                        </option>
+                                    </select>
+
+                                    <input type="hidden"
+                                           class="passenger-type-hidden"
+                                           th:name="|passengers[${stat.index}].passengerType|"
+                                           th:value="${passenger.passengerType != null ? passenger.passengerType : 'DEFAULT'}">
+
+                                    <div class="rail-field-error age-validation-msg">
+                                        Date of birth cannot be in the future.
+                                    </div>
+                                </div>
+
+                                <div class="rail-form-field identity-wrapper">
+                                    <label class="rail-form-label">
+                                        Identity Document Number
+                                    </label>
+
+                                    <div class="rail-input-wrap">
+                                        <i class="bi bi-card-text rail-input-icon"></i>
+
+                                        <input class="rail-input has-icon identity-input"
+                                               type="text"
+                                               th:name="|passengers[${stat.index}].identityNumber|"
+                                               th:value="${passenger.identityNumber}"
+                                               placeholder="Passport or National ID">
+                                    </div>
+
+                                    <small class="rail-field-hint">
+                                        Required for adult and senior passengers.
+                                    </small>
+                                </div>
+
+                                <div class="rail-form-field relationship-wrapper" style="display:none;">
+                                    <label class="rail-form-label">
+                                        Relationship to Booker
+                                    </label>
+
+                                    <input class="rail-input relationship-input"
+                                           type="text"
+                                           th:name="|passengers[${stat.index}].relationshipToBooker|"
+                                           th:value="${passenger.relationshipToBooker}"
+                                           placeholder="Example: Child, sibling, nephew">
+
+                                    <small class="rail-field-hint">
+                                        Required for passengers under 16 years old.
+                                    </small>
+                                </div>
+                            </div>
+                        </article>
+                    </div>
+
+                    <button type="button" class="rail-dashed-btn">
+                        <i class="bi bi-plus-circle"></i>
+                        Passenger quantity is based on selected seats
+                    </button>
+
+                    <div class="rail-form-actions">
+                        <a class="rail-back-link"
+                           th:href="@{/booking/{tripId}/seats(
+        tripId=${bookingSession.trainTripId},
+        departureStationId=${bookingSession.departureStationId},
+        arrivalStationId=${bookingSession.arrivalStationId},
+        passengerCount=${bookingSession.passengerCount}
+   )}">
+                            <i class="bi bi-arrow-left"></i>
+                            Back to Seat Selection
+                        </a>
+
+                        <button class="rail-primary-btn" type="submit">
+                            Continue to Confirmation
+                            <i class="bi bi-arrow-right"></i>
+                        </button>
+                    </div>
+                </form>
+            </main>
+
+            <aside class="rail-glass-card rail-summary-card">
+                <h2 class="rail-summary-title">
+                    <i class="bi bi-receipt"></i>
+                    Journey Summary
+                </h2>
+
+                <div class="rail-summary-route">
+                    <div class="rail-route-stop">
+                        <p class="rail-summary-label">Current Step</p>
+                        <p class="rail-summary-value">Passenger Information</p>
+                        <p class="rail-summary-sub">Fill in all passenger details before confirmation.</p>
+                    </div>
+
+                    <div class="rail-route-stop end">
+                        <p class="rail-summary-label">Next Step</p>
+                        <p class="rail-summary-value">Booking Confirmation</p>
+                        <p class="rail-summary-sub">Review selected seats and final ticket amount.</p>
+                    </div>
+                </div>
+
+                <div class="rail-summary-pill">
+                    <i class="bi bi-speedometer2"></i>
+                    <span>Passenger verification and fare rules are enabled</span>
+                    <span>ACTIVE</span>
+                </div>
+
+                <div class="rail-summary-lines">
+                    <div class="rail-summary-line">
+                        <span>Passengers</span>
+                        <strong th:text="${bookingSession != null ? bookingSession.passengerCount : 0}">
+                            1
+                        </strong>
+                    </div>
+
+                    <div class="rail-summary-line">
+                        <span>Selected seats</span>
+                        <strong th:text="${bookingSession != null and bookingSession.seatIds != null ? #lists.size(bookingSession.seatIds) : 0}">
+                            1
+                        </strong>
+                    </div>
+
+                    <div class="rail-summary-line">
+                        <span>Fare policy</span>
+                        <strong>Age-based</strong>
+                    </div>
+                </div>
+
+                <div class="rail-summary-total">
+                    <small>Ticket rules</small>
+                    <strong>Ready</strong>
+                </div>
+            </aside>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.querySelector('.rail-passenger-info-form');
+
+            if (!form) {
+                return;
+            }
+
+            const draftKey = form.dataset.draftKey;
+
+            if (!draftKey) {
+                return;
+            }
+
+            function fields() {
+                return Array.from(form.querySelectorAll('input[name], select[name], textarea[name]'));
+            }
+
+            function readDraft() {
+                try {
+                    const raw = localStorage.getItem(draftKey);
+                    return raw ? JSON.parse(raw) : null;
+                } catch (error) {
+                    return null;
+                }
+            }
+
+            function writeDraft() {
+                const data = {};
+
+                fields().forEach(function (field) {
+                    if (field.type === 'hidden' || field.disabled || field.classList.contains('passenger-type-display')) {
+                        return;
+                    }
+
+                    data[field.name] = field.value;
+                });
+
+                localStorage.setItem(draftKey, JSON.stringify(data));
+            }
+
+            function restoreDraft() {
+                const data = readDraft();
+
+                if (!data) {
+                    return;
+                }
+
+                fields().forEach(function (field) {
+                    if (field.type === 'hidden' || field.disabled || field.classList.contains('passenger-type-display')) {
+                        return;
+                    }
+
+                    if (!Object.prototype.hasOwnProperty.call(data, field.name)) {
+                        return;
+                    }
+
+                    const serverHasValue = field.value !== null && field.value !== '';
+
+                    if (!serverHasValue) {
+                        field.value = data[field.name];
+                        field.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                });
+            }
+
+            restoreDraft();
+
+            fields().forEach(function (field) {
+                field.addEventListener('input', writeDraft);
+                field.addEventListener('change', writeDraft);
+            });
+
+            form.addEventListener('submit', function (event) {
+                setTimeout(function () {
+                    if (!event.defaultPrevented) {
+                        localStorage.removeItem(draftKey);
+                    }
+                }, 0);
+            });
+        });
+    </script>
+    <script th:src="@{/js/rail-booking-flow.js}"></script>
+</section>
+</html>

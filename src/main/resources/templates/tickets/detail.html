@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/customer-layout :: layout('Ticket Information', ~{::section}, 'tickets')}">
+
+<section class="rail-ticket-page">
+    <link rel="stylesheet" th:href="@{/css/rail-ticket-pages.css}">
+
+    <div class="rail-ticket-container">
+        <header class="rail-ticket-detail-head">
+            <div>
+                <a class="rail-back-link" th:href="@{/tickets}">
+                    <i class="bi bi-arrow-left"></i>
+                    Back to Tickets
+                </a>
+
+                <h1 class="rail-page-title">
+                    Booking
+                    <span th:text="${ticket.booking != null ? ticket.booking.bookingNumber : ticket.ticketCode}">
+                        RJ-4092
+                    </span>
+                </h1>
+            </div>
+
+            <div class="rail-page-actions">
+                <a class="rail-secondary-btn"
+                   th:if="${ticket.ticketStatus != null and ticket.ticketStatus.name() != 'REFUNDED'}"
+                   th:href="@{/tickets/{id}/print(id=${ticket.ticketId})}">
+                    <i class="bi bi-download"></i>
+                    Download Ticket
+                </a>
+            </div>
+        </header>
+
+        <div class="rail-alert success" th:if="${successMessage}" th:text="${successMessage}"></div>
+        <div class="rail-alert danger" th:if="${error}" th:text="${error}"></div>
+        <div class="rail-alert danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+
+        <article class="rail-glass-card rail-ticket-detail-card">
+            <div class="rail-title-row">
+                <div class="rail-page-actions">
+                    <span class="rail-chip">
+                        <i class="bi bi-award"></i>
+
+                        <span th:text="${ticket.seat != null and ticket.seat.seatType != null ? ticket.seat.seatType : 'Standard Class'}">
+                            First Class
+                        </span>
+                    </span>
+
+                    <span class="rail-chip neutral">Direct</span>
+                </div>
+
+                <div class="text-end">
+                    <span class="rail-summary-label">Status</span>
+
+                    <div class="mt-2">
+                        <span class="rail-chip success"
+                              th:if="${ticket.ticketStatus != null and ticket.ticketStatus.name() == 'CONFIRMED'}"
+                              th:text="${ticket.ticketStatus}">
+                            CONFIRMED
+                        </span>
+
+                        <span class="rail-chip success"
+                              th:if="${ticket.ticketStatus != null and ticket.ticketStatus.name() == 'REFUNDED'}">
+                            REFUNDED
+                        </span>
+
+                        <span class="rail-chip neutral"
+                              th:if="${ticket.ticketStatus == null or (ticket.ticketStatus.name() != 'CONFIRMED' and ticket.ticketStatus.name() != 'REFUNDED')}"
+                              th:text="${ticket.ticketStatus != null ? ticket.ticketStatus : 'UNKNOWN'}">
+                            BOOKED
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rail-ticket-detail-route">
+                <div class="rail-station-block">
+                    <h2 th:text="${ticket.trainTrip != null and ticket.trainTrip.departureTime != null ? #temporals.format(ticket.trainTrip.departureTime, 'HH:mm') : '--:--'}">
+                        23:45
+                    </h2>
+
+                    <h3 th:text="${ticket.booking != null and ticket.booking.departureStation != null ? ticket.booking.departureStation.stationName : '-'}">
+                        Neo-Tokyo
+                    </h3>
+
+                    <p>Departure Station</p>
+
+                    <p th:text="${ticket.trainTrip != null and ticket.trainTrip.departureTime != null ? #temporals.format(ticket.trainTrip.departureTime, 'dd MMM yyyy') : '-'}">
+                        Oct 14, 2024
+                    </p>
+                </div>
+
+                <div class="rail-route-visual">
+                    <div class="rail-route-line">
+                        <span class="rail-route-dot"></span>
+
+                        <span class="rail-route-train">
+                            <i class="bi bi-train-front"></i>
+                        </span>
+
+                        <span class="rail-route-dot end"></span>
+                    </div>
+
+                    <span th:text="${ticket.trainTrip != null and ticket.trainTrip.train != null ? ticket.trainTrip.train.trainName : 'RailJet'}">
+                        Midnight-X
+                    </span>
+                </div>
+
+                <div class="rail-station-block end">
+                    <h2 th:text="${ticket.trainTrip != null and ticket.trainTrip.arrivalTime != null ? #temporals.format(ticket.trainTrip.arrivalTime, 'HH:mm') : '--:--'}">
+                        08:00
+                    </h2>
+
+                    <h3 th:text="${ticket.booking != null and ticket.booking.arrivalStation != null ? ticket.booking.arrivalStation.stationName : '-'}">
+                        Kyoto
+                    </h3>
+
+                    <p>Arrival Station</p>
+
+                    <p th:text="${ticket.trainTrip != null and ticket.trainTrip.arrivalTime != null ? #temporals.format(ticket.trainTrip.arrivalTime, 'dd MMM yyyy') : '-'}">
+                        Oct 15, 2024
+                    </p>
+                </div>
+            </div>
+
+            <div class="rail-ticket-detail-grid">
+                <div class="rail-mini-cell">
+                    <small>Passenger</small>
+
+                    <strong th:text="${ticket.passenger != null ? ticket.passenger.fullName : '-'}">
+                        Alex Mercer
+                    </strong>
+                </div>
+
+                <div class="rail-mini-cell">
+                    <small>Location</small>
+
+                    <strong>
+                        <span>Coach </span>
+
+                        <span th:text="${ticket.seat != null and ticket.seat.coach != null ? ticket.seat.coach.coachNumber : '-'}">
+            C01
+        </span>
+
+                        <span th:if="${ticket.seat != null and ticket.seat.compartment != null}">
+            , Compartment
+        </span>
+
+                        <span th:if="${ticket.seat != null and ticket.seat.compartment != null}"
+                              th:text="${ticket.seat.compartment.compartmentNumber}">
+            K01
+        </span>
+
+                        <span>, Seat </span>
+
+                        <span th:text="${ticket.seat != null ? ticket.seat.seatNumber : '-'}">
+            12A
+        </span>
+                    </strong>
+
+                    <span th:if="${ticket.seat != null and ticket.seat.berthLevel != null}"
+                          th:text="${ticket.seat.berthLevel}">
+        LOWER
+    </span>
+                </div>
+
+                <div class="rail-mini-cell">
+                    <small>Train</small>
+
+                    <strong th:text="${ticket.trainTrip != null and ticket.trainTrip.train != null ? ticket.trainTrip.train.trainName : '-'}">
+                        Midnight-X
+                    </strong>
+                </div>
+
+                <div class="rail-mini-cell">
+                    <small>Booking Ref</small>
+
+                    <strong th:text="${ticket.booking != null ? ticket.booking.bookingNumber : '-'}">
+                        X7Y9-L2M
+                    </strong>
+                </div>
+            </div>
+        </article>
+
+        <section class="rail-ticket-refund-box"
+                 th:if="${ticket.ticketStatus != null and ticket.ticketStatus.name() == 'CONFIRMED'}">
+            <h2>Refund Request</h2>
+
+            <p class="rail-page-subtitle mt-0">
+                You can send a refund request for this ticket. After admin approval, the ticket will become refunded and its seat will be released.
+            </p>
+
+            <form class="rail-refund-form"
+                  th:action="@{/tickets/{id}/refund(id=${ticket.ticketId})}"
+                  method="post"
+                  onsubmit="return confirm('Send refund request for this ticket?')">
+
+                <input type="text"
+                       name="reason"
+                       placeholder="Enter refund reason"
+                       value="Customer requested refund">
+
+                <button type="submit" class="rail-danger-btn">
+                    Request Refund
+                </button>
+            </form>
+        </section>
+
+        <div class="rail-page-actions mt-4">
+            <a class="rail-secondary-btn" th:href="@{/tickets}">
+                Back
+            </a>
+
+            <a class="rail-primary-btn"
+               th:if="${ticket.ticketStatus != null and ticket.ticketStatus.name() != 'REFUNDED'}"
+               th:href="@{/tickets/{id}/print(id=${ticket.ticketId})}">
+                <i class="bi bi-printer"></i>
+                Print Ticket
+            </a>
+
+            <a class="rail-secondary-btn"
+               th:if="${ticket.booking != null}"
+               th:href="@{/booking/{id}(id=${ticket.booking.bookingId})}">
+                View Booking
+            </a>
+        </div>
+    </div>
+</section>
+</html>

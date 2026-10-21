@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/customer-layout :: layout('Search Trip', ~{::section}, 'booking')}">
+
+<section class="rail-search-page">
+    <link rel="stylesheet" th:href="@{/css/rail-booking.css}">
+
+    <div class="rail-search-container">
+        <div class="rail-search-hero">
+            <h1>
+                Cross distance.
+                <span>Master time.</span>
+            </h1>
+
+            <p>
+                Experience a faster and cleaner train booking journey. Select your departure station, arrival station, travel date, and choose seats in the next step.
+            </p>
+        </div>
+
+        <div class="rail-search-panel">
+            <div class="rail-search-steps">
+                <div class="rail-step active">
+                    <i class="bi bi-search"></i>
+                    Search
+                </div>
+
+                <div class="rail-step">
+                    <i class="bi bi-ticket-perforated"></i>
+                    Select seats
+                </div>
+
+                <div class="rail-step">
+                    <i class="bi bi-check-circle"></i>
+                    Complete
+                </div>
+            </div>
+
+            <div class="alert alert-danger"
+                 th:if="${error}"
+                 th:text="${error}">
+            </div>
+
+            <form th:action="@{/booking/trips}"
+                  method="post">
+
+                <input type="hidden" name="passengerCount" value="1">
+
+                <div class="rail-trip-toggle">
+                    <input id="oneWay"
+                           type="radio"
+                           name="roundTrip"
+                           value="false"
+                           checked>
+
+                    <label for="oneWay">
+                        One way
+                    </label>
+
+                    <input id="roundTrip"
+                           type="radio"
+                           name="roundTrip"
+                           value="true"
+                           th:checked="${tripSearchForm != null and tripSearchForm.roundTrip == true}">
+
+                    <label for="roundTrip">
+                        Round trip
+                    </label>
+                </div>
+
+                <div class="rail-search-grid">
+                    <div class="rail-search-field">
+                        <label for="departureStationId">
+                            From
+                        </label>
+
+                        <select id="departureStationId"
+                                name="departureStationId"
+                                class="form-select"
+                                required>
+                            <option value="">Select departure</option>
+
+                            <option th:each="station : ${stations}"
+                                    th:value="${station.stationId}"
+                                    th:text="${station.stationName}"
+                                    th:selected="${tripSearchForm != null and tripSearchForm.departureStationId != null and tripSearchForm.departureStationId == station.stationId}">
+                                Ha Noi
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="rail-search-field">
+                        <label for="arrivalStationId">
+                            To
+                        </label>
+
+                        <select id="arrivalStationId"
+                                name="arrivalStationId"
+                                class="form-select"
+                                required>
+                            <option value="">Select arrival</option>
+
+                            <option th:each="station : ${stations}"
+                                    th:value="${station.stationId}"
+                                    th:text="${station.stationName}"
+                                    th:selected="${tripSearchForm != null and tripSearchForm.arrivalStationId != null and tripSearchForm.arrivalStationId == station.stationId}">
+                                Sai Gon
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="rail-search-field">
+                        <label for="departureDate">
+                            Departure date
+                        </label>
+
+                        <input id="departureDate"
+                               name="departureDate"
+                               class="form-control"
+                               type="date"
+                               th:value="${tripSearchForm != null ? tripSearchForm.departureDate : ''}"
+                               required>
+                    </div>
+
+                    <div class="rail-search-field rail-return-date" id="returnDateGroup">
+                        <label for="returnDate">
+                            Return date
+                        </label>
+
+                        <input id="returnDate"
+                               name="returnDate"
+                               class="form-control"
+                               type="date"
+                               th:value="${tripSearchForm != null ? tripSearchForm.returnDate : ''}">
+                    </div>
+                </div>
+
+                <button class="btn rail-search-submit" type="submit">
+                    <i class="bi bi-search me-2"></i>
+                    Search trains
+                </button>
+
+                <p class="rail-search-note">
+                    Ticket quantity will be based on the number of seats you select in the next step.
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <div class="rail-why-section">
+        <div class="rail-why-header">
+            <h2>
+                Why choose <span>RailJet?</span>
+            </h2>
+
+            <p>
+                A modern railway experience combining technology, comfort, and a smoother booking journey.
+            </p>
+        </div>
+
+        <div class="rail-feature-grid">
+            <div class="rail-feature-card wide">
+                <div class="rail-feature-icon">
+                    <i class="bi bi-speedometer2"></i>
+                </div>
+
+                <h3>Outstanding speed</h3>
+
+                <p>
+                    Reduce travel time with modern train operations, reliable scheduling, and a smoother passenger experience.
+                </p>
+            </div>
+
+            <div class="rail-feature-card">
+                <div class="rail-feature-icon">
+                    <i class="bi bi-person-wheelchair"></i>
+                </div>
+
+                <h3>Premium comfort</h3>
+
+                <p>
+                    Enjoy clear booking steps, better seat selection, and a cleaner trip management flow.
+                </p>
+            </div>
+
+            <div class="rail-feature-card">
+                <div class="rail-feature-icon">
+                    <i class="bi bi-recycle"></i>
+                </div>
+
+                <h3>Lower emissions</h3>
+
+                <p>
+                    Move toward greener transportation with energy-efficient railway travel.
+                </p>
+            </div>
+
+            <div class="rail-feature-card wide">
+                <div class="rail-feature-tags">
+                    <span>Direct</span>
+                    <span>Express</span>
+                </div>
+
+                <div class="rail-feature-icon">
+                    <i class="bi bi-diagram-3"></i>
+                </div>
+
+                <h3>Connected network</h3>
+
+                <p>
+                    Connect major cities with station-based search, visual seat selection, and simple booking history.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script th:src="@{/js/rail-search.js}"></script>
+</section>
+</html>

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/customer-layout :: layout('Booking Lookup', ~{::section}, 'history')}">
+<section class="booking-shell booking-section">
+    <div class="page-hero compact-hero">
+        <span class="page-eyebrow">My bookings</span>
+        <h1 class="page-title">Booking lookup</h1>
+        <p class="page-subtitle">Find guest bookings using the email and phone number used at booking time.</p>
+    </div>
+
+    <div class="railjet-card card">
+        <div class="card-body">
+            <div class="alert alert-danger" th:if="${error}" th:text="${error}"></div>
+
+            <form th:action="@{/booking/lookup}" method="post" class="row g-3">
+                <div class="col-md-6">
+                    <label for="email" class="form-label">Email</label>
+                    <input id="email"
+                           name="email"
+                           type="email"
+                           class="form-control"
+                           th:value="${email}"
+                           required>
+                </div>
+                <div class="col-md-6">
+                    <label for="phone" class="form-label">Phone</label>
+                    <input id="phone"
+                           name="phone"
+                           type="text"
+                           class="form-control"
+                           th:value="${phone}"
+                           required>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">Find My Bookings</button>
+                    <a class="btn btn-outline-primary" th:href="@{/booking/search}">Search trip</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+</html>

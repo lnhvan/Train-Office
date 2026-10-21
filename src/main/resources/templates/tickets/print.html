@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Print Ticket | RailJet</title>
+
+    <link rel="stylesheet" th:href="@{/css/bootstrap.css}">
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" th:href="@{/css/rail-ticket-pages.css}">
+</head>
+
+<body>
+<section class="rail-print-page">
+    <header class="rail-print-header">
+        <a class="rail-back-link"
+           th:href="@{/tickets/{id}(id=${ticket.ticketId})}">
+            <i class="bi bi-arrow-left"></i>
+            Back to Ticket Information
+        </a>
+
+        <div class="rail-print-brand">
+            RailJet
+        </div>
+
+        <div></div>
+    </header>
+
+    <main class="rail-print-ticket">
+        <div class="rail-print-ticket-body">
+            <div class="rail-print-top">
+                <div>
+                    <span class="rail-summary-label">Booking Ref</span>
+                    <strong class="rail-summary-value"
+                            th:text="${ticket.booking != null ? ticket.booking.bookingNumber : '-'}">
+                        XYZ789
+                    </strong>
+                </div>
+
+                <div>
+                    <span class="rail-summary-label">Passenger</span>
+                    <strong class="rail-summary-value"
+                            th:text="${ticket.passenger != null ? ticket.passenger.fullName : '-'}">
+                        Alex Mercer
+                    </strong>
+                </div>
+
+                <div>
+                    <span class="rail-chip">
+                        <i class="bi bi-award"></i>
+
+                        <span th:text="${ticket.seat != null and ticket.seat.seatType != null ? ticket.seat.seatType : 'Standard'}">
+                            First Class
+                        </span>
+                    </span>
+                </div>
+            </div>
+
+            <div class="rail-print-route">
+                <div class="rail-print-station">
+                    <small>From</small>
+
+                    <h2 th:text="${ticket.booking != null and ticket.booking.departureStation != null ? ticket.booking.departureStation.stationName : '-'}">
+                        LND
+                    </h2>
+
+                    <p>Departure Station</p>
+
+                    <strong th:text="${ticket.trainTrip != null and ticket.trainTrip.departureTime != null ? #temporals.format(ticket.trainTrip.departureTime, 'HH:mm') : '--:--'}">
+                        08:45
+                    </strong>
+                </div>
+
+                <div class="rail-print-line">
+                    <div class="rail-print-line-main">
+                        <span class="rail-print-train-icon">
+                            <i class="bi bi-train-front"></i>
+                        </span>
+                    </div>
+
+                    <span th:text="${ticket.trainTrip != null and ticket.trainTrip.train != null ? ticket.trainTrip.train.trainName : 'RailJet Express'}">
+                        RJ-492 Express
+                    </span>
+                </div>
+
+                <div class="rail-print-station end">
+                    <small>To</small>
+
+                    <h2 th:text="${ticket.booking != null and ticket.booking.arrivalStation != null ? ticket.booking.arrivalStation.stationName : '-'}">
+                        PAR
+                    </h2>
+
+                    <p>Arrival Station</p>
+
+                    <strong th:text="${ticket.trainTrip != null and ticket.trainTrip.arrivalTime != null ? #temporals.format(ticket.trainTrip.arrivalTime, 'HH:mm') : '--:--'}">
+                        11:15
+                    </strong>
+                </div>
+            </div>
+
+            <div class="rail-print-meta-grid">
+                <div class="rail-print-meta">
+                    <small>Date</small>
+
+                    <strong th:text="${ticket.trainTrip != null and ticket.trainTrip.departureTime != null ? #temporals.format(ticket.trainTrip.departureTime, 'dd MMM yyyy') : '-'}">
+                        15 Nov 2024
+                    </strong>
+                </div>
+
+                <div class="rail-print-meta">
+                    <small>Coach</small>
+
+                    <strong th:text="${ticket.seat != null and ticket.seat.coach != null ? ticket.seat.coach.coachNumber : '-'}">
+                        C
+                    </strong>
+                </div>
+                <div class="rail-print-meta">
+                    <small>Compartment</small>
+
+                    <strong th:text="${ticket.seat != null and ticket.seat.compartment != null ? ticket.seat.compartment.compartmentNumber : '-'}">
+                        K01
+                    </strong>
+                </div>
+                <div class="rail-print-meta">
+                    <small>Seat / Berth</small>
+
+                    <strong class="highlight">
+        <span th:text="${ticket.seat != null ? ticket.seat.seatNumber : '-'}">
+            12A
+        </span>
+
+                        <span th:if="${ticket.seat != null and ticket.seat.berthLevel != null}">
+            -
+        </span>
+
+                        <span th:if="${ticket.seat != null and ticket.seat.berthLevel != null}"
+                              th:text="${ticket.seat.berthLevel}">
+            LOWER
+        </span>
+                    </strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="rail-print-actions">
+            <button type="button" class="rail-primary-btn" onclick="window.print()">
+                <i class="bi bi-printer"></i>
+                Print Ticket
+            </button>
+
+            <button type="button" class="rail-secondary-btn" onclick="window.print()">
+                <i class="bi bi-download"></i>
+                Save to PDF
+            </button>
+        </div>
+    </main>
+</section>
+</body>
+</html>

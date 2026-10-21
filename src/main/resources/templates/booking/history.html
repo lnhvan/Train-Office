@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/customer-layout :: layout('Booking History', ~{::section}, 'history')}">
+
+<section class="rail-booking-page rail-history-page">
+    <link rel="stylesheet" th:href="@{/css/rail-booking-summary.css(v='clean-1')}">
+
+    <div class="rail-booking-container">
+        <header class="rail-booking-head rail-history-head">
+            <div>
+                <span class="rail-booking-eyebrow">My journeys</span>
+
+                <h1 class="rail-booking-title">Booking History</h1>
+
+                <p class="rail-booking-subtitle">
+                    Track your booking reference, route, payment status, total amount, and ticket actions.
+                </p>
+            </div>
+
+            <div class="rail-booking-actions">
+                <a class="rail-primary-btn" th:href="@{/booking/search}">
+                    <i class="bi bi-search"></i>
+                    Search Trip
+                </a>
+            </div>
+        </header>
+
+        <form class="rail-history-filter rail-glass-card"
+              th:action="@{/booking/history}"
+              method="get">
+
+            <div class="rail-history-filter-title">
+                <i class="bi bi-funnel"></i>
+                <span>Filter by status</span>
+            </div>
+
+            <div class="rail-history-filter-pills">
+                <a class="rail-filter-pill"
+                   th:classappend="${selectedStatus == null} ? ' active'"
+                   th:href="@{/booking/history}">
+                    All
+                </a>
+
+                <a class="rail-filter-pill"
+                   th:each="status : ${bookingStatuses}"
+                   th:classappend="${selectedStatus != null and selectedStatus == status.name()} ? ' active'"
+                   th:href="@{/booking/history(status=${status.name()})}"
+                   th:text="${status}">
+                    PAID
+                </a>
+            </div>
+        </form>
+
+        <div class="rail-alert success" th:if="${successMessage}" th:text="${successMessage}"></div>
+        <div class="rail-alert danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+        <div class="rail-alert danger" th:if="${error}" th:text="${error}"></div>
+
+        <div class="rail-history-list"
+             th:if="${recentBookings != null and !#lists.isEmpty(recentBookings)}">
+
+            <article class="rail-glass-card rail-history-card rail-history-card-v2"
+                     th:each="booking : ${recentBookings}">
+
+                <div class="rail-history-ref-block">
+                    <span class="rail-summary-label">Booking Ref</span>
+
+                    <div class="rail-history-code"
+                         th:text="${booking.bookingNumber}">
+                        RJ0001
+                    </div>
+
+                    <span class="rail-history-date"
+                          th:text="${booking.bookingDate}">
+                        2026-06-28T08:00
+                    </span>
+                </div>
+
+                <div class="rail-history-route-block">
+                    <h2 class="rail-history-route">
+                        <span th:text="${booking.departureStation != null ? booking.departureStation.stationName : '-'}">
+                            Ha Noi
+                        </span>
+
+                        <span> → </span>
+
+                        <span th:text="${booking.arrivalStation != null ? booking.arrivalStation.stationName : '-'}">
+                            Sai Gon
+                        </span>
+                    </h2>
+
+                    <p class="rail-history-meta">
+                        <span th:text="${booking.trainTrip != null and booking.trainTrip.train != null ? booking.trainTrip.train.trainName : 'Train trip'}">
+                            SE1
+                        </span>
+
+                        <span> · </span>
+
+                        <span th:if="${booking.trainTrip != null and booking.trainTrip.departureTime != null}"
+                              th:text="${booking.trainTrip.departureTime}">
+                            2026-07-03T06:00
+                        </span>
+
+                        <span th:if="${booking.trainTrip == null or booking.trainTrip.departureTime == null}">
+                            Departure time not available
+                        </span>
+                    </p>
+                </div>
+
+                <div class="rail-history-price-block">
+                    <span class="rail-summary-label">Total Amount</span>
+
+                    <strong th:if="${booking.totalAmount != null}"
+                            th:text="${#numbers.formatDecimal(booking.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' VND'">
+                        870,000 VND
+                    </strong>
+
+                    <strong th:if="${booking.totalAmount == null}">
+                        0 VND
+                    </strong>
+                </div>
+
+                <div class="rail-history-status-block">
+                    <span class="rail-chip success"
+                          th:if="${booking.bookingStatus != null and booking.bookingStatus.name() == 'PAID'}"
+                          th:text="${booking.bookingStatus}">
+                        PAID
+                    </span>
+
+                    <span class="rail-chip danger"
+                          th:if="${booking.bookingStatus != null and booking.bookingStatus.name() == 'CANCELLED'}"
+                          th:text="${booking.bookingStatus}">
+                        CANCELLED
+                    </span>
+
+                    <span class="rail-chip neutral"
+                          th:if="${booking.bookingStatus != null and booking.bookingStatus.name() == 'REFUNDED'}"
+                          th:text="${booking.bookingStatus}">
+                        REFUNDED
+                    </span>
+
+                    <span class="rail-chip warning"
+                          th:if="${booking.bookingStatus == null or (
+                              booking.bookingStatus.name() != 'PAID'
+                              and booking.bookingStatus.name() != 'CANCELLED'
+                              and booking.bookingStatus.name() != 'REFUNDED'
+                          )}"
+                          th:text="${booking.bookingStatus != null ? booking.bookingStatus : 'UNKNOWN'}">
+                        PENDING_PAYMENT
+                    </span>
+                </div>
+
+                <div class="rail-history-actions-v2">
+                    <a class="rail-primary-btn"
+                       th:if="${booking.bookingStatus != null and booking.bookingStatus.name() == 'PENDING_PAYMENT'}"
+                       th:href="@{/payments/bookings/{bookingId}(bookingId=${booking.bookingId})}">
+                        <i class="bi bi-credit-card"></i>
+                        Pay
+                    </a>
+
+                    <a class="rail-secondary-btn"
+                       th:if="${booking.bookingStatus != null and booking.bookingStatus.name() == 'PAID'}"
+                       th:href="@{/tickets}">
+                        <i class="bi bi-ticket-perforated"></i>
+                        Tickets
+                    </a>
+
+                    <a class="rail-secondary-btn"
+                       th:href="@{/booking/{bookingId}(bookingId=${booking.bookingId})}">
+                        Details
+                        <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </article>
+        </div>
+
+        <div class="rail-glass-card rail-empty-state"
+             th:if="${recentBookings == null or #lists.isEmpty(recentBookings)}">
+            <i class="bi bi-calendar2-x"></i>
+
+            <h2>No bookings found</h2>
+
+            <p th:if="${selectedStatus == null}">
+                Your bookings will appear here after they are created.
+            </p>
+
+            <p th:if="${selectedStatus != null}">
+                No bookings match the selected status.
+            </p>
+
+            <a class="rail-primary-btn" th:href="@{/booking/search}">
+                Search Trip
+            </a>
+        </div>
+    </div>
+</section>
+</html>

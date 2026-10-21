@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/admin-layout :: layout('Train Form', ~{::section}, 'trains')}">
+<section>
+    <div class="admin-page-hero">
+        <div>
+            <span class="admin-page-kicker"><i class="fas fa-train mr-1"></i> Train Profile</span>
+            <h2 th:text="${train.trainId == null ? 'Add Train' : 'Update Train'}">Train Form</h2>
+            <p>Maintain train identity and operating status for trip scheduling.</p>
+        </div>
+        <a th:href="@{/admin/trains}" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left mr-1"></i> Back to trains
+        </a>
+    </div>
+
+    <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+
+    <div class="card admin-form-card">
+        <div class="card-header">
+            <span class="admin-card-title">Train Information</span>
+            <small>Train code must remain unique across the fleet.</small>
+        </div>
+        <form th:action="@{/admin/trains/save}" th:object="${train}" method="POST">
+            <input type="hidden" th:field="*{trainId}">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label" for="trainCode">Train Code</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-hashtag"></i></span></div>
+                            <input class="form-control" type="text" th:field="*{trainCode}" id="trainCode" required>
+                        </div>
+                        <div class="text-danger small" th:if="${#fields.hasErrors('trainCode')}" th:errors="*{trainCode}"></div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label" for="trainName">Train Name</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-train"></i></span></div>
+                            <input class="form-control" type="text" th:field="*{trainName}" id="trainName" required>
+                        </div>
+                        <div class="text-danger small" th:if="${#fields.hasErrors('trainName')}" th:errors="*{trainName}"></div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label" for="selectedTrainType">Train Type</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-tags"></i></span></div>
+                            <select class="form-control" id="selectedTrainType" name="selectedTrainType" required
+                                    th:attr="data-other-value=${otherTrainTypeValue}">
+                                <option value="">Select train type</option>
+                                <option th:each="type : ${availableTrainTypes}"
+                                        th:value="${type}"
+                                        th:text="${type}"
+                                        th:selected="${selectedTrainType == type}">Express</option>
+                                <option th:value="${otherTrainTypeValue}"
+                                        th:selected="${selectedTrainType == otherTrainTypeValue}">Other...</option>
+                            </select>
+                        </div>
+                        <div class="text-danger small" th:if="${#fields.hasErrors('trainType')}" th:errors="*{trainType}"></div>
+                    </div>
+                    <div class="col-md-4 mb-3" id="newTrainTypeGroup"
+                         th:style="${selectedTrainType == otherTrainTypeValue ? '' : 'display:none;'}">
+                        <label class="form-label" for="newTrainType">New Train Type</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-plus"></i></span></div>
+                            <input class="form-control" type="text" id="newTrainType" name="newTrainType"
+                                   th:value="${newTrainType}">
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label" for="status">Status</label>
+                        <select class="form-control" th:field="*{status}" id="status">
+                            <option th:each="s : ${allTrainStatus}" th:value="${s}" th:text="${s.description}"></option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer d-flex justify-content-end gap-2">
+                <a th:href="@{/admin/trains}" class="btn btn-outline-secondary">Cancel</a>
+                <button class="btn btn-primary" type="submit">
+                    <i class="fas fa-save mr-1"></i> Save Train
+                </button>
+            </div>
+        </form>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const typeSelect = document.getElementById('selectedTrainType');
+            const newTypeGroup = document.getElementById('newTrainTypeGroup');
+            const newTypeInput = document.getElementById('newTrainType');
+            const otherValue = typeSelect ? typeSelect.dataset.otherValue : '';
+
+            if (!typeSelect || !newTypeGroup || !newTypeInput) {
+                return;
+            }
+
+            function updateNewTypeVisibility() {
+                const isOther = typeSelect.value === otherValue;
+                newTypeGroup.style.display = isOther ? '' : 'none';
+                newTypeInput.required = isOther;
+            }
+
+            typeSelect.addEventListener('change', updateNewTypeVisibility);
+            updateNewTypeVisibility();
+        });
+    </script>
+</section>
+</html>

@@ -1,0 +1,2 @@
+﻿<nav xmlns:th="http://www.thymeleaf.org" th:fragment="breadcrumb(items)" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a th:href="@{/}">Home / Trang chủ</a></li><li class="breadcrumb-item" th:each="item, stat : ${items}" th:classappend="${stat.last} ? ' active'"><a th:if="${!stat.last and item.url != null}" th:href="@{${item.url}}" th:text="${item.label}">Page</a><span th:if="${stat.last or item.url == null}" th:text="${item.label}">Current</span></li></ol></nav>
+

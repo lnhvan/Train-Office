@@ -1,0 +1,496 @@
+:root {
+    --rj-bg: #051424;
+    --rj-bg-deep: #010f1f;
+    --rj-surface: #122131;
+    --rj-surface-low: #0d1c2d;
+    --rj-surface-high: #1c2b3c;
+    --rj-surface-highest: #273647;
+    --rj-text: #d4e4fa;
+    --rj-muted: #bdc8d1;
+    --rj-outline: #87929a;
+    --rj-outline-soft: rgba(255, 255, 255, .10);
+    --rj-primary: #38bdf8;
+    --rj-primary-soft: #8ed5ff;
+    --rj-danger: #ffb4ab;
+    --rj-success: #34d399;
+}
+
+
+.customer-footer {
+    background: #010f1f !important;
+    color: var(--rj-muted) !important;
+    border-top: 1px solid rgba(255, 255, 255, .10);
+}
+
+.customer-footer h5,
+.customer-footer .footer-copy,
+.customer-footer a {
+    color: var(--rj-muted) !important;
+}
+
+.railjet-main {
+    padding: 0 !important;
+}
+
+.rail-profile-page {
+    min-height: calc(100vh - 72px);
+    margin: 0;
+    padding: 48px 16px 88px;
+    color: var(--rj-text);
+    background:
+            linear-gradient(180deg, rgba(1, 15, 31, .62), rgba(5, 20, 36, .94)),
+            url('https://images.unsplash.com/photo-1474487548417-781cb71495f3?auto=format&fit=crop&w=1800&q=80') center / cover fixed;
+}
+
+.rail-profile-container {
+    width: min(100%, 1040px);
+    margin: 0 auto;
+}
+
+.rail-profile-hero {
+    text-align: center;
+    margin-bottom: 34px;
+}
+
+.rail-profile-hero h1 {
+    margin: 0;
+    color: #ffffff;
+    font-size: clamp(38px, 5vw, 58px);
+    line-height: 1.05;
+    font-weight: 900;
+    letter-spacing: -.055em;
+}
+
+.rail-profile-hero p {
+    margin: 12px 0 0;
+    color: var(--rj-muted);
+    font-size: 18px;
+    line-height: 1.6;
+    font-weight: 600;
+}
+
+.rail-profile-top-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) 260px;
+    gap: 24px;
+    margin-bottom: 28px;
+}
+
+.rail-glass-card {
+    border: 1px solid var(--rj-outline-soft);
+    border-radius: 18px;
+    background: rgba(18, 33, 49, .82);
+    backdrop-filter: blur(20px);
+    box-shadow: 0 24px 70px rgba(0, 0, 0, .30);
+}
+
+.rail-profile-user-card {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 26px;
+}
+
+.rail-profile-avatar {
+    width: 96px;
+    height: 96px;
+    flex: 0 0 96px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    color: #001e2c;
+    background: linear-gradient(135deg, var(--rj-primary-soft), var(--rj-primary));
+    border: 2px solid rgba(142, 213, 255, .80);
+    font-size: 40px;
+    font-weight: 900;
+    box-shadow: 0 0 26px rgba(56, 189, 248, .18);
+}
+
+.rail-profile-user-info h2 {
+    margin: 0;
+    color: #ffffff;
+    font-size: 28px;
+    font-weight: 900;
+    letter-spacing: -.035em;
+}
+
+.rail-profile-chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.rail-profile-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 28px;
+    padding: 0 12px;
+    border-radius: 999px;
+    color: var(--rj-primary-soft);
+    border: 1px solid rgba(56, 189, 248, .28);
+    background: rgba(56, 189, 248, .10);
+    font-size: 11px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+}
+
+.rail-profile-chip.neutral {
+    color: var(--rj-muted);
+    border-color: rgba(255, 255, 255, .12);
+    background: rgba(255, 255, 255, .04);
+}
+
+.rail-profile-chip.success {
+    color: #bbf7d0;
+    border-color: rgba(52, 211, 153, .30);
+    background: rgba(52, 211, 153, .10);
+}
+
+.rail-profile-tier-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 26px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.rail-profile-tier-card:after {
+    content: "";
+    position: absolute;
+    right: -42px;
+    top: -42px;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: rgba(56, 189, 248, .16);
+    filter: blur(30px);
+}
+
+.rail-profile-tier-card i {
+    color: var(--rj-primary-soft);
+    font-size: 36px;
+    margin-bottom: 12px;
+}
+
+.rail-profile-label {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--rj-muted);
+    font-size: 11px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: .10em;
+}
+
+.rail-profile-tier-card strong {
+    color: var(--rj-primary-soft);
+    font-size: 28px;
+    line-height: 1.15;
+    font-weight: 900;
+    letter-spacing: -.035em;
+}
+
+.rail-profile-main-card {
+    overflow: hidden;
+}
+
+.rail-profile-main-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 24px 26px;
+    background: rgba(1, 15, 31, .42);
+    border-bottom: 1px solid rgba(255, 255, 255, .08);
+}
+
+.rail-profile-main-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.rail-profile-main-title i {
+    color: var(--rj-primary-soft);
+    font-size: 28px;
+}
+
+.rail-profile-main-title h2 {
+    margin: 0;
+    color: #ffffff;
+    font-size: 28px;
+    font-weight: 900;
+    letter-spacing: -.035em;
+}
+
+.rail-profile-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.rail-profile-btn,
+.rail-profile-btn-outline,
+.rail-profile-btn-muted,
+.rail-profile-btn-danger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 42px;
+    padding: 0 18px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: .07em;
+    border: 1px solid transparent;
+    transition: .18s ease;
+}
+
+.rail-profile-btn {
+    background: var(--rj-primary);
+    border-color: var(--rj-primary);
+    color: #001e2c;
+}
+
+.rail-profile-btn:hover {
+    color: #001e2c;
+    filter: brightness(1.08);
+    box-shadow: 0 0 22px rgba(56, 189, 248, .26);
+}
+
+.rail-profile-btn-outline {
+    color: var(--rj-primary-soft);
+    border-color: rgba(142, 213, 255, .55);
+    background: rgba(18, 33, 49, .45);
+}
+
+.rail-profile-btn-outline:hover {
+    color: #ffffff;
+    background: rgba(56, 189, 248, .10);
+}
+
+.rail-profile-btn-muted {
+    color: var(--rj-muted);
+    border-color: rgba(255, 255, 255, .12);
+    background: rgba(255, 255, 255, .06);
+}
+
+.rail-profile-btn-muted:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, .10);
+}
+
+.rail-profile-btn-danger {
+    color: var(--rj-danger);
+    border-color: rgba(255, 180, 171, .45);
+    background: rgba(255, 180, 171, .08);
+}
+
+.rail-profile-btn-danger:hover {
+    color: #ffffff;
+    background: rgba(255, 180, 171, .14);
+}
+
+.rail-profile-body {
+    padding: 26px;
+}
+
+.rail-profile-alert {
+    margin-bottom: 18px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    font-weight: 800;
+}
+
+.rail-profile-alert.success {
+    color: #d1fae5;
+    border: 1px solid rgba(52, 211, 153, .35);
+    background: rgba(52, 211, 153, .10);
+}
+
+.rail-profile-alert.danger {
+    color: #ffd7d3;
+    border: 1px solid rgba(255, 180, 171, .38);
+    background: rgba(147, 0, 10, .25);
+}
+
+.rail-profile-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px 26px;
+}
+
+.rail-profile-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.rail-profile-field label {
+    color: var(--rj-muted);
+    font-size: 11px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: .10em;
+}
+
+.rail-profile-input-wrap {
+    position: relative;
+}
+
+.rail-profile-input-wrap i {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--rj-outline);
+    font-size: 18px;
+    pointer-events: none;
+}
+
+.rail-profile-input,
+.rail-profile-select {
+    width: 100%;
+    min-height: 54px;
+    padding: 12px 14px 12px 44px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, .10);
+    background: #020617;
+    color: var(--rj-text);
+    font-size: 16px;
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, .35);
+}
+
+.rail-profile-select {
+    appearance: auto;
+}
+
+.rail-profile-input::placeholder {
+    color: rgba(189, 200, 209, .58);
+}
+
+.rail-profile-input:focus,
+.rail-profile-select:focus {
+    outline: none;
+    border-color: var(--rj-primary);
+    box-shadow:
+            inset 0 2px 5px rgba(0, 0, 0, .35),
+            0 0 0 1px rgba(56, 189, 248, .55),
+            0 0 18px rgba(56, 189, 248, .14);
+}
+
+.rail-profile-input[readonly] {
+    opacity: .78;
+    cursor: default;
+}
+
+.rail-profile-error {
+    color: var(--rj-danger);
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.35;
+}
+
+.rail-profile-divider {
+    grid-column: 1 / -1;
+    height: 1px;
+    margin: 6px 0;
+    background: linear-gradient(90deg, transparent, rgba(56, 189, 248, .45), transparent);
+}
+
+.rail-profile-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 26px;
+    padding-top: 22px;
+    border-top: 1px solid rgba(255, 255, 255, .08);
+}
+
+.rail-password-layout {
+    width: min(100%, 620px);
+    margin: 0 auto;
+}
+
+.rail-password-icon {
+    width: 78px;
+    height: 78px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 22px;
+    border-radius: 50%;
+    color: var(--rj-primary-soft);
+    background: rgba(142, 213, 255, .08);
+    border: 1px solid rgba(142, 213, 255, .24);
+    box-shadow: 0 0 28px rgba(56, 189, 248, .16);
+    font-size: 38px;
+}
+
+.rail-password-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.rail-password-header h2 {
+    margin: 0;
+    color: #ffffff;
+    font-size: 32px;
+    font-weight: 900;
+    letter-spacing: -.04em;
+}
+
+.rail-password-header p {
+    margin: 10px auto 0;
+    max-width: 430px;
+    color: var(--rj-muted);
+    font-size: 16px;
+    line-height: 1.55;
+}
+
+@media (max-width: 992px) {
+    .rail-profile-top-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .rail-profile-page {
+        padding: 34px 16px 68px;
+    }
+
+    .rail-profile-main-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .rail-profile-actions,
+    .rail-profile-btn,
+    .rail-profile-btn-outline,
+    .rail-profile-btn-muted,
+    .rail-profile-btn-danger {
+        width: 100%;
+    }
+
+    .rail-profile-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .rail-profile-form-actions {
+        flex-direction: column;
+    }
+
+    .rail-profile-user-card {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}

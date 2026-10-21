@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/admin-layout :: layout('User form', ~{::section}, 'users')}">
+<section>
+    <div class="admin-page-hero">
+        <div>
+            <span class="admin-page-kicker"><i class="fas fa-user-cog mr-1"></i> User Profile</span>
+            <h2 th:text="${user.userId == null ? 'Create user' : 'Edit user'}">User form</h2>
+            <p>Set login credentials, role, and account availability.</p>
+        </div>
+        <a class="btn btn-outline-primary" th:href="@{/admin/users}">
+            <i class="fas fa-arrow-left mr-1"></i> Back to users
+        </a>
+    </div>
+
+    <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+
+    <div class="card admin-form-card">
+        <div class="card-header">
+            <span class="admin-card-title">Account Information</span>
+            <small>Required fields are used by the existing admin user workflow.</small>
+        </div>
+        <form th:action="@{/admin/users/save}" th:object="${user}" method="post">
+            <input type="hidden" th:field="*{userId}">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Email</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-envelope"></i></span></div>
+                            <input class="form-control" th:field="*{email}" type="email" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Password</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-key"></i></span></div>
+                            <input class="form-control" th:field="*{password}" type="text"
+                                   th:required="${user.userId == null}"
+                                   th:placeholder="${user.userId == null ? 'Required for new user' : 'Leave blank to keep current password'}">
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Full name</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-id-badge"></i></span></div>
+                            <input class="form-control" th:field="*{fullName}">
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Role</label>
+                        <select class="form-control" th:field="*{role}" required>
+                            <option th:each="role : ${roles}" th:value="${role}" th:text="${role}"></option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Status</label>
+                        <select class="form-control" th:field="*{status}" required>
+                            <option th:each="status : ${statuses}" th:value="${status}" th:text="${status}"></option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer d-flex justify-content-end">
+                <button class="btn btn-primary" type="submit">
+                    <i class="fas fa-save mr-1"></i> Save
+                </button>
+            </div>
+        </form>
+    </div>
+</section>
+</html>

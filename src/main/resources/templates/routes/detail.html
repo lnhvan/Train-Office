@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/admin-layout :: layout('Route Detail', ~{::section}, 'routes')}">
+<section>
+    <div class="admin-page-hero">
+        <div>
+            <span class="admin-page-kicker"><i class="fas fa-route mr-1"></i> Route Detail</span>
+            <h2 th:text="${detail.routeName}">Route</h2>
+            <p th:text="${detail.routeCode}">HN-SG</p>
+        </div>
+        <div class="admin-page-actions">
+            <a class="btn btn-outline-primary" th:href="@{/admin/routes}">
+                <i class="fas fa-arrow-left mr-1"></i> Back
+            </a>
+            <a class="btn btn-outline-info" th:href="@{/admin/routes/{routeId}/stations(routeId=${detail.routeId})}">
+                <i class="fas fa-list-ol mr-1"></i> Manage Stations
+            </a>
+            <a class="btn btn-warning" th:href="@{'/admin/routes/edit/' + ${detail.routeId}}">
+                <i class="fas fa-edit mr-1"></i> Edit
+            </a>
+        </div>
+    </div>
+
+    <div class="card admin-detail-card">
+        <div class="card-header">
+            <span class="admin-card-title">Route Information</span>
+            <small>Route identity and travel distance</small>
+        </div>
+        <div class="card-body">
+            <dl class="admin-detail-grid">
+                <dt>ID</dt><dd th:text="${detail.routeId}">1</dd>
+                <dt>Code</dt><dd th:text="${detail.routeCode}">HN-SG</dd>
+                <dt>Name</dt><dd th:text="${detail.routeName}">Ha Noi - Sai Gon</dd>
+                <dt>Distance</dt><dd><span th:text="${detail.distanceKm}">0</span> km</dd>
+            </dl>
+        </div>
+    </div>
+</section>
+</html>

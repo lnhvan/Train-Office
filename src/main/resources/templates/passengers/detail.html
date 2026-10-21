@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/admin-layout :: layout('Passenger detail', ~{::section}, 'passengers')}">
+<section>
+    <div class="admin-page-hero">
+        <div>
+            <span class="admin-page-kicker"><i class="fas fa-address-card mr-1"></i> Passenger Detail</span>
+            <h2 th:text="${passenger.fullName}">Passenger detail</h2>
+            <p th:text="${passenger.identityNumber ?: 'No identity number'}">Identity</p>
+        </div>
+        <div class="admin-page-actions">
+            <a class="btn btn-outline-primary" th:href="@{/admin/passengers}">
+                <i class="fas fa-arrow-left mr-1"></i> Back
+            </a>
+            <a class="btn btn-warning" th:href="@{/admin/passengers/edit/{id}(id=${passenger.passengerId})}">
+                <i class="fas fa-edit mr-1"></i> Edit
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-4">
+            <div class="card admin-profile-card">
+                <div class="card-body text-center">
+                    <span class="admin-profile-avatar"><i class="fas fa-id-card"></i></span>
+                    <h3 th:text="${passenger.fullName}">Passenger</h3>
+                    <p th:text="${passenger.identityNumber ?: 'No identity number'}">Identity</p>
+                    <span class="badge badge-light admin-badge-soft" th:text="${passenger.gender ?: 'N/A'}">N/A</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-8">
+            <div class="card admin-detail-card">
+                <div class="card-header">
+                    <span class="admin-card-title">Passenger Information</span>
+                    <small>Identity and linked booking data</small>
+                </div>
+                <div class="card-body">
+                    <dl class="admin-detail-grid">
+                        <dt>ID</dt><dd th:text="${passenger.passengerId}">1</dd>
+                        <dt>Full name</dt><dd th:text="${passenger.fullName}">Passenger</dd>
+                        <dt>Identity number</dt><dd th:text="${passenger.identityNumber ?: '-'}">-</dd>
+                        <dt>Date of birth</dt><dd th:text="${passenger.dateOfBirth != null ? #temporals.format(passenger.dateOfBirth, 'dd/MM/yyyy') : '-'}">-</dd>
+                        <dt>Gender</dt><dd th:text="${passenger.gender ?: '-'}">-</dd>
+                        <dt>Booking</dt><dd th:text="${passenger.booking != null ? passenger.booking.bookingNumber : '-'}">-</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+</html>

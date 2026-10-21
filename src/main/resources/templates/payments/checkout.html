@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/customer-layout :: layout('VNPay Checkout', ~{::section}, 'booking')}">
+
+<section class="rail-payment-page">
+    <link rel="stylesheet" th:href="@{/css/rail-payment.css}">
+
+    <div class="rail-payment-shell">
+        <div class="rail-payment-card wide">
+            <div class="rail-payment-icon">
+                <i class="bi bi-credit-card-2-front"></i>
+            </div>
+
+            <h1 class="rail-payment-title">Complete Your Payment</h1>
+
+            <p class="rail-payment-subtitle">
+                Review your booking before continuing to the VNPay Sandbox payment gateway.
+            </p>
+
+            <div class="rail-payment-alert danger"
+                 th:if="${errorMessage}"
+                 th:text="${errorMessage}">
+            </div>
+
+            <div class="rail-payment-alert success"
+                 th:if="${successMessage}"
+                 th:text="${successMessage}">
+            </div>
+
+            <div class="rail-payment-summary" th:if="${booking != null}">
+                <div class="rail-payment-line">
+                    <span>Booking Number</span>
+                    <strong th:text="${booking.bookingNumber}">RJ0001</strong>
+                </div>
+
+                <div class="rail-payment-line">
+                    <span>Status</span>
+                    <strong th:text="${booking.bookingStatus}">PENDING_PAYMENT</strong>
+                </div>
+
+                <div class="rail-payment-line">
+                    <span>Train</span>
+                    <strong th:text="${booking.trainTrip != null and booking.trainTrip.train != null ? booking.trainTrip.train.trainName : '-'}">
+                        SE1
+                    </strong>
+                </div>
+
+                <div class="rail-payment-line">
+                    <span>Route</span>
+                    <strong>
+                        <span th:text="${booking.departureStation != null ? booking.departureStation.stationName : '-'}">
+                            Departure
+                        </span>
+                        <span> → </span>
+                        <span th:text="${booking.arrivalStation != null ? booking.arrivalStation.stationName : '-'}">
+                            Arrival
+                        </span>
+                    </strong>
+                </div>
+
+                <div class="rail-payment-line">
+                    <span>Departure Time</span>
+                    <strong th:text="${booking.trainTrip != null ? booking.trainTrip.departureTime : '-'}">
+                        2026-06-30T08:00
+                    </strong>
+                </div>
+
+                <div class="rail-payment-line total">
+                    <span>Total Amount</span>
+
+                    <strong th:if="${booking.totalAmount != null}"
+                            th:text="${#numbers.formatDecimal(booking.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' VND'">
+                        0 VND
+                    </strong>
+
+                    <strong th:if="${booking.totalAmount == null}">
+                        0 VND
+                    </strong>
+                </div>
+            </div>
+
+            <div class="rail-payment-alert info">
+                This is a VNPay Sandbox payment. After successful payment, your booking will become
+                <strong>PAID</strong> and your tickets will become <strong>CONFIRMED</strong>.
+            </div>
+
+            <div class="rail-payment-methods">
+                <div class="rail-payment-method">
+                    <i class="bi bi-wallet2"></i>
+                    <div>
+                        <strong>VNPay Sandbox</strong>
+                        <small>Secure test payment gateway for this project.</small>
+                    </div>
+                </div>
+            </div>
+
+            <form th:if="${booking != null and booking.bookingStatus != null and booking.bookingStatus.name() == 'PENDING_PAYMENT'}"
+                  th:action="@{/payments/bookings/{id}(id=${booking.bookingId})}"
+                  method="post">
+
+                <button type="submit" class="rail-payment-primary-btn">
+                    <i class="bi bi-shield-check"></i>
+                    Pay with VNPay
+                </button>
+            </form>
+
+            <div class="rail-payment-alert danger rail-payment-disabled"
+                 th:if="${booking != null and booking.bookingStatus != null and booking.bookingStatus.name() != 'PENDING_PAYMENT'}">
+                This booking is no longer pending payment.
+            </div>
+
+            <div class="rail-payment-action-grid">
+                <a class="rail-payment-secondary-btn"
+                   th:if="${booking != null}"
+                   th:href="@{/booking/{id}(id=${booking.bookingId})}">
+                    Back to Booking
+                </a>
+
+                <a class="rail-payment-secondary-btn"
+                   th:if="${booking == null}"
+                   th:href="@{/booking/history}">
+                    Back
+                </a>
+
+                <a class="rail-payment-secondary-btn"
+                   th:href="@{/booking/history}">
+                    My Bookings
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+</html>

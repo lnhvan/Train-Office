@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/customer-layout :: layout('Booking Summary', ~{::section}, 'booking')}">
+
+<section class="rail-summary-page">
+    <link rel="stylesheet" th:href="@{/css/rail-booking-summary.css}">
+
+    <div class="rail-summary-container">
+        <header class="rail-summary-hero">
+            <h1>Booking Summary</h1>
+            <p>Review your itinerary before creating the booking.</p>
+        </header>
+
+        <div class="rail-alert"
+             th:if="${error}"
+             th:text="${error}">
+        </div>
+
+        <div class="rail-summary-layout">
+            <main class="rail-summary-left">
+                <article class="rail-glass-card rail-card-body">
+                    <div class="rail-title-row">
+                        <h2 class="rail-section-title">
+                            <i class="bi bi-train-front"></i>
+                            Outbound Journey
+                        </h2>
+
+                        <span class="rail-direct-chip">Direct</span>
+                    </div>
+
+                    <div class="rail-journey-board">
+                        <div class="rail-time-box">
+                            <h3 th:text="${trip.departureTime != null ? #temporals.format(trip.departureTime, 'HH:mm') : '--:--'}">
+                                08:30
+                            </h3>
+
+                            <strong th:text="${segment.departureStop.station.stationName}">
+                                Departure Station
+                            </strong>
+
+                            <small>
+                                <i class="bi bi-calendar3"></i>
+
+                                <span th:text="${trip.departureTime != null ? #temporals.format(trip.departureTime, 'dd MMM yyyy') : '-'}">
+                                    24 Oct 2024
+                                </span>
+                            </small>
+                        </div>
+
+                        <div class="rail-duration">
+                            <i class="bi bi-arrow-right"></i>
+                            <span>Direct</span>
+                        </div>
+
+                        <div class="rail-time-box">
+                            <h3 th:text="${trip.arrivalTime != null ? #temporals.format(trip.arrivalTime, 'HH:mm') : '--:--'}">
+                                11:45
+                            </h3>
+
+                            <strong th:text="${segment.arrivalStop.station.stationName}">
+                                Arrival Station
+                            </strong>
+
+                            <small>
+                                <i class="bi bi-calendar3"></i>
+
+                                <span th:text="${trip.arrivalTime != null ? #temporals.format(trip.arrivalTime, 'dd MMM yyyy') : '-'}">
+                                    24 Oct 2024
+                                </span>
+                            </small>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="rail-glass-card rail-card-body">
+                    <h2 class="rail-section-title">
+                        <i class="bi bi-person"></i>
+                        Passenger Details
+                    </h2>
+
+                    <div class="rail-passenger-list">
+                        <div class="rail-passenger-grid"
+                             th:each="seat, stat : ${selectedSeats}">
+
+                            <div class="rail-passenger-card">
+                                <small th:text="${stat.index == 0 ? 'Primary Traveler' : 'Passenger'}">
+                                    Primary Traveler
+                                </small>
+
+                                <strong th:text="${passengerInfo.passengers[stat.index].fullName}">
+                                    Passenger Name
+                                </strong>
+
+                                <span th:text="${passengerInfo.passengers[stat.index].passengerType}">
+                                    Adult
+                                </span>
+                            </div>
+
+                            <div class="rail-passenger-card">
+                                <small>Seat Allocation</small>
+
+                                <div class="seat-code">
+                                    <i class="bi bi-seat-recline-normal"></i>
+
+                                    <span>
+                                        <span>Coach </span>
+
+                                        <span th:text="${seat.coach != null ? seat.coach.coachNumber : '-'}">
+                                            C01
+                                        </span>
+
+                                        <span th:if="${seat.compartment != null}">
+                                            , Compartment
+                                        </span>
+
+                                        <span th:if="${seat.compartment != null}"
+                                              th:text="${seat.compartment.compartmentNumber}">
+                                            K01
+                                        </span>
+
+                                        <span> - </span>
+
+                                        <span th:text="${seat.seatNumber}">
+                                            A3
+                                        </span>
+                                    </span>
+                                </div>
+
+                                <span>
+                                    <span th:text="${seat.seatType}">
+                                        First Class
+                                    </span>
+
+ <span th:if="${seat.berthLevel != null}">
+    •
+</span>
+
+<span class="rail-berth-pill"
+      th:if="${seat.berthLevel != null}"
+      th:classappend="${seat.berthLevel == 'LOWER'} ? ' lower' :
+          (${seat.berthLevel == 'MIDDLE'} ? ' middle' :
+          (${seat.berthLevel == 'UPPER'} ? ' upper' : ''))"
+      th:text="${seat.berthLevel == 'LOWER' ? 'Level 1 / Lower berth' :
+          (seat.berthLevel == 'MIDDLE' ? 'Level 2 / Middle berth' :
+          (seat.berthLevel == 'UPPER' ? 'Level 3 / Upper berth' : seat.berthLevel))}">
+    Level 1 / Lower berth
+</span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="rail-passenger-nav">
+                        <small>
+                            Passenger summary
+                        </small>
+
+                        <div class="rail-mini-buttons">
+                            <button class="rail-mini-button" type="button" disabled>
+                                <i class="bi bi-chevron-left"></i>
+                            </button>
+
+                            <button class="rail-mini-button active" type="button" disabled>
+                                <i class="bi bi-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </article>
+            </main>
+
+            <aside class="rail-glass-card rail-fare-card">
+                <h2 class="rail-fare-title">Fare Summary</h2>
+
+                <div class="rail-fare-lines">
+                    <form th:action="@{/booking/group-discount}"
+                          method="post"
+                          class="rail-discount-panel"
+                          id="groupDiscountForm">
+
+                        <div class="rail-discount-panel-header">
+                            <div class="rail-discount-panel-icon">
+                                <i class="bi bi-tags-fill"></i>
+                            </div>
+
+                            <div class="rail-discount-panel-copy">
+                                <strong>Group Discount</strong>
+                                <small>Select one combo policy for this booking</small>
+                            </div>
+                        </div>
+
+                        <input type="hidden"
+                               id="groupDiscountPolicyInput"
+                               name="groupDiscountPolicyId"
+                               th:value="${selectedGroupDiscountPolicyId}">
+
+                        <div class="rail-custom-dropdown" data-rail-dropdown>
+                            <button type="button"
+                                    class="rail-custom-dropdown-toggle"
+                                    data-rail-dropdown-toggle>
+            <span th:if="${priceSummary.groupDiscountPolicyId == null}">
+                No group discount
+            </span>
+
+                                <span th:if="${priceSummary.groupDiscountPolicyId != null}"
+                                      th:text="${priceSummary.groupDiscountPolicyName + ' - ' + priceSummary.groupDiscountPercent + '%'}">
+                Family Combo - 10%
+            </span>
+
+                                <i class="bi bi-chevron-down"></i>
+                            </button>
+
+                            <div class="rail-custom-dropdown-menu" data-rail-dropdown-menu>
+                                <button type="submit"
+                                        class="rail-custom-dropdown-item"
+                                        th:classappend="${selectedGroupDiscountPolicyId == null} ? ' active'"
+                                        onclick="document.getElementById('groupDiscountPolicyInput').value = ''">
+                <span>
+                    <strong>No group discount</strong>
+                    <small>Continue without combo discount</small>
+                </span>
+
+                                    <i class="bi bi-check-circle-fill"
+                                       th:if="${selectedGroupDiscountPolicyId == null}"></i>
+                                </button>
+
+                                <button type="submit"
+                                        class="rail-custom-dropdown-item"
+                                        th:each="policy : ${availableGroupDiscountPolicies}"
+                                        th:classappend="${selectedGroupDiscountPolicyId != null and selectedGroupDiscountPolicyId == policy.policyId} ? ' active'"
+                                        th:onclick="|document.getElementById('groupDiscountPolicyInput').value='${policy.policyId}'|">
+
+                <span>
+                    <strong th:text="${policy.policyName + ' - ' + policy.discountPercent + '%'}">
+                        Family Combo - 10%
+                    </strong>
+
+                    <small>
+                        <span th:if="${policy.maxPassengers != null}"
+                              th:text="${policy.minPassengers + ' - ' + policy.maxPassengers + ' passengers'}">
+                            3 - 10 passengers
+                        </span>
+
+                        <span th:if="${policy.maxPassengers == null}"
+                              th:text="${policy.minPassengers + '+ passengers'}">
+                            10+ passengers
+                        </span>
+                    </small>
+                </span>
+
+                                    <i class="bi bi-check-circle-fill"
+                                       th:if="${selectedGroupDiscountPolicyId != null and selectedGroupDiscountPolicyId == policy.policyId}"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <small class="rail-discount-current"
+                               th:if="${priceSummary.groupDiscountPolicyId != null}">
+                            Applied:
+                            <strong th:text="${priceSummary.groupDiscountPolicyName}">
+                                Family Combo
+                            </strong>
+                        </small>
+
+                        <small class="rail-discount-current"
+                               th:if="${priceSummary.groupDiscountPolicyId == null}">
+                            No combo discount is currently applied.
+                        </small>
+                    </form>
+
+                    <div class="rail-fare-line"
+                         th:each="item : ${fareBreakdownItems}">
+                        <span>
+                            <strong th:text="${item.passengerName}">
+                                Passenger
+                            </strong>
+
+                            <br>
+
+                            <small>
+                                <span th:text="${item.passengerPolicyName}">
+                                    Passenger Policy
+                                </span>
+
+                                <span> • </span>
+
+                                <span th:text="${item.passengerDiscountPercent + '%'}">
+                                    0%
+                                </span>
+
+                                <span> discount</span>
+                            </small>
+
+                            <br>
+
+                            <small>
+                                <span th:text="${item.coachNumber + ' - ' + item.seatNumber}">
+                                    C01 - 01A
+                                </span>
+
+                                <span> • </span>
+
+                                <span th:text="${item.seatType}">
+                                    Seat Type
+                                </span>
+                                <span th:if="${item.berthLevelLabel != null}">
+    •
+</span>
+
+<span class="rail-berth-mini"
+      th:if="${item.berthLevelLabel != null}"
+      th:classappend="${item.berthLevelCssClass}"
+      th:text="${item.berthLevelLabel}">
+    Level 1 / Lower berth
+</span>
+                            </small>
+                        </span>
+
+                        <strong>
+                            <span th:if="${item.passengerDiscountAmount != null and item.passengerDiscountAmount > 0}">
+                                <span style="text-decoration: line-through; opacity: .65;"
+                                      th:text="${#numbers.formatDecimal(item.originalPrice, 0, 'COMMA', 0, 'POINT') + ' VND'}">
+                                    0 VND
+                                </span>
+                                <br>
+                            </span>
+
+                            <span th:text="${#numbers.formatDecimal(item.finalPrice, 0, 'COMMA', 0, 'POINT') + ' VND'}">
+                                0 VND
+                            </span>
+                        </strong>
+                    </div>
+
+                    <div class="rail-fare-line">
+                        <span>Passenger Subtotal</span>
+
+                        <strong th:text="${#numbers.formatDecimal(priceSummary.passengerSubtotal, 0, 'COMMA', 0, 'POINT') + ' VND'}">
+                            0 VND
+                        </strong>
+                    </div>
+
+                    <div class="rail-fare-line"
+                         th:if="${priceSummary.groupDiscountPolicyId != null}">
+                        <span>
+                            <strong th:text="${priceSummary.groupDiscountPolicyName}">
+                                Group Discount
+                            </strong>
+
+                            <br>
+
+                            <small th:text="${priceSummary.groupDiscountPercent + '% group discount applied'}">
+                                0% group discount applied
+                            </small>
+                        </span>
+
+                        <strong th:text="'- ' + ${#numbers.formatDecimal(priceSummary.groupDiscountAmount, 0, 'COMMA', 0, 'POINT')} + ' VND'">
+                            - 0 VND
+                        </strong>
+                    </div>
+
+                    <div class="rail-fare-line"
+                         th:if="${priceSummary.groupDiscountPolicyId == null}">
+                        <span>Group Discount</span>
+
+                        <strong>Not applied</strong>
+                    </div>
+
+                    <div class="rail-fare-line">
+                        <span>Taxes & Fees</span>
+
+                        <strong>Included</strong>
+                    </div>
+                </div>
+
+                <div class="rail-fare-total">
+                    <span>
+                        Total
+                        <br>
+                        Due
+                    </span>
+
+                    <strong th:text="${#numbers.formatDecimal(totalAmount, 0, 'COMMA', 0, 'POINT')} + ' VND'">
+                        0 VND
+                    </strong>
+                </div>
+
+                <form th:action="@{/booking/confirmation}" method="post">
+                    <button class="rail-primary-btn" type="submit">
+                        Create Booking
+                        <i class="bi bi-arrow-right"></i>
+                    </button>
+                </form>
+
+                <a class="rail-secondary-btn mt-3" th:href="@{/booking/passenger-info}">
+                    <i class="bi bi-arrow-left"></i>
+                    Back to Passenger Details
+                </a>
+
+                <p class="rail-policy-note">
+                    By creating a booking, you agree to our Terms of Service and Privacy Policy.
+                </p>
+            </aside>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const dropdowns = document.querySelectorAll('[data-rail-dropdown]');
+
+            dropdowns.forEach(function (dropdown) {
+                const toggle = dropdown.querySelector('[data-rail-dropdown-toggle]');
+                const menu = dropdown.querySelector('[data-rail-dropdown-menu]');
+
+                if (!toggle || !menu) {
+                    return;
+                }
+
+                toggle.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+
+                    dropdowns.forEach(function (otherDropdown) {
+                        if (otherDropdown !== dropdown) {
+                            otherDropdown.classList.remove('open');
+                        }
+                    });
+
+                    dropdown.classList.toggle('open');
+                });
+
+                menu.addEventListener('click', function (event) {
+                    event.stopPropagation();
+                });
+            });
+
+            document.addEventListener('click', function () {
+                dropdowns.forEach(function (dropdown) {
+                    dropdown.classList.remove('open');
+                });
+            });
+
+            document.addEventListener('keydown', function (event) {
+                if (event.key === 'Escape') {
+                    dropdowns.forEach(function (dropdown) {
+                        dropdown.classList.remove('open');
+                    });
+                }
+            });
+        });
+    </script>
+</section>
+</html>

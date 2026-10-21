@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/customer-layout :: layout('Payment Success', ~{::section}, 'booking')}">
+
+<section class="rail-payment-page rail-payment-success-page">
+    <link rel="stylesheet" th:href="@{/css/rail-payment.css}">
+
+    <div class="rail-payment-shell">
+        <div class="rail-payment-card rail-payment-result-card">
+            <div class="rail-payment-status-icon rail-payment-status-success">
+                <i class="bi bi-check2-circle"></i>
+            </div>
+
+            <h1 class="rail-payment-title">Payment Successful</h1>
+            <p class="rail-payment-subtitle">
+                Your journey is confirmed and ready for departure.
+            </p>
+
+            <div class="rail-payment-summary-box">
+                <div class="rail-payment-summary-row">
+                    <span>Booking Number</span>
+                    <strong th:text="${bookingCode != null ? bookingCode : (booking != null ? booking.bookingCode : 'RJ1782996611446')}">RJ1782996611446</strong>
+                </div>
+
+                <div class="rail-payment-summary-row">
+                    <span>Transaction Code</span>
+                    <strong th:text="${transactionCode != null ? transactionCode : 'TXN-9982-AB'}">TXN-9982-AB</strong>
+                </div>
+
+                <div class="rail-payment-summary-row">
+                    <span>Payment Status</span>
+                    <strong class="rail-payment-status-text rail-payment-status-text-success">● SUCCESS</strong>
+                </div>
+
+                <div class="rail-payment-summary-row rail-payment-total-row">
+                    <span>Total Amount</span>
+                    <strong class="rail-payment-total-value"
+                            th:text="${formattedAmount != null ? formattedAmount : '900,000 VND'}">900,000 VND</strong>
+                </div>
+            </div>
+
+            <a class="rail-payment-primary-btn"
+               th:href="@{/tickets}">
+                <i class="bi bi-ticket-perforated me-2"></i>
+                View Tickets
+            </a>
+
+            <div class="rail-payment-action-row">
+                <a class="rail-payment-secondary-btn"
+                   th:href="@{/booking/history}">
+                    View My Bookings
+                </a>
+
+                <a class="rail-payment-secondary-btn"
+                   th:href="@{/all-trips}">
+                    Book Another Trip
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+</html>

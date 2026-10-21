@@ -1,0 +1,103 @@
+﻿<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/admin-layout :: layout('Edit Coach / Sửa toa', ~{::section}, 'coaches')}">
+
+<section>
+    <div th:replace="~{fragments/breadcrumb :: breadcrumb(${breadcrumbs})}"></div>
+
+    <div class="card">
+        <div class="card-header">
+            Edit Coach / Sửa toa
+        </div>
+
+        <form th:action="@{/admin/coaches/save}" method="post">
+            <div class="card-body">
+                <div th:replace="~{fragments/form-errors :: globalErrors}"></div>
+
+                <div class="alert alert-danger"
+                     th:if="${errorMessage}"
+                     th:text="${errorMessage}">
+                </div>
+
+                <input type="hidden"
+                       name="coachId"
+                       th:value="${coach != null ? coach.coachId : ''}">
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label" for="coachIdView">Coach ID</label>
+
+                        <input id="coachIdView"
+                               class="form-control"
+                               th:value="${coach != null ? coach.coachId : ''}"
+                               readonly>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label" for="trainId">Train</label>
+
+                        <select id="trainId"
+                                name="train.trainId"
+                                class="form-control"
+                                required>
+                            <option value="">Select train</option>
+
+                            <option th:each="train : ${allTrains}"
+                                    th:value="${train.trainId}"
+                                    th:text="${train.trainCode + ' - ' + train.trainName}"
+                                    th:selected="${coach != null and coach.train != null and coach.train.trainId == train.trainId}">
+                                Train
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label" for="coachNumber">Coach Number</label>
+
+                        <input id="coachNumber"
+                               name="coachNumber"
+                               class="form-control"
+                               th:value="${coach != null ? coach.coachNumber : ''}"
+                               placeholder="Example: C1"
+                               required>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label" for="coachType">Coach Type</label>
+
+                        <input id="coachType"
+                               name="coachType"
+                               class="form-control"
+                               th:value="${coach != null ? coach.coachType : ''}"
+                               placeholder="Example: Soft Seat / Sleeper"
+                               required>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label" for="capacity">Capacity</label>
+
+                        <input id="capacity"
+                               name="capacity"
+                               type="number"
+                               min="1"
+                               class="form-control"
+                               th:value="${coach != null ? coach.capacity : ''}"
+                               placeholder="Example: 56"
+                               required>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-footer d-flex justify-content-between">
+                <a class="btn btn-secondary" th:href="@{/admin/coaches}">
+                    Back / Quay lại
+                </a>
+
+                <button class="btn btn-primary" type="submit">
+                    Save / Lưu
+                </button>
+            </div>
+        </form>
+    </div>
+</section>
+</html>

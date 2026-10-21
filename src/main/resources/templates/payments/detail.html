@@ -1,0 +1,27 @@
+﻿<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" th:replace="~{layouts/admin-layout :: layout('Payment Detail', ~{::section}, 'payments')}">
+<section>
+    <div class="card">
+        <div class="card-header d-flex justify-content-between">
+            <span>Payment Detail</span>
+            <span th:replace="~{fragments/status-badge :: statusBadge(${payment.paymentStatus})}"></span>
+        </div>
+        <div class="card-body table-responsive">
+            <table class="table table-bordered">
+                <tr><th>ID</th><td th:text="${payment.paymentId}">1</td></tr>
+                <tr><th>Booking</th><td th:text="${payment.booking != null ? payment.booking.bookingNumber : ''}">RJ0001</td></tr>
+                <tr><th>Method</th><td th:text="${payment.paymentMethod}">BANK_TRANSFER</td></tr>
+                <tr><th>Amount</th><td th:text="${payment.amount}">0</td></tr>
+                <tr><th>Transaction</th><td th:text="${payment.transactionCode}">TXN</td></tr>
+                <tr><th>OTP</th><td th:text="${payment.otpCode}">OTP</td></tr>
+                <tr><th>Status</th><td th:text="${payment.paymentStatus}">PENDING</td></tr>
+                <tr><th>Paid At</th><td th:text="${payment.paidAt}">Paid At</td></tr>
+            </table>
+        </div>
+        <div class="card-footer">
+            <a class="btn btn-secondary" th:href="@{/admin/payments}">Back</a>
+            <a class="btn btn-warning" th:href="@{/admin/payments/edit/{id}(id=${payment.paymentId})}">Edit</a>
+        </div>
+    </div>
+</section>
+</html>

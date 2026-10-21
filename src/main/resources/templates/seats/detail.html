@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/admin-layout :: layout('Seat Detail', ~{::section}, 'seats')}">
+<section>
+    <div class="admin-page-hero">
+        <div>
+            <span class="admin-page-kicker"><i class="fas fa-chair mr-1"></i> Seat Detail</span>
+            <h2 th:text="${detail.seatNumber}">Seat</h2>
+            <p th:text="${detail.coach != null ? detail.coach.coachNumber : 'No coach'}">Coach</p>
+        </div>
+        <div class="admin-page-actions">
+            <a class="btn btn-outline-primary" th:href="@{/admin/seats}">
+                <i class="fas fa-arrow-left mr-1"></i> Back
+            </a>
+            <a class="btn btn-warning" th:href="@{/admin/seats/edit/{id}(id=${detail.seatId})}">
+                <i class="fas fa-edit mr-1"></i> Edit
+            </a>
+        </div>
+    </div>
+
+    <div class="card admin-detail-card">
+        <div class="card-header">
+            <span class="admin-card-title">Seat Information</span>
+            <small>Seat type and price modifier</small>
+        </div>
+        <div class="card-body">
+            <dl class="admin-detail-grid">
+                <dt>ID</dt><dd th:text="${detail.seatId}">1</dd>
+                <dt>Coach</dt><dd th:text="${detail.coach != null ? detail.coach.coachNumber : '-'}">C01</dd>
+                <dt>Seat Number</dt><dd th:text="${detail.seatNumber}">A1</dd>
+                <dt>Type</dt><dd><span class="seat-type-badge" th:text="${detail.seatType}">STANDARD</span></dd>
+                <dt>Extra Price</dt><dd th:text="${detail.extraPrice}">0</dd>
+            </dl>
+        </div>
+    </div>
+</section>
+</html>

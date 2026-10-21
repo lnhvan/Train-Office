@@ -1,0 +1,2 @@
+﻿<div xmlns:th="http://www.thymeleaf.org" th:fragment="fieldError(fieldName)" class="text-danger small mt-1" th:if="${#fields.hasErrors(fieldName)}" th:errors="*{__${fieldName}__}">Validation error</div><div xmlns:th="http://www.thymeleaf.org" th:fragment="globalErrors" class="alert alert-danger" th:if="${#fields.hasGlobalErrors()}"><div th:each="err : ${#fields.globalErrors()}" th:text="${err}">Global error</div></div>
+

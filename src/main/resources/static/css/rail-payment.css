@@ -1,0 +1,345 @@
+:root {
+    --rp-bg: #051424;
+    --rp-bg-deep: #010f1f;
+    --rp-card: rgba(30, 41, 59, .82);
+    --rp-card-dark: rgba(13, 28, 45, .72);
+    --rp-border: rgba(255, 255, 255, .10);
+    --rp-text: #d4e4fa;
+    --rp-muted: #bdc8d1;
+    --rp-primary: #38bdf8;
+    --rp-primary-soft: #8ed5ff;
+    --rp-success: #4ade80;
+    --rp-warning: #f59e0b;
+    --rp-danger: #ffb4ab;
+}
+
+.railjet-main {
+    padding: 0 !important;
+}
+
+.rail-payment-page {
+    min-height: calc(100vh - 72px);
+    margin: 0;
+    padding: 72px 16px 88px;
+    position: relative;
+    overflow: hidden;
+    color: var(--rp-text);
+    background:
+            linear-gradient(180deg, rgba(1, 15, 31, .42), rgba(5, 20, 36, .96)),
+            url("https://lh3.googleusercontent.com/aida/AP1WRLuMiTesKAw3cHv1GnrFAD-iTWwHxFnRICKjoEcYj2_bOwoJvJ89945kJwjvS-UGl-yk_euYXyMdc39Jk9f0N3wKtCP876zbRhLORk_pxbryWY1o_KS6GSE7IfmgIgPQA7ZLxFEFw0y7FU8S9RrNpGG8UshudnVTAypKZlztlKxvuQkvQZbvvz6ofCohXDr0HLJ_kRcDzRPtBeIIAu2zhlyjY6hMUaRbF6YaLSx4eSmtNgLJVEmgaA3tCnQ") center / cover no-repeat;
+}
+
+.rail-payment-page::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+            radial-gradient(circle at 50% 20%, rgba(56, 189, 248, .11), transparent 34%),
+            radial-gradient(circle at 20% 80%, rgba(142, 213, 255, .08), transparent 38%);
+    pointer-events: none;
+}
+
+.rail-payment-page::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(1, 15, 31, .30);
+    pointer-events: none;
+}
+
+.rail-payment-shell {
+    position: relative;
+    z-index: 2;
+    width: min(100%, 540px);
+    min-height: calc(100vh - 210px);
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.rail-payment-card {
+    width: 100%;
+    padding: 34px;
+    border-radius: 16px;
+    background: var(--rp-card);
+    border: 1px solid var(--rp-border);
+    box-shadow: 0 24px 70px rgba(0, 0, 0, .36);
+    backdrop-filter: blur(22px);
+}
+
+.rail-payment-card.wide {
+    width: min(100%, 680px);
+}
+
+.rail-payment-icon {
+    width: 86px;
+    height: 86px;
+    margin: 0 auto 24px;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--rp-primary-soft);
+    background: rgba(1, 15, 31, .62);
+    border: 1px solid rgba(142, 213, 255, .22);
+    box-shadow: 0 0 30px rgba(56, 189, 248, .18);
+    font-size: 44px;
+}
+
+.rail-payment-icon.success {
+    color: var(--rp-primary-soft);
+}
+
+.rail-payment-icon.failed {
+    color: var(--rp-danger);
+    background: rgba(147, 0, 10, .18);
+    border-color: rgba(255, 180, 171, .24);
+}
+
+.rail-payment-title {
+    margin: 0 0 8px;
+    text-align: center;
+    color: #ffffff;
+    font-size: 30px;
+    line-height: 1.2;
+    font-weight: 900;
+    letter-spacing: -.035em;
+}
+
+.rail-payment-subtitle {
+    max-width: 430px;
+    margin: 0 auto 28px;
+    text-align: center;
+    color: var(--rp-muted);
+    font-size: 16px;
+    line-height: 1.6;
+    font-weight: 500;
+}
+
+.rail-payment-alert {
+    margin-bottom: 16px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    font-weight: 700;
+    line-height: 1.45;
+}
+
+.rail-payment-alert.danger {
+    color: #ffd7d3;
+    border: 1px solid rgba(255, 180, 171, .34);
+    background: rgba(147, 0, 10, .24);
+}
+
+.rail-payment-alert.success {
+    color: #d1fae5;
+    border: 1px solid rgba(74, 222, 128, .30);
+    background: rgba(74, 222, 128, .10);
+}
+
+.rail-payment-alert.info {
+    color: #dbeafe;
+    border: 1px solid rgba(142, 213, 255, .24);
+    background: rgba(56, 189, 248, .08);
+}
+
+.rail-payment-summary {
+    margin-bottom: 28px;
+    padding: 18px 18px 10px;
+    border-radius: 12px;
+    background: rgba(13, 28, 45, .58);
+    border: 1px solid rgba(255, 255, 255, .06);
+}
+
+.rail-payment-line {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, .07);
+}
+
+.rail-payment-line:last-child {
+    border-bottom: none;
+}
+
+.rail-payment-line span {
+    color: var(--rp-muted);
+    font-size: 12px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+}
+
+.rail-payment-line strong {
+    color: var(--rp-text);
+    font-size: 15px;
+    font-weight: 800;
+    text-align: right;
+    word-break: break-word;
+}
+
+.rail-payment-line.total {
+    margin-top: 8px;
+    padding-top: 18px;
+}
+
+.rail-payment-line.total strong {
+    color: var(--rp-primary-soft);
+    font-size: 30px;
+    line-height: 1.1;
+    font-weight: 900;
+    letter-spacing: -.035em;
+}
+
+.rail-payment-status-success {
+    color: var(--rp-success) !important;
+    letter-spacing: .12em;
+}
+
+.rail-payment-status-failed {
+    display: inline-flex;
+    min-height: 28px;
+    align-items: center;
+    padding: 0 10px;
+    border-radius: 6px;
+    color: var(--rp-danger) !important;
+    background: rgba(147, 0, 10, .35);
+    letter-spacing: .08em;
+}
+
+.rail-payment-primary-btn,
+.rail-payment-secondary-btn,
+.rail-payment-danger-btn {
+    min-height: 56px;
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 900;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    transition: .2s ease;
+}
+
+.rail-payment-primary-btn {
+    color: #001e2c;
+    background: var(--rp-primary);
+    border-color: var(--rp-primary);
+    box-shadow: 0 12px 28px rgba(56, 189, 248, .18);
+}
+
+.rail-payment-primary-btn:hover {
+    color: #001e2c;
+    filter: brightness(1.06);
+    box-shadow: 0 0 26px rgba(56, 189, 248, .30);
+    transform: translateY(-1px);
+}
+
+.rail-payment-secondary-btn {
+    color: var(--rp-primary-soft);
+    border-color: rgba(142, 213, 255, .38);
+    background: rgba(18, 33, 49, .52);
+}
+
+.rail-payment-secondary-btn:hover {
+    color: #ffffff;
+    background: rgba(56, 189, 248, .10);
+    transform: translateY(-1px);
+}
+
+.rail-payment-danger-btn {
+    color: var(--rp-danger);
+    border-color: rgba(255, 180, 171, .42);
+    background: rgba(147, 0, 10, .14);
+}
+
+.rail-payment-action-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.rail-payment-methods {
+    display: grid;
+    gap: 14px;
+    margin-bottom: 22px;
+}
+
+.rail-payment-method {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-height: 76px;
+    padding: 16px;
+    border-radius: 14px;
+    background: rgba(13, 28, 45, .56);
+    border: 1px solid rgba(255, 255, 255, .08);
+}
+
+.rail-payment-method i {
+    width: 48px;
+    height: 48px;
+    flex: 0 0 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    color: #001e2c;
+    background: var(--rp-primary);
+    font-size: 22px;
+}
+
+.rail-payment-method strong {
+    display: block;
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 900;
+}
+
+.rail-payment-method small {
+    display: block;
+    margin-top: 3px;
+    color: var(--rp-muted);
+    font-size: 13px;
+}
+
+.rail-payment-disabled {
+    margin-top: 18px;
+}
+
+@media (max-width: 720px) {
+    .rail-payment-page {
+        padding: 42px 14px 64px;
+    }
+
+    .rail-payment-card {
+        padding: 26px 20px;
+    }
+
+    .rail-payment-line {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .rail-payment-line strong {
+        text-align: left;
+    }
+
+    .rail-payment-action-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .rail-payment-title {
+        font-size: 26px;
+    }
+}

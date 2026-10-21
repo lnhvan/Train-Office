@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/admin-layout :: layout('Refund Detail', ~{::section}, 'refunds')}">
+
+<section>
+    <div class="card velocity-card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <h3 class="card-title mb-0">Refund Detail</h3>
+                <small>Xem chi tiết thông tin hoàn tiền của khách hàng.</small>
+            </div>
+
+            <a class="btn btn-secondary btn-sm" th:href="@{/admin/refunds}">
+                <i class="fas fa-arrow-left mr-1"></i>
+                Back
+            </a>
+        </div>
+
+        <div class="card-body">
+            <div class="alert alert-success"
+                 th:if="${successMessage}"
+                 th:text="${successMessage}">
+            </div>
+
+            <div class="alert alert-danger"
+                 th:if="${errorMessage}"
+                 th:text="${errorMessage}">
+            </div>
+
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card border">
+                        <div class="card-header">
+                            <strong>Refund Summary</strong>
+                        </div>
+
+                        <div class="card-body">
+                            <p>
+                                <small class="text-muted d-block">Refund code</small>
+                                <strong th:text="${refund.refundCode}">RF001</strong>
+                            </p>
+
+                            <p>
+                                <small class="text-muted d-block">Amount</small>
+                                <strong th:text="${#numbers.formatDecimal(refund.refundAmount, 0, 'COMMA', 0, 'POINT')} + ' VND'">
+                                    0 VND
+                                </strong>
+                            </p>
+
+                            <p>
+                                <small class="text-muted d-block">Status</small>
+                                <span class="badge badge-warning"
+                                      th:if="${refund.refundStatus != null and refund.refundStatus.name() == 'PENDING'}"
+                                      th:text="${refund.refundStatus}">
+                                    PENDING
+                                </span>
+
+                                <span class="badge badge-success"
+                                      th:if="${refund.refundStatus != null and refund.refundStatus.name() == 'APPROVED'}"
+                                      th:text="${refund.refundStatus}">
+                                    APPROVED
+                                </span>
+
+                                <span class="badge badge-danger"
+                                      th:if="${refund.refundStatus != null and refund.refundStatus.name() == 'REJECTED'}"
+                                      th:text="${refund.refundStatus}">
+                                    REJECTED
+                                </span>
+
+                                <span class="badge badge-info"
+                                      th:if="${refund.refundStatus != null and refund.refundStatus.name() == 'COMPLETED'}"
+                                      th:text="${refund.refundStatus}">
+                                    COMPLETED
+                                </span>
+                            </p>
+
+                            <p>
+                                <small class="text-muted d-block">Refunded at</small>
+                                <span th:text="${refund.refundedAt != null ? #temporals.format(refund.refundedAt, 'yyyy-MM-dd HH:mm') : '-'}">
+                                    -
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="mt-3"
+                         th:if="${refund.refundStatus != null and refund.refundStatus.name() == 'PENDING'}">
+                        <form th:action="@{/admin/refunds/{id}/approve(id=${refund.refundId})}"
+                              method="post"
+                              class="d-inline"
+                              onsubmit="return confirm('Approve this refund? Admin wallet will be deducted.')">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-check mr-1"></i>
+                                Approve
+                            </button>
+                        </form>
+
+                        <form th:action="@{/admin/refunds/{id}/reject(id=${refund.refundId})}"
+                              method="post"
+                              class="d-inline"
+                              onsubmit="return confirm('Reject this refund request?')">
+                            <button type="submit" class="btn btn-outline-danger">
+                                <i class="fas fa-times mr-1"></i>
+                                Reject
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="col-md-8">
+                    <div class="card border mb-3">
+                        <div class="card-header">
+                            <strong>Customer Information</strong>
+                        </div>
+
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <small class="text-muted d-block">Name</small>
+                                    <strong th:text="${refund.customerName != null ? refund.customerName : '-'}">
+                                        Customer
+                                    </strong>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <small class="text-muted d-block">Phone</small>
+                                    <strong th:text="${refund.customerPhone != null ? refund.customerPhone : '-'}">
+                                        Phone
+                                    </strong>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <small class="text-muted d-block">Email</small>
+                                    <strong th:text="${refund.customerEmail != null ? refund.customerEmail : '-'}">
+                                        Email
+                                    </strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card border mb-3">
+                        <div class="card-header">
+                            <strong>Bank Transfer Information</strong>
+                        </div>
+
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <small class="text-muted d-block">Bank name</small>
+                                    <strong th:text="${refund.bankName != null ? refund.bankName : '-'}">
+                                        Bank
+                                    </strong>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <small class="text-muted d-block">Account number</small>
+                                    <strong th:text="${refund.bankAccountNumber != null ? refund.bankAccountNumber : '-'}">
+                                        Account
+                                    </strong>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <small class="text-muted d-block">Account holder</small>
+                                    <strong th:text="${refund.bankAccountHolder != null ? refund.bankAccountHolder : '-'}">
+                                        Holder
+                                    </strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card border mb-3">
+                        <div class="card-header">
+                            <strong>Ticket Information</strong>
+                        </div>
+
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <small class="text-muted d-block">Ticket code</small>
+                                    <strong th:text="${refund.ticket != null ? refund.ticket.ticketCode : '-'}">
+                                        T001
+                                    </strong>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <small class="text-muted d-block">Train</small>
+                                    <strong th:text="${refund.ticket != null and refund.ticket.trainTrip != null and refund.ticket.trainTrip.train != null ? refund.ticket.trainTrip.train.trainName : '-'}">
+                                        Train
+                                    </strong>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <small class="text-muted d-block">Seat</small>
+                                    <strong th:text="${refund.ticket != null and refund.ticket.seat != null ? refund.ticket.seat.seatNumber : '-'}">
+                                        Seat
+                                    </strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card border">
+                        <div class="card-header">
+                            <strong>Refund Reason</strong>
+                        </div>
+
+                        <div class="card-body">
+                            <p class="mb-0" th:text="${refund.refundReason}">
+                                Reason
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+</html>

@@ -1,0 +1,35 @@
+﻿<div class="rail-flash-container"
+     xmlns:th="http://www.thymeleaf.org"
+     th:fragment="toast"
+     th:if="${toastMessage != null or successMessage != null or errorMessage != null}">
+
+    <div class="rail-flash"
+         th:classappend="${errorMessage != null} ? ' danger' : ' success'">
+
+        <div class="rail-flash-icon">
+            <i th:class="${errorMessage != null} ? 'bi bi-exclamation-triangle-fill' : 'bi bi-check-circle-fill'"></i>
+        </div>
+
+        <div class="rail-flash-content">
+            <div class="rail-flash-title-row">
+                <strong th:text="${toastTitle ?: (errorMessage != null ? 'Action failed' : 'RailJet')}">
+                    RailJet
+                </strong>
+
+                <small>Now</small>
+            </div>
+
+            <div class="rail-flash-message"
+                 th:text="${toastMessage ?: (successMessage ?: errorMessage)}">
+                Message
+            </div>
+        </div>
+
+        <button type="button"
+                class="rail-flash-close"
+                onclick="this.closest('.rail-flash-container').remove()"
+                aria-label="Close">
+            <i class="bi bi-x-lg"></i>
+        </button>
+    </div>
+</div>

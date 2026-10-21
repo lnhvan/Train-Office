@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/customer-layout :: layout('Chi tiết hoàn tiền', ~{::section}, 'payments')}">
+<section class="container customer-page">
+    <div class="page-hero">
+        <span class="page-eyebrow">Refund</span>
+        <h1 class="page-title">Chi tiết yêu cầu hoàn tiền</h1>
+        <p class="page-subtitle">Theo dõi trạng thái xử lý và thông tin vé liên quan đến yêu cầu hoàn tiền.</p>
+    </div>
+
+    <div class="railjet-card card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span>Thông tin refund</span>
+            <span class="badge text-bg-warning" th:text="${detail != null ? detail.refundStatus : 'PENDING'}">PENDING</span>
+        </div>
+        <div class="card-body p-4">
+            <div class="row g-3">
+                <div class="col-md-6 col-lg-3">
+                    <div class="summary-box h-100">
+                        <div class="text-muted small fw-bold text-uppercase">Mã refund</div>
+                        <div class="fs-5 fw-bold" th:text="${detail != null ? detail.refundCode : 'RF0001'}">RF0001</div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="summary-box h-100">
+                        <div class="text-muted small fw-bold text-uppercase">Vé</div>
+                        <div class="fs-5 fw-bold" th:text="${detail != null ? detail.ticket : 'TK0001'}">TK0001</div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="summary-box h-100">
+                        <div class="text-muted small fw-bold text-uppercase">Số tiền</div>
+                        <div class="fs-5 fw-bold" th:text="${detail != null ? detail.refundAmount : '450,000 VND'}">450,000 VND</div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="summary-box h-100">
+                        <div class="text-muted small fw-bold text-uppercase">Ngày hoàn</div>
+                        <div class="fs-5 fw-bold" th:text="${detail != null ? detail.refundedAt : '-'}">-</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="summary-box mt-3">
+                <div class="text-muted small fw-bold text-uppercase">Lý do</div>
+                <p class="mb-0 fw-semibold" th:text="${detail != null ? detail.refundReason : 'Thay đổi kế hoạch'}">Thay đổi kế hoạch</p>
+            </div>
+
+            <div class="d-flex flex-wrap gap-2 mt-4">
+                <a class="btn btn-primary" th:href="@{/booking/history}">Quay về lịch sử đặt vé</a>
+                <a class="btn btn-outline-primary" th:href="@{/refunds/request}">Tạo yêu cầu khác</a>
+            </div>
+        </div>
+    </div>
+</section>
+</html>

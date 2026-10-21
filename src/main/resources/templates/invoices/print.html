@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>In hóa đơn | RailJet</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *{font-family:Inter,"Segoe UI",Arial,sans-serif;letter-spacing:0}
+        body{background:#f3f7fb;color:#071a33}
+        .print-shell{max-width:900px;margin:32px auto;padding:0 16px}
+        .invoice{background:#fff;border:1px solid #d9e3ef;border-radius:8px;box-shadow:0 18px 48px rgba(7,26,51,.08);overflow:hidden}
+        .invoice-header{display:flex;justify-content:space-between;gap:24px;padding:32px;background:#071a33;color:#fff}
+        .invoice-header h1{margin:0;font-size:34px;font-weight:900}
+        .invoice-body{padding:32px}
+        .invoice-box{border:1px solid #d9e3ef;border-radius:8px;padding:18px;background:#f8fbff}
+        .invoice-label{font-size:12px;font-weight:800;text-transform:uppercase;color:#657287}
+        .invoice-value{font-size:18px;font-weight:800;color:#071a33}
+        @media print{
+            body{background:#fff}
+            .print-shell{max-width:none;margin:0;padding:0}
+            .invoice{box-shadow:none;border:0;border-radius:0}
+            .d-print-none{display:none!important}
+        }
+    </style>
+</head>
+<body>
+<main class="print-shell">
+    <div class="d-print-none d-flex justify-content-between align-items-center mb-3">
+        <a class="btn btn-outline-primary" th:href="@{/invoices/1}">Quay lại</a>
+        <button class="btn btn-primary" onclick="window.print()">In hóa đơn</button>
+    </div>
+
+    <section class="invoice">
+        <div class="invoice-header">
+            <div>
+                <div class="fw-bold text-info text-uppercase mb-2">RailJet Invoice</div>
+                <h1>Hóa đơn thanh toán</h1>
+            </div>
+            <div class="text-end">
+                <div class="small text-white-50">Mã hóa đơn</div>
+                <div class="h4 fw-bold mb-0" th:text="${detail != null ? detail.invoiceCode : 'INV0001'}">INV0001</div>
+            </div>
+        </div>
+
+        <div class="invoice-body">
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <div class="invoice-box">
+                        <div class="invoice-label">Booking</div>
+                        <div class="invoice-value" th:text="${detail != null ? detail.booking : 'RJ0001'}">RJ0001</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="invoice-box">
+                        <div class="invoice-label">Payment</div>
+                        <div class="invoice-value" th:text="${detail != null ? detail.payment : 'TXN001'}">TXN001</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="invoice-box">
+                        <div class="invoice-label">Ngày phát hành</div>
+                        <div class="invoice-value" th:text="${detail != null ? detail.issuedAt : '2026-06-27'}">2026-06-27</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="invoice-box">
+                        <div class="invoice-label">Trạng thái</div>
+                        <div class="invoice-value">PAID</div>
+                    </div>
+                </div>
+            </div>
+
+            <table class="table table-bordered align-middle">
+                <thead class="table-dark">
+                <tr>
+                    <th>Nội dung</th>
+                    <th class="text-end">Số tiền</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>Vé tàu RailJet</td>
+                    <td class="text-end" th:text="${detail != null ? detail.totalAmount : '900,000 VND'}">900,000 VND</td>
+                </tr>
+                </tbody>
+                <tfoot>
+                <tr>
+                    <th>Tổng cộng</th>
+                    <th class="text-end" th:text="${detail != null ? detail.totalAmount : '900,000 VND'}">900,000 VND</th>
+                </tr>
+                </tfoot>
+            </table>
+
+            <p class="text-muted mb-0">Cảm ơn bạn đã sử dụng dịch vụ RailJet.</p>
+        </div>
+    </section>
+</main>
+</body>
+</html>

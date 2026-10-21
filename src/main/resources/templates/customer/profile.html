@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/customer-layout :: layout('Account Profile', ~{::section}, 'profile')}">
+
+<section class="rail-profile-page">
+    <link rel="stylesheet" th:href="@{/css/rail-profile.css}">
+
+    <div class="rail-profile-container">
+        <header class="rail-profile-hero">
+            <h1>Account Profile</h1>
+            <p>Manage your personal information and account status.</p>
+        </header>
+
+        <div class="rail-profile-top-grid">
+            <div class="rail-glass-card rail-profile-user-card">
+                <div class="rail-profile-avatar">
+                    <span th:text="${profileForm != null and profileForm.fullName != null and !#strings.isEmpty(profileForm.fullName) ? #strings.substring(profileForm.fullName, 0, 1) : 'R'}">
+                        R
+                    </span>
+                </div>
+
+                <div class="rail-profile-user-info">
+                    <h2 th:text="${profileForm != null and profileForm.fullName != null and !#strings.isEmpty(profileForm.fullName) ? profileForm.fullName : (currentUser != null ? currentUser.email : 'RailJet User')}">
+                        RailJet User
+                    </h2>
+
+                    <div class="rail-profile-chip-row">
+                        <span class="rail-profile-chip success">
+                            <i class="bi bi-check-circle"></i>
+                            <span th:text="${currentUser != null and currentUser.status != null ? currentUser.status : 'ACTIVE'}">
+                                ACTIVE
+                            </span>
+                        </span>
+
+                        <span class="rail-profile-chip neutral"
+                              th:text="${currentUser != null and currentUser.role != null ? currentUser.role : 'CUSTOMER'}">
+                            CUSTOMER
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rail-glass-card rail-profile-tier-card">
+                <i class="bi bi-star"></i>
+                <span class="rail-profile-label">Rewards Tier</span>
+                <strong>First Class</strong>
+            </div>
+        </div>
+
+        <div class="rail-glass-card rail-profile-main-card">
+            <div class="rail-profile-main-header">
+                <div class="rail-profile-main-title">
+                    <i class="bi bi-person-vcard"></i>
+                    <h2>Personal Details</h2>
+                </div>
+
+                <div class="rail-profile-actions">
+                    <a class="rail-profile-btn-outline" th:href="@{/change-password}">
+                        <i class="bi bi-key"></i>
+                        Change Password
+                    </a>
+
+                    <button class="rail-profile-btn" type="submit" form="profileForm">
+                        <i class="bi bi-check2-circle"></i>
+                        Save Profile
+                    </button>
+
+                    <a class="rail-profile-btn-muted" th:href="@{/logout}">
+                        <i class="bi bi-box-arrow-right"></i>
+                        Logout
+                    </a>
+                </div>
+            </div>
+
+            <div class="rail-profile-body">
+                <div class="rail-profile-alert success"
+                     th:if="${successMessage}"
+                     th:text="${successMessage}">
+                </div>
+
+                <div class="rail-profile-alert danger"
+                     th:if="${errorMessage}"
+                     th:text="${errorMessage}">
+                </div>
+
+                <form id="profileForm"
+                      th:action="@{/profile}"
+                      method="post"
+                      th:object="${profileForm}"
+                      autocomplete="off"
+                      accept-charset="UTF-8">
+
+                    <div class="rail-profile-form-grid">
+                        <div class="rail-profile-field">
+                            <label for="profileUserId">User ID</label>
+
+                            <div class="rail-profile-input-wrap">
+                                <i class="bi bi-fingerprint"></i>
+                                <input id="profileUserId"
+                                       class="rail-profile-input"
+                                       type="text"
+                                       th:value="${currentUser != null ? 'USR-' + currentUser.userId : ''}"
+                                       readonly>
+                            </div>
+                        </div>
+
+                        <div class="rail-profile-field">
+                            <label for="profileEmail">Email Address</label>
+
+                            <div class="rail-profile-input-wrap">
+                                <i class="bi bi-envelope"></i>
+                                <input id="profileEmail"
+                                       class="rail-profile-input"
+                                       type="email"
+                                       th:value="${currentUser != null ? currentUser.email : ''}"
+                                       readonly>
+                            </div>
+                        </div>
+
+                        <div class="rail-profile-field">
+                            <label for="profileFullName">Full Name</label>
+
+                            <div class="rail-profile-input-wrap">
+                                <i class="bi bi-person"></i>
+                                <input id="profileFullName"
+                                       class="rail-profile-input"
+                                       type="text"
+                                       th:field="*{fullName}"
+                                       maxlength="100"
+                                       placeholder="Enter your full name"
+                                       required>
+                            </div>
+
+                            <div class="rail-profile-error"
+                                 th:if="${#fields.hasErrors('fullName')}"
+                                 th:errors="*{fullName}">
+                            </div>
+                        </div>
+
+                        <div class="rail-profile-field">
+                            <label for="profileDateOfBirth">Date of Birth</label>
+
+                            <div class="rail-profile-input-wrap">
+                                <i class="bi bi-calendar3"></i>
+                                <input id="profileDateOfBirth"
+                                       class="rail-profile-input"
+                                       type="date"
+                                       th:field="*{dateOfBirth}">
+                            </div>
+
+                            <div class="rail-profile-error"
+                                 th:if="${#fields.hasErrors('dateOfBirth')}"
+                                 th:errors="*{dateOfBirth}">
+                            </div>
+                        </div>
+
+                        <div class="rail-profile-field">
+                            <label for="profileGender">Gender</label>
+
+                            <div class="rail-profile-input-wrap">
+                                <i class="bi bi-people"></i>
+                                <select id="profileGender"
+                                        class="rail-profile-select"
+                                        th:field="*{gender}">
+                                    <option value="">Not specified</option>
+                                    <option value="MALE">Male</option>
+                                    <option value="FEMALE">Female</option>
+                                    <option value="OTHER">Other</option>
+                                </select>
+                            </div>
+
+                            <div class="rail-profile-error"
+                                 th:if="${#fields.hasErrors('gender')}"
+                                 th:errors="*{gender}">
+                            </div>
+                        </div>
+
+                        <div class="rail-profile-field">
+                            <label for="profileIdentityNumber">Document ID</label>
+
+                            <div class="rail-profile-input-wrap">
+                                <i class="bi bi-card-text"></i>
+                                <input id="profileIdentityNumber"
+                                       class="rail-profile-input"
+                                       type="text"
+                                       th:field="*{identityNumber}"
+                                       maxlength="30"
+                                       placeholder="Passport or national ID">
+                            </div>
+
+                            <div class="rail-profile-error"
+                                 th:if="${#fields.hasErrors('identityNumber')}"
+                                 th:errors="*{identityNumber}">
+                            </div>
+                        </div>
+
+                        <div class="rail-profile-divider"></div>
+
+                        <div class="rail-profile-field">
+                            <label for="profilePassengerId">Passenger ID</label>
+
+                            <div class="rail-profile-input-wrap">
+                                <i class="bi bi-hash"></i>
+                                <input id="profilePassengerId"
+                                       class="rail-profile-input"
+                                       type="text"
+                                       th:field="*{passengerId}"
+                                       placeholder="Automatically generated"
+                                       readonly>
+                            </div>
+                        </div>
+
+                        <div class="rail-profile-field">
+                            <label for="profileUpdatedAt">Last Updated</label>
+
+                            <div class="rail-profile-input-wrap">
+                                <i class="bi bi-clock-history"></i>
+                                <input id="profileUpdatedAt"
+                                       class="rail-profile-input"
+                                       type="text"
+                                       th:value="${currentUser != null and currentUser.updatedAt != null ? currentUser.updatedAt : 'Not updated yet'}"
+                                       readonly>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="rail-profile-form-actions">
+                        <button type="reset" class="rail-profile-btn-outline">
+                            Reset
+                        </button>
+
+                        <button type="submit" class="rail-profile-btn">
+                            <i class="bi bi-check2-circle"></i>
+                            Save Profile
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+</html>

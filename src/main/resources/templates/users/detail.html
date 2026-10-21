@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/admin-layout :: layout('User detail', ~{::section}, 'users')}">
+<section>
+    <div class="admin-page-hero">
+        <div>
+            <span class="admin-page-kicker"><i class="fas fa-user-shield mr-1"></i> Account Detail</span>
+            <h2 th:text="${user.fullName ?: user.email}">User detail</h2>
+            <p th:text="${user.email}">user@example.com</p>
+        </div>
+        <div class="admin-page-actions">
+            <a class="btn btn-outline-primary" th:href="@{/admin/users}">
+                <i class="fas fa-arrow-left mr-1"></i> Back
+            </a>
+            <a class="btn btn-warning" th:href="@{/admin/users/edit/{id}(id=${user.userId})}">
+                <i class="fas fa-edit mr-1"></i> Edit
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-4">
+            <div class="card admin-profile-card">
+                <div class="card-body text-center">
+                    <span class="admin-profile-avatar"><i class="fas fa-user"></i></span>
+                    <h3 th:text="${user.fullName ?: 'Unnamed user'}">User</h3>
+                    <p th:text="${user.email}">user@example.com</p>
+                    <div class="d-flex justify-content-center gap-2">
+                        <span class="badge admin-badge-soft"
+                              th:classappend="${user.role != null and user.role.toString() == 'ADMIN'} ? ' badge-danger' : ' badge-info'"
+                              th:text="${user.role}">CUSTOMER</span>
+                        <span class="badge admin-badge-soft"
+                              th:classappend="${user.status != null and user.status.toString() == 'ACTIVE'} ? ' badge-success' : ' badge-secondary'"
+                              th:text="${user.status}">ACTIVE</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-8">
+            <div class="card admin-detail-card">
+                <div class="card-header">
+                    <span class="admin-card-title">User Information</span>
+                    <small>Profile and audit fields</small>
+                </div>
+                <div class="card-body">
+                    <dl class="admin-detail-grid">
+                        <dt>ID</dt><dd th:text="${user.userId}">1</dd>
+                        <dt>Email</dt><dd th:text="${user.email}">user@example.com</dd>
+                        <dt>Full name</dt><dd th:text="${user.fullName ?: '-'}">User</dd>
+                        <dt>Identity number</dt><dd th:text="${user.identityNumber ?: '-'}">-</dd>
+                        <dt>Date of birth</dt><dd th:text="${user.dateOfBirth != null ? #temporals.format(user.dateOfBirth, 'dd/MM/yyyy') : '-'}">-</dd>
+                        <dt>Gender</dt><dd th:text="${user.gender ?: '-'}">-</dd>
+                        <dt>Created at</dt><dd th:text="${#temporals.format(user.createdAt, 'dd/MM/yyyy HH:mm')}">01/01/2026</dd>
+                        <dt>Updated at</dt><dd th:text="${#temporals.format(user.updatedAt, 'dd/MM/yyyy HH:mm')}">01/01/2026</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+</html>
