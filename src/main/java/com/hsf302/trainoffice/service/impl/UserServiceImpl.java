@@ -1,5 +1,7 @@
 package com.hsf302.trainoffice.service.impl;
 
+
+import com.hsf302.trainoffice.config.I18n;
 import com.hsf302.trainoffice.common.enums.UserRole;
 import com.hsf302.trainoffice.common.enums.UserStatus;
 import com.hsf302.trainoffice.dto.ProfileForm;
@@ -7,9 +9,15 @@ import com.hsf302.trainoffice.dto.RegisterRequest;
 import com.hsf302.trainoffice.entity.User;
 import com.hsf302.trainoffice.repository.UserRepository;
 import com.hsf302.trainoffice.service.UserService;
+import com.hsf302.trainoffice.repository.PasswordResetCodeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 
 import java.util.List;
 import java.util.Optional;
@@ -17,8 +25,21 @@ import java.util.Optional;
 @Service
 public class UserServiceImpl implements UserService {
 
+    /** Mật khẩu đã băm BCrypt có dạng $2a$/$2b$/$2y$ + cost + 53 ký tự. */
+    private static final java.util.regex.Pattern BCRYPT_HASH =
+            java.util.regex.Pattern.compile("^\\$2[aby]?\\$\\d{2}\\$[./A-Za-z0-9]{53}$");
+
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private PasswordResetCodeRepository passwordResetCodeRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    /** Băm giả để email không tồn tại vẫn tốn thời gian như email đúng (không dò được email qua thời gian phản hồi). */
+    private volatile String dummyHash;
 
     @Override
     public boolean existsByEmail(String email) {
@@ -34,7 +55,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public User findById(Long id) {
         return userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException(I18n.t("err.userNotFound")));
     }
 
     @Override
@@ -67,7 +88,7 @@ public class UserServiceImpl implements UserService {
 
         User user = new User();
         user.setEmail(email);
-        user.setPassword(password);
+        user.setPassword(encodePassword(password));
         user.setFullName(fullName);
         user.setRole(UserRole.CUSTOMER);
         user.setStatus(UserStatus.ACTIVE);
@@ -88,13 +109,63 @@ public class UserServiceImpl implements UserService {
             return null;
         }
 
-        User user = userRepository.findByEmailAndPassword(normalizedEmail, pwd);
+        User user = userRepository.findByEmail(normalizedEmail);
 
-        if (user == null || user.getStatus() != UserStatus.ACTIVE) {
+        if (user == null) {
+            passwordMatches(pwd, dummyHash());
             return null;
         }
 
+        if (!passwordMatches(pwd, user.getPassword())) {
+            return null;
+        }
+
+        if (user.getStatus() != UserStatus.ACTIVE) {
+            return null;
+        }
+
+        // Mật khẩu cũ còn lưu dạng chữ thường: đăng nhập đúng thì đổi sang BCrypt luôn.
+        if (!isEncoded(user.getPassword())) {
+            user.setPassword(encodePassword(pwd));
+            user = userRepository.save(user);
+        }
+
         return user;
+    }
+
+    /**
+     * So mật khẩu người dùng nhập với giá trị trong DB.
+     * DB có thể là BCrypt (tài khoản mới / đã nâng cấp) hoặc chữ thường (dữ liệu cũ).
+     */
+    private boolean passwordMatches(String raw, String stored) {
+        if (raw == null || stored == null || raw.getBytes(StandardCharsets.UTF_8).length > 72) {
+            return false;
+        }
+        if (isEncoded(stored)) {
+            return passwordEncoder.matches(raw, stored);
+        }
+        return MessageDigest.isEqual(
+                raw.getBytes(StandardCharsets.UTF_8),
+                stored.getBytes(StandardCharsets.UTF_8));
+    }
+
+    /** BCrypt chỉ dùng 72 byte đầu (Spring báo lỗi nếu dài hơn) -> chặn trước với thông báo dễ hiểu. */
+    private String encodePassword(String raw) {
+        if (raw == null || raw.getBytes(StandardCharsets.UTF_8).length > 72) {
+            throw new IllegalArgumentException(I18n.t("err.passwordIsTooLong"));
+        }
+        return passwordEncoder.encode(raw);
+    }
+
+    private boolean isEncoded(String value) {
+        return value != null && BCRYPT_HASH.matcher(value).matches();
+    }
+
+    private String dummyHash() {
+        if (dummyHash == null) {
+            dummyHash = passwordEncoder.encode("railjet-dummy-password");
+        }
+        return dummyHash;
     }
 
     @Override
@@ -117,18 +188,32 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User saveUser(User user) {
-        validateUser(user);
-
+        // Sửa tài khoản: Admin chỉ có thể thay đổi vai trò (role) và trạng thái (status)
         if (user.getUserId() != null) {
-            userRepository.findById(user.getUserId()).ifPresent(existing -> {
-                user.setCreatedAt(existing.getCreatedAt());
+            User existing = userRepository.findById(user.getUserId())
+                    .orElseThrow(() -> new IllegalArgumentException(I18n.t("err.userNotFound")));
 
-                if (user.getPassword() == null || user.getPassword().isBlank()) {
-                    user.setPassword(existing.getPassword());
-                }
-            });
+            boolean roleChanged = user.getRole() != null && existing.getRole() != user.getRole();
+            boolean statusChanged = user.getStatus() != null && existing.getStatus() != user.getStatus();
+
+            if (user.getRole() != null) {
+                existing.setRole(user.getRole());
+            }
+            if (user.getStatus() != null) {
+                existing.setStatus(user.getStatus());
+            }
+
+            // Nếu đổi vai trò hoặc khóa/hủy tài khoản, thu hồi token đăng nhập để buộc đăng nhập lại
+            if (roleChanged || (statusChanged && existing.getStatus() != UserStatus.ACTIVE)) {
+                existing.revokeTokens();
+            }
+
+            return userRepository.save(existing);
         }
 
+        // Tạo mới tài khoản (userId == null)
+        validateUser(user);
+        user.setPassword(encodePassword(user.getPassword()));
         user.setEmail(normalizeEmail(user.getEmail()));
         user.setFullName(clean(user.getFullName()));
 
@@ -144,14 +229,17 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public void deleteUser(Long userId) {
+        passwordResetCodeRepository.deleteAllForUser(userId);
         userRepository.deleteById(userId);
+        userRepository.flush();
     }
 
     @Override
     public User updateProfile(Long userId, ProfileForm profileForm) {
         User user = getUserById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new IllegalArgumentException(I18n.t("err.userNotFound")));
         user.setFullName(profileForm.getFullName().trim());
         user.setIdentityNumber(blankToNull(profileForm.getIdentityNumber()));
         user.setDateOfBirth(profileForm.getDateOfBirth());
@@ -163,10 +251,11 @@ public class UserServiceImpl implements UserService {
     public void resetPassword(String email, String password) {
         User user = userRepository.findByEmail(email);
         if(user == null){
-            throw new RuntimeException("User not found");
+            throw new RuntimeException(I18n.t("err.userNotFound"));
         }
 
-        user.setPassword(password);
+        user.setPassword(encodePassword(password));
+        user.revokeTokens();
 
         userRepository.save(user);
     }
@@ -182,11 +271,12 @@ public class UserServiceImpl implements UserService {
             return false;
         }
 
-        if (!user.getPassword().equals(currentPassword)) {
+        if (!passwordMatches(currentPassword, user.getPassword())) {
             return false;
         }
 
-        user.setPassword(newPassword);
+        user.setPassword(encodePassword(newPassword));
+        user.revokeTokens();
 
         userRepository.save(user);
 
@@ -195,13 +285,13 @@ public class UserServiceImpl implements UserService {
 
     private void validateUser(User user) {
         if (user == null) {
-            throw new IllegalArgumentException("User is required.");
+            throw new IllegalArgumentException(I18n.t("err.userIsRequired2"));
         }
 
         String email = normalizeEmail(user.getEmail());
 
         if (email == null) {
-            throw new IllegalArgumentException("Email is required.");
+            throw new IllegalArgumentException(I18n.t("err.emailIsRequired"));
         }
 
         boolean duplicate = user.getUserId() == null
@@ -209,23 +299,23 @@ public class UserServiceImpl implements UserService {
                 : userRepository.existsByEmailAndUserIdNot(email, user.getUserId());
 
         if (duplicate) {
-            throw new IllegalArgumentException("Email already exists.");
+            throw new IllegalArgumentException(I18n.t("err.emailAlreadyExists"));
         }
 
         if (user.getUserId() == null && (user.getPassword() == null || user.getPassword().isBlank())) {
-            throw new IllegalArgumentException("Password is required.");
+            throw new IllegalArgumentException(I18n.t("err.passwordIsRequired"));
         }
 
         if (user.getPassword() != null && user.getPassword().length() > 255) {
-            throw new IllegalArgumentException("Password is too long.");
+            throw new IllegalArgumentException(I18n.t("err.passwordIsTooLong"));
         }
 
         if (user.getRole() == null) {
-            throw new IllegalArgumentException("Role is required.");
+            throw new IllegalArgumentException(I18n.t("err.roleIsRequired"));
         }
 
         if (user.getStatus() == null) {
-            throw new IllegalArgumentException("Status is required.");
+            throw new IllegalArgumentException(I18n.t("err.statusIsRequired"));
         }
     }
 

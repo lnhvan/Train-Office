@@ -113,18 +113,18 @@ public class AdminDashboardController {
 
     private List<Map<String, String>> adminMenus() {
         return List.of(
-                Map.of("key", "users", "label", "Users", "icon", " fas fa-users"),
-                Map.of("key", "passengers", "label", "Passengers", "icon", " fas fa-user-friends"),
-                Map.of("key", "stations", "label", "Stations", "icon", " fas fa-map-marker-alt"),
-                Map.of("key", "routes", "label", "Routes", "icon", " fas fa-route"),
-                Map.of("key", "trains", "label", "Trains", "icon", " fas fa-train"),
-                Map.of("key", "coaches", "label", "Coaches", "icon", " fas fa-subway"),
-                Map.of("key", "seats", "label", "Seats", "icon", " fas fa-chair"),
-                Map.of("key", "trips", "label", "Trips", "icon", " fas fa-calendar-alt"),
-                Map.of("key", "payments", "label", "Payments", "icon", " fas fa-credit-card"),
-                Map.of("key", "refunds", "label", "Refunds", "icon", " fas fa-undo"),
-                Map.of("key", "groupDiscounts", "label", "Group Discounts", "icon", " fas fa-users"),
-                Map.of("key", "discounts", "label", "Discount Policies", "icon", " fas fa-percent")
+                Map.of("key", "users", "label", "Users", "icon", " bi bi-person-badge"),
+                Map.of("key", "passengers", "label", "Passengers", "icon", " bi bi-person-vcard"),
+                Map.of("key", "stations", "label", "Stations", "icon", " bi bi-geo-alt"),
+                Map.of("key", "routes", "label", "Routes", "icon", " bi bi-signpost-split"),
+                Map.of("key", "trains", "label", "Trains", "icon", " bi bi-train-front"),
+                Map.of("key", "coaches", "label", "Coaches", "icon", " bi bi-train-lightrail-front"),
+                Map.of("key", "seats", "label", "Seats", "icon", " bi bi-grid-3x2-gap"),
+                Map.of("key", "trips", "label", "Trips", "icon", " bi bi-calendar3"),
+                Map.of("key", "payments", "label", "Payments", "icon", " bi bi-credit-card"),
+                Map.of("key", "refunds", "label", "Refunds", "icon", " bi bi-arrow-counterclockwise"),
+                Map.of("key", "groupDiscounts", "label", "Group Discounts", "icon", " bi bi-people"),
+                Map.of("key", "discounts", "label", "Discount Policies", "icon", " bi bi-percent")
         );
     }
 

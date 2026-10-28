@@ -1,5 +1,7 @@
 package com.hsf302.trainoffice.controller;
 
+
+import com.hsf302.trainoffice.config.I18n;
 import com.hsf302.trainoffice.common.enums.TrainStatus;
 import com.hsf302.trainoffice.config.AdminErrorMessageUtil;
 import com.hsf302.trainoffice.entity.Train;
@@ -92,7 +94,7 @@ public class TrainController {
 
         redirectAttributes.addFlashAttribute(
                 "errorMessage",
-                "Train was not found."
+                I18n.t("msg.train.notFound")
         );
 
         return "redirect:/admin/trains";
@@ -129,7 +131,7 @@ public class TrainController {
 
             redirectAttributes.addFlashAttribute(
                     "successMessage",
-                    "Train saved successfully."
+                    I18n.t("msg.train.saved")
             );
 
             return "redirect:/admin/trains";
@@ -159,7 +161,7 @@ public class TrainController {
 
             redirectAttributes.addFlashAttribute(
                     "successMessage",
-                    "Train with ID " + id + " has been deleted."
+                    I18n.t("msg.train.deleted", id)
             );
 
         } catch (Exception e) {

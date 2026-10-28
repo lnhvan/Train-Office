@@ -1,71 +1,56 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layouts/customer-layout :: layout('Chi tiết hóa đơn', ~{::section}, 'payments')}">
-<section class="container customer-page">
-    <div class="page-hero">
-        <span class="page-eyebrow">Invoice</span>
-        <h1 class="page-title">Chi tiết hóa đơn</h1>
-        <p class="page-subtitle">Theo dõi thông tin thanh toán, mã giao dịch và tổng tiền của booking.</p>
-    </div>
-
-    <div class="row g-4">
-        <div class="col-lg-8">
-            <div class="railjet-card card h-100">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <span>Thông tin hóa đơn</span>
-                    <span class="badge text-bg-success">PAID</span>
-                </div>
-                <div class="card-body p-4">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <div class="summary-box">
-                                <div class="text-muted small fw-bold text-uppercase">Mã hóa đơn</div>
-                                <div class="fs-4 fw-bold" th:text="${detail != null ? detail.invoiceCode : 'INV0001'}">INV0001</div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="summary-box">
-                                <div class="text-muted small fw-bold text-uppercase">Booking</div>
-                                <div class="fs-4 fw-bold" th:text="${detail != null ? detail.booking : 'RJ0001'}">RJ0001</div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="summary-box">
-                                <div class="text-muted small fw-bold text-uppercase">Thanh toán</div>
-                                <div class="fw-bold" th:text="${detail != null ? detail.payment : 'TXN001'}">TXN001</div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="summary-box">
-                                <div class="text-muted small fw-bold text-uppercase">Ngày phát hành</div>
-                                <div class="fw-bold" th:text="${detail != null ? detail.issuedAt : '2026-06-27'}">2026-06-27</div>
-                            </div>
-                        </div>
-                    </div>
-                    <hr class="my-4">
-                    <div class="d-flex justify-content-between align-items-end gap-3">
-                        <div>
-                            <div class="text-muted small fw-bold text-uppercase">Tổng tiền</div>
-                            <div class="display-6 fw-bold" th:text="${detail != null ? detail.totalAmount : '900,000 VND'}">900,000 VND</div>
-                        </div>
-                        <a class="btn btn-primary" th:href="@{/invoices/1/print}">
-                            <i class="bi bi-printer me-1"></i> In hóa đơn
-                        </a>
-                    </div>
-                </div>
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/customer-layout :: layout(#{invoice.invoiceDetail}, ~{::section}, 'payments')}">
+<section class="rj-page">
+    <div class="rj-container">
+        <div class="rj-page-head">
+            <div>
+                <h1>[[#{invoice.invoiceDetail}]]</h1>
+                <p>[[#{invoice.trackPaymentInformationTransactionCodeAnd}]]</p>
             </div>
+            <a class="btn btn-primary" th:href="@{/invoices/1/print}">
+                <i class="bi bi-printer"></i>[[#{invoice.printInvoice}]]
+            </a>
         </div>
-        <div class="col-lg-4">
-            <div class="railjet-card card h-100">
-                <div class="card-body p-4">
-                    <h3 class="h5 fw-bold">Tác vụ nhanh</h3>
-                    <div class="d-grid gap-2 mt-3">
-                        <a class="btn btn-outline-primary" th:href="@{/booking/history}">Lịch sử đặt vé</a>
-                        <a class="btn btn-outline-primary" th:href="@{/tickets}">Danh sách vé</a>
-                        <a class="btn btn-primary" th:href="@{/booking/search}">Đặt chuyến mới</a>
+
+        <div class="rj-flow-grid">
+            <div class="rj-card">
+                <div class="rj-card-head">
+                    <h2>[[#{invoice.invoiceInformation}]]</h2>
+                    <span class="rj-badge is-success">[[#{common.paid}]]</span>
+                </div>
+                <dl class="rj-dl">
+                    <div>
+                        <dt>[[#{invoice.invoiceCode}]]</dt>
+                        <dd class="rj-code" th:text="${detail != null ? detail.invoiceCode : 'INV0001'}">INV0001</dd>
                     </div>
+                    <div>
+                        <dt>[[#{common.booking}]]</dt>
+                        <dd class="rj-code" th:text="${detail != null ? detail.booking : 'RJ0001'}">RJ0001</dd>
+                    </div>
+                    <div>
+                        <dt>[[#{common.payment}]]</dt>
+                        <dd class="rj-code" th:text="${detail != null ? detail.payment : 'TXN001'}">TXN001</dd>
+                    </div>
+                    <div>
+                        <dt>[[#{invoice.issueDate}]]</dt>
+                        <dd class="rj-num" th:text="${detail != null ? detail.issuedAt : '2026-06-27'}">2026-06-27</dd>
+                    </div>
+                </dl>
+                <div class="rj-summary-total mt-4 mb-0">
+                    <span>[[#{common.totalAmount}]]</span>
+                    <strong class="rj-num" th:text="${detail != null ? detail.totalAmount : '900,000 VND'}">900,000 VND</strong>
                 </div>
             </div>
+
+            <aside class="rj-card">
+                <h2 class="rj-summary-title">[[#{invoice.quickActions}]]</h2>
+                <nav class="rj-link-list">
+                    <a th:href="@{/booking/history}"><i class="bi bi-calendar-check"></i>[[#{invoice.bookingHistory}]]<i class="bi bi-chevron-right"></i></a>
+                    <a th:href="@{/tickets}"><i class="bi bi-ticket-perforated"></i>[[#{invoice.ticketList}]]<i class="bi bi-chevron-right"></i></a>
+                    <a th:href="@{/booking/search}"><i class="bi bi-plus-circle"></i>[[#{invoice.bookANewTrip}]]<i class="bi bi-chevron-right"></i></a>
+                </nav>
+            </aside>
         </div>
     </div>
 </section>

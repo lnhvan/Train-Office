@@ -3,6 +3,9 @@ package com.hsf302.trainoffice.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(
         name = "route_stations",
@@ -44,4 +47,9 @@ public class RouteStation {
     @Column(name = "distance_from_start_km", nullable = false, columnDefinition = "float default 0")
     @Builder.Default
     private Double distanceFromStartKm = 0.0;
+
+    @Builder.Default
+    @OneToMany(mappedBy = "routeStation", fetch = FetchType.LAZY)
+    @ToString.Exclude
+    private List<TripStation> tripStations = new ArrayList<>();
 }

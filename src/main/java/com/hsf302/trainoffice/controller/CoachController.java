@@ -1,5 +1,7 @@
 package com.hsf302.trainoffice.controller;
 
+
+import com.hsf302.trainoffice.config.I18n;
 import com.hsf302.trainoffice.entity.Coach;
 import com.hsf302.trainoffice.entity.Train;
 import com.hsf302.trainoffice.service.CoachService;
@@ -153,7 +155,7 @@ public class CoachController {
 
         try {
             coachService.saveCoach(coach);
-            redirectAttributes.addFlashAttribute("successMessage", "Coach saved successfully!");
+            redirectAttributes.addFlashAttribute("successMessage", I18n.t("msg.coach.saved"));
 
             if (trainId != null) {
                 return "redirect:/admin/coaches?trainId=" + trainId;
@@ -162,7 +164,7 @@ public class CoachController {
             return "redirect:/admin/coaches";
 
         } catch (Exception e) {
-            model.addAttribute("errorMessage", "Error saving coach: " + e.getMessage());
+            model.addAttribute("errorMessage", I18n.t("msg.coach.saveError", e.getMessage()));
             addCommonAttributes(model, trainId);
 
             return "coaches/form";
@@ -179,14 +181,14 @@ public class CoachController {
             coachService.deleteCoach(id);
             redirectAttributes.addFlashAttribute(
                     "successMessage",
-                    "Coach with ID " + id + " has been deleted."
+                    I18n.t("msg.coach.deleted", id)
             );
         } catch (ResourceInUseException e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute(
                     "errorMessage",
-                    "Error deleting coach: " + e.getMessage()
+                    I18n.t("msg.coach.deleteError", e.getMessage())
             );
         }
 

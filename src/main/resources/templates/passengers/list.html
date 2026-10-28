@@ -1,15 +1,15 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layouts/admin-layout :: layout('Passengers', ~{::section}, 'passengers')}">
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/admin-layout :: layout(#{common.passengers}, ~{::section}, 'passengers')}">
 <section>
     <div class="admin-page-hero">
         <div>
-            <span class="admin-page-kicker"><i class="fas fa-user-friends mr-1"></i> Passenger Records</span>
-            <h2>Passengers</h2>
-            <p>Review passenger identities connected to booking and ticket records.</p>
+            <span class="admin-page-kicker"><i class="bi bi-person-vcard"></i> [[#{passenger.passengerRecords}]]</span>
+            <h1>[[#{common.passengers}]]</h1>
+            <p>[[#{passenger.reviewPassengerIdentitiesConnectedToBooking}]]</p>
         </div>
         <a class="btn btn-primary" th:href="@{/admin/passengers/new}">
-            <i class="fas fa-plus mr-1"></i> Add passenger
+            <i class="bi bi-plus-lg"></i> [[#{passenger.addPassenger}]]
         </a>
     </div>
 
@@ -20,12 +20,12 @@
         <div class="card-header">
             <form class="row g-2" method="get" th:action="@{/admin/passengers}">
                 <div class="col-lg-10 col-md-12">
-                    <label class="form-label">Search</label>
-                    <input class="form-control" name="keyword" th:value="${keyword}" placeholder="Search full name or identity number">
+                    <label class="form-label">[[#{common.search}]]</label>
+                    <input class="form-control" name="keyword" th:value="${keyword}" th:placeholder="#{passenger.searchFullNameOrIdentityNumber}">
                 </div>
                 <div class="col-lg-2 col-md-12 d-flex align-items-end">
                     <button class="btn btn-outline-primary w-100" type="submit">
-                        <i class="fas fa-search mr-1"></i> Search
+                        <i class="bi bi-search"></i> [[#{common.search}]]
                     </button>
                 </div>
             </form>
@@ -35,22 +35,22 @@
     <div class="card admin-table-card">
         <div class="card-header d-flex align-items-center justify-content-between">
             <div>
-                <span class="admin-card-title">Passenger Directory</span>
-                <small th:text="${#lists.size(passengers)} + ' records shown'">0 records shown</small>
+                <span class="admin-card-title">[[#{passenger.passengerDirectory}]]</span>
+                <small th:text="#{common.recordsShown(${#lists.size(passengers)})}">0 records shown</small>
             </div>
-            <span class="badge badge-info">Passengers</span>
+            <span class="rj-badge is-info no-dot">[[#{common.passengers}]]</span>
         </div>
         <div class="card-body table-responsive p-0">
             <table class="table table-hover mb-0">
                 <thead>
                 <tr>
                     <th>ID</th>
-                    <th>Full name</th>
-                    <th>Identity number</th>
-                    <th>Date of birth</th>
-                    <th>Gender</th>
-                    <th>Booking</th>
-                    <th class="text-right">Actions</th>
+                    <th>[[#{common.fullName}]]</th>
+                    <th>[[#{common.identityNumber}]]</th>
+                    <th>[[#{common.dateOfBirth}]]</th>
+                    <th>[[#{common.gender}]]</th>
+                    <th>[[#{common.booking}]]</th>
+                    <th class="text-end">[[#{common.actions}]]</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -58,44 +58,38 @@
                     <td><span class="text-muted" th:text="'#' + ${passenger.passengerId}">#1</span></td>
                     <td>
                         <div class="admin-identity">
-                            <span class="admin-avatar"><i class="fas fa-id-card"></i></span>
+                            <span class="admin-avatar"><i class="bi bi-person-vcard"></i></span>
                             <span>
                                 <strong th:text="${passenger.fullName}">Passenger</strong>
-                                <small th:text="${passenger.gender ?: 'No gender'}">Gender</small>
+                                <small th:text="${passenger.gender ?: #messages.msg('passenger.noGender')}">Gender</small>
                             </span>
                         </div>
                     </td>
                     <td th:text="${passenger.identityNumber ?: '-'}">-</td>
                     <td th:text="${passenger.dateOfBirth != null ? #temporals.format(passenger.dateOfBirth, 'dd/MM/yyyy') : '-'}">-</td>
                     <td>
-                        <span class="badge badge-light admin-badge-soft" th:text="${passenger.gender ?: 'N/A'}">N/A</span>
+                        <span class="rj-badge is-neutral admin-badge-soft" th:text="${#messages.msgOrNull('enum.' + (passenger.gender ?: 'N/A')) ?: (passenger.gender ?: 'N/A')}">N/A</span>
                     </td>
                     <td>
-                        <span class="badge badge-info admin-badge-soft"
+                        <span class="rj-badge is-info admin-badge-soft no-dot"
                               th:if="${passenger.booking != null}"
                               th:text="${passenger.booking.bookingNumber}">BK</span>
                         <span class="text-muted" th:if="${passenger.booking == null}">-</span>
                     </td>
-                    <td class="text-right">
-                        <a class="btn btn-sm btn-outline-primary" th:href="@{/admin/passengers/{id}(id=${passenger.passengerId})}">
-                            <i class="fas fa-eye"></i><span>View</span>
-                        </a>
-                        <a class="btn btn-sm btn-outline-warning" th:href="@{/admin/passengers/edit/{id}(id=${passenger.passengerId})}">
-                            <i class="fas fa-edit"></i><span>Edit</span>
-                        </a>
-                        <a class="btn btn-sm btn-outline-danger"
+                    <td class="text-end">
+                        <a class="rj-icon-btn is-info" th:href="@{/admin/passengers/{id}(id=${passenger.passengerId})}" th:title="#{common.view}"><i class="bi bi-eye" aria-hidden="true"></i><span class="visually-hidden">[[#{common.view}]]</span></a>
+                        <a class="rj-icon-btn is-warning" th:href="@{/admin/passengers/edit/{id}(id=${passenger.passengerId})}" th:title="#{common.edit}"><i class="bi bi-pencil-square" aria-hidden="true"></i><span class="visually-hidden">[[#{common.edit}]]</span></a>
+                        <a class="rj-icon-btn is-danger"
                            th:href="@{/admin/passengers/delete/{id}(id=${passenger.passengerId})}"
-                           onclick="return confirm('Delete this passenger?')">
-                            <i class="fas fa-trash"></i><span>Delete</span>
-                        </a>
+                           th:data-confirm="#{confirm.deletePassenger}" onclick="return confirm(this.dataset.confirm)" th:title="#{common.delete}"><i class="bi bi-trash3" aria-hidden="true"></i><span class="visually-hidden">[[#{common.delete}]]</span></a>
                     </td>
                 </tr>
                 <tr th:if="${#lists.isEmpty(passengers)}">
                     <td colspan="7">
                         <div class="admin-empty-state">
-                            <i class="fas fa-user-friends"></i>
-                            <strong>No passengers found</strong>
-                            <span>Try another keyword or add a passenger record.</span>
+                            <i class="bi bi-person-vcard"></i>
+                            <strong>[[#{passenger.noPassengersFound}]]</strong>
+                            <span>[[#{passenger.tryAnotherKeywordOrAddA}]]</span>
                         </div>
                     </td>
                 </tr>

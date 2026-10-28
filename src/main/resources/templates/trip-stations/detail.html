@@ -1,36 +1,42 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layouts/admin-layout :: layout('Trip Station Detail', ~{::section}, 'trips')}">
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/admin-layout :: layout(#{tripStation.tripStationDetail}, ~{::section}, 'trips')}">
 <section>
     <div class="admin-page-hero">
         <div>
-            <span class="admin-page-kicker"><i class="fas fa-map-signs mr-1"></i> Stop Detail</span>
-            <h2 th:text="${detail.station != null ? detail.station.stationName : 'Trip Station'}">Trip Station</h2>
-            <p th:text="${detail.trainTrip != null ? (detail.trainTrip.train != null ? detail.trainTrip.train.trainCode : 'Trip') : 'Trip'}">Trip</p>
+            <span class="admin-page-kicker"><i class="bi bi-signpost-2"></i> [[#{tripStation.stopDetail}]]</span>
+            <h1 th:text="${detail.station != null ? detail.station.stationName : #messages.msg('tripStation.tripStation')}">Trip Station</h1>
+            <p th:text="${detail.trainTrip != null ? (detail.trainTrip.train != null ? detail.trainTrip.train.trainCode : #messages.msg('common.trip')) : #messages.msg('common.trip')}">Trip</p>
         </div>
         <div class="admin-page-actions">
-            <a class="btn btn-outline-primary" th:href="@{/admin/trips}">
-                <i class="fas fa-arrow-left mr-1"></i> Back to Trips
+            <a class="btn rj-btn-quiet" th:href="@{/admin/trips}">
+                <i class="bi bi-arrow-left"></i> [[#{common.backToTrips}]]
             </a>
             <a class="btn btn-warning" th:href="@{'/admin/trip-stations/' + ${detail.tripStationId} + '/edit'}">
-                <i class="fas fa-edit mr-1"></i> Edit
+                <i class="bi bi-pencil-square"></i> [[#{common.edit}]]
             </a>
         </div>
     </div>
 
     <div class="card admin-detail-card">
         <div class="card-header">
-            <span class="admin-card-title">Stop Information</span>
-            <small>Station order and arrival/departure timing</small>
+            <span class="admin-card-title">[[#{tripStation.stopInformation}]]</span>
+            <small>[[#{tripStation.stationOrderAndArrivalDepartureTiming}]]</small>
         </div>
         <div class="card-body">
             <dl class="admin-detail-grid">
                 <dt>ID</dt><dd th:text="${detail.tripStationId}">1</dd>
-                <dt>Trip</dt><dd th:text="${detail.trainTrip != null ? (detail.trainTrip.train != null ? detail.trainTrip.train.trainCode : '-') : '-'}">Trip</dd>
-                <dt>Station</dt><dd th:text="${detail.station != null ? detail.station.stationName : '-'}">Station</dd>
-                <dt>Order</dt><dd><span class="route-order-badge" th:text="${detail.stationOrder}">1</span></dd>
-                <dt>Arrival</dt><dd th:text="${detail.arrivalTime}">Arrival</dd>
-                <dt>Departure</dt><dd th:text="${detail.departureTime}">Departure</dd>
+                <dt>[[#{common.trip}]]</dt><dd th:text="${detail.trainTrip != null ? (detail.trainTrip.train != null ? detail.trainTrip.train.trainCode : '-') : '-'}">Trip</dd>
+                <dt>[[#{common.station}]]</dt><dd th:text="${detail.station != null ? detail.station.stationName : '-'}">Station</dd>
+                <dt>[[#{tripStation.routeStation}]]</dt>
+                <dd>
+                    <span th:if="${detail.routeStation != null}"
+                          th:text="${(detail.routeStation.route != null ? detail.routeStation.route.routeCode + ' · ' : '') + #numbers.formatDecimal(detail.routeStation.distanceFromStartKm != null ? detail.routeStation.distanceFromStartKm : 0, 1, 0) + ' km'}">HN-SG · 0 km</span>
+                    <span class="rj-badge is-warning" th:if="${detail.routeStation == null}">[[#{tripStation.notLinkedToRoute}]]</span>
+                </dd>
+                <dt>[[#{common.order}]]</dt><dd><span class="route-order-badge" th:text="${detail.stationOrder}">1</span></dd>
+                <dt>[[#{common.arrival}]]</dt><dd th:text="${detail.arrivalTime}">Arrival</dd>
+                <dt>[[#{common.departure}]]</dt><dd th:text="${detail.departureTime}">Departure</dd>
             </dl>
         </div>
     </div>

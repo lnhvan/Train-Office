@@ -1,49 +1,47 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layouts/admin-layout :: layout('Route Form', ~{::section}, 'routes')}">
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/admin-layout :: layout(#{route.routeForm}, ~{::section}, 'routes')}">
 <section>
     <div class="admin-page-hero">
         <div>
-            <span class="admin-page-kicker"><i class="fas fa-route mr-1"></i> Route Profile</span>
-            <h2 th:text="${route.routeId == null ? 'Create Route' : 'Update Route'}">Route Form</h2>
-            <p>Set the route identity before arranging stations in travel order.</p>
+            <span class="admin-page-kicker"><i class="bi bi-signpost-split"></i> [[#{route.routeProfile}]]</span>
+            <h1 th:text="${route.routeId == null ? #messages.msg('route.createRoute') : #messages.msg('route.updateRoute')}">Route Form</h1>
+            <p>[[#{route.setTheRouteIdentityBeforeArranging}]]</p>
         </div>
-        <a th:href="@{/admin/routes}" class="btn btn-outline-primary">
-            <i class="fas fa-arrow-left mr-1"></i> Back to routes
+        <a th:href="@{/admin/routes}" class="btn rj-btn-quiet">
+            <i class="bi bi-arrow-left"></i> [[#{route.backToRoutes}]]
         </a>
     </div>
 
     <div class="card admin-form-card">
         <div class="card-header">
-            <span class="admin-card-title">Route Information</span>
-            <small>Use a clear route code and total distance in kilometers.</small>
+            <span class="admin-card-title">[[#{route.routeInformation}]]</span>
+            <small>[[#{route.useAClearRouteCodeAnd}]]</small>
         </div>
         <form th:action="@{/admin/routes/save}" th:object="${route}" method="post">
             <input type="hidden" th:field="*{routeId}">
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-4 mb-3">
-                        <label class="form-label">Route Code</label>
+                        <label class="form-label">[[#{route.routeCode}]]</label>
                         <div class="input-group">
-                            <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-hashtag"></i></span></div>
+                            <span class="input-group-text"><i class="bi bi-hash"></i></span>
                             <input class="form-control" th:field="*{routeCode}">
                         </div>
                     </div>
                     <div class="col-md-5 mb-3">
-                        <label class="form-label">Route Name</label>
+                        <label class="form-label">[[#{route.routeName}]]</label>
                         <div class="input-group">
-                            <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-map-signs"></i></span></div>
+                            <span class="input-group-text"><i class="bi bi-signpost-2"></i></span>
                             <input class="form-control" th:field="*{routeName}">
                         </div>
                     </div>
                     <div class="col-md-3 mb-3">
-                        <label class="form-label">Distance (km)</label>
+                        <label class="form-label">[[#{route.distanceKm}]]</label>
                         <div class="input-group">
-                            <div class="input-group-prepend">
-            <span class="input-group-text">
-                <i class="fas fa-road"></i>
+                            <span class="input-group-text">
+                <i class="bi bi-sign-railroad"></i>
             </span>
-                            </div>
 
                             <input type="number"
                                    step="0.1"
@@ -53,15 +51,15 @@
                         </div>
 
                         <small class="form-text text-muted">
-                            Auto-calculated from route stations.
+                            [[#{route.autoCalculatedFromRouteStations}]]
                         </small>
                     </div>
                 </div>
             </div>
             <div class="card-footer d-flex justify-content-end gap-2">
-                <a th:href="@{/admin/routes}" class="btn btn-outline-secondary">Cancel</a>
+                <a th:href="@{/admin/routes}" class="btn btn-outline-secondary">[[#{common.cancel}]]</a>
                 <button class="btn btn-primary" type="submit">
-                    <i class="fas fa-save mr-1"></i> Save Route
+                    <i class="bi bi-check2-circle"></i> [[#{route.saveRoute}]]
                 </button>
             </div>
         </form>

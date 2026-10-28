@@ -1,40 +1,105 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layouts/admin-layout :: layout('Train Trips', ~{::section}, 'trips')}">
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/admin-layout :: layout(#{trip.trainTrips}, ~{::section}, 'trips')}">
 <section>
     <div class="admin-page-hero">
         <div>
-            <span class="admin-page-kicker"><i class="fas fa-calendar-alt mr-1"></i> Trip Scheduling</span>
-            <h2>Train Trips</h2>
-            <p>Manage scheduled trips, route assignments, and station stops.</p>
+            <span class="admin-page-kicker"><i class="bi bi-calendar3"></i> [[#{trip.tripScheduling}]]</span>
+            <h1>[[#{trip.trainTrips}]]</h1>
+            <p>[[#{trip.manageScheduledTripsRouteAssignmentsAnd}]]</p>
         </div>
         <a class="btn btn-primary" th:href="@{/admin/trips/create}">
-            <i class="fas fa-plus mr-1"></i> Create Trip
+            <i class="bi bi-plus-lg"></i> [[#{trip.createTrip}]]
         </a>
     </div>
 
     <div class="alert alert-success" th:if="${success}" th:text="${success}"></div>
     <div class="alert alert-danger" th:if="${error}" th:text="${error}"></div>
 
+    <div class="card admin-filter-card mb-3">
+        <div class="card-header">
+            <form th:action="@{/admin/trips}" method="get" class="row g-2 align-items-end">
+                <div class="col-lg-3 col-md-6">
+                    <label class="form-label">[[#{common.searchTrip}]]</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input class="form-control" type="text" name="keyword"
+                               th:placeholder="#{trip.searchPlaceholder}"
+                               th:value="${keyword}">
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-6">
+                    <label class="form-label" for="filterTrain">[[#{common.train}]]</label>
+                    <select class="form-select" id="filterTrain" name="trainId">
+                        <option value="">[[#{common.allTrains}]]</option>
+                        <option th:each="train : ${trains}"
+                                th:value="${train.trainId}"
+                                th:text="${train.trainCode + ' - ' + train.trainName}"
+                                th:selected="${selectedTrainId != null and selectedTrainId == train.trainId}"></option>
+                    </select>
+                </div>
+                <div class="col-lg-2 col-md-6">
+                    <label class="form-label" for="filterRoute">[[#{common.route}]]</label>
+                    <select class="form-select" id="filterRoute" name="routeId">
+                        <option value="">[[#{trip.allRoutes}]]</option>
+                        <option th:each="route : ${routes}"
+                                th:value="${route.routeId}"
+                                th:text="${route.routeCode + ' - ' + route.routeName}"
+                                th:selected="${selectedRouteId != null and selectedRouteId == route.routeId}"></option>
+                    </select>
+                </div>
+                <div class="col-lg-2 col-md-6">
+                    <label class="form-label" for="filterDepartureDate">[[#{booking.departureDate}]]</label>
+                    <input class="form-control" type="date" id="filterDepartureDate" name="departureDate"
+                           th:value="${selectedDepartureDate}">
+                </div>
+                <div class="col-lg-3 col-md-12">
+                    <div class="row g-2">
+                        <div class="col-sm-5">
+                            <label class="form-label" for="filterStatus">[[#{common.status}]]</label>
+                            <select class="form-select" id="filterStatus" name="status">
+                                <option value="">[[#{common.allStatuses}]]</option>
+                                <option th:each="st : ${statuses}"
+                                        th:value="${st}"
+                                        th:text="${#messages.msgOrNull('enum.' + st) ?: st}"
+                                        th:selected="${selectedStatus != null and selectedStatus == st}"></option>
+                            </select>
+                        </div>
+                        <div class="col-sm-7 d-flex align-items-end">
+                            <div class="w-100 d-flex gap-1">
+                                <button class="btn btn-primary flex-fill text-nowrap px-2" type="submit" th:title="#{common.search}">
+                                    <i class="bi bi-search"></i> [[#{common.search}]]
+                                </button>
+                                <a class="btn btn-outline-secondary text-nowrap px-2" th:href="@{/admin/trips}" th:title="#{common.clear}">
+                                    [[#{common.clear}]]
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div class="card admin-table-card">
         <div class="card-header d-flex align-items-center justify-content-between">
             <div>
-                <span class="admin-card-title">Trip Schedule</span>
-                <small th:text="${#lists.size(trips)} + ' trips available'">0 trips available</small>
+                <span class="admin-card-title">[[#{trip.tripSchedule}]]</span>
+                <small th:text="#{trip.tripsAvailable(${#lists.size(trips)})}">0 trips available</small>
             </div>
-            <span class="badge badge-primary">Trips</span>
+            <span class="rj-badge is-info no-dot">[[#{common.trips}]]</span>
         </div>
         <div class="card-body table-responsive p-0">
             <table class="table table-hover mb-0">
                 <thead>
                 <tr>
                     <th>ID</th>
-                    <th>Trip</th>
-                    <th>Route</th>
-                    <th>Schedule</th>
-                    <th>Price</th>
-                    <th>Status</th>
-                    <th class="text-right">Actions</th>
+                    <th>[[#{common.trip}]]</th>
+                    <th>[[#{common.route}]]</th>
+                    <th>[[#{trip.schedule}]]</th>
+                    <th class="text-end">[[#{common.price}]]</th>
+                    <th>[[#{common.status}]]</th>
+                    <th class="text-end">[[#{common.actions}]]</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -42,7 +107,7 @@
                     <td><span class="text-muted" th:text="'#' + ${trip.tripId}">#1</span></td>
                     <td>
                         <div class="admin-identity">
-                            <span class="admin-avatar"><i class="fas fa-train"></i></span>
+                            <span class="admin-avatar"><i class="bi bi-train-front"></i></span>
                             <span>
                                 <strong th:text="${trip.train != null ? trip.train.trainName : '-'}">SE1</strong>
                                 <small th:text="${trip.train != null ? trip.train.trainCode : '-'}">SE1</small>
@@ -60,43 +125,53 @@
                             </div>
                         </div>
                     </td>
-                    <td>
-                        <div>
-                            <strong th:text="${trip.departureTime}">2026-06-28T08:00</strong>
-                            <div class="text-muted small">to <span th:text="${trip.arrivalTime}">2026-06-28T18:00</span></div>
+                    <td class="align-middle">
+                        <div class="trip-schedule-cell">
+                            <div class="trip-schedule-row is-departure">
+                                <span class="trip-time"
+                                      th:text="${trip.departureTime != null ? #temporals.format(trip.departureTime, 'HH:mm') : '--:--'}">06:00</span>
+                                <span class="trip-date"
+                                      th:text="${trip.departureTime != null ? #temporals.format(trip.departureTime, 'dd/MM/yyyy') : ''}">28/10/2026</span>
+                            </div>
+                            <div class="trip-schedule-row is-arrival">
+                                <i class="bi bi-arrow-return-right trip-arrow" aria-hidden="true"></i>
+                                <span class="trip-arrival-label">[[#{trip.to}]]</span>
+                                <span class="trip-time"
+                                      th:text="${trip.arrivalTime != null ? #temporals.format(trip.arrivalTime, 'HH:mm') : '--:--'}">13:20</span>
+                                <span class="trip-date"
+                                      th:text="${trip.arrivalTime != null ? #temporals.format(trip.arrivalTime, 'dd/MM/yyyy') : ''}">29/10/2026</span>
+                            </div>
                         </div>
                     </td>
-                    <td>
-                        <strong th:text="${trip.basePrice}">0</strong>
+                    <td class="text-end align-middle rj-num">
+                        <div class="trip-price-cell">
+                            <strong class="trip-price-val"
+                                    th:if="${trip.basePrice != null}"
+                                    th:text="${#numbers.formatDecimal(trip.basePrice, 0, 'COMMA', 0, 'POINT')}">870,000</strong>
+                            <strong class="trip-price-val" th:if="${trip.basePrice == null}">0</strong>
+                            <span class="trip-price-currency">VND</span>
+                        </div>
                     </td>
-                    <td>
+                    <td class="align-middle">
                         <span class="trip-status-pill"
                               th:classappend="${trip.status != null and trip.status.toString() == 'SCHEDULED'} ? ' trip-status-scheduled' : (${trip.status != null and trip.status.toString() == 'CANCELLED'} ? ' trip-status-cancelled' : ' trip-status-completed')"
-                              th:text="${trip.status}">SCHEDULED</span>
+                              th:text="${#messages.msgOrNull('enum.' + (trip.status)) ?: (trip.status)}">SCHEDULED</span>
                     </td>
-                    <td class="text-right">
-                        <a class="btn btn-sm btn-outline-info" th:href="@{/admin/trips/{id}(id=${trip.tripId})}">
-                            <i class="fas fa-eye"></i><span>Detail</span>
-                        </a>
-                        <a class="btn btn-sm btn-outline-warning" th:href="@{/admin/trips/{id}/edit(id=${trip.tripId})}">
-                            <i class="fas fa-edit"></i><span>Edit</span>
-                        </a>
-                        <a class="btn btn-sm btn-outline-primary" th:href="@{/admin/trips/{id}/stations(id=${trip.tripId})}">
-                            <i class="fas fa-list-ol"></i><span>Stations</span>
-                        </a>
+                    <td class="text-end align-middle">
+                        <a class="rj-icon-btn is-info" th:href="@{/admin/trips/{id}(id=${trip.tripId})}" th:title="#{common.detail}"><i class="bi bi-eye" aria-hidden="true"></i><span class="visually-hidden">[[#{common.detail}]]</span></a>
+                        <a class="rj-icon-btn is-warning" th:href="@{/admin/trips/{id}/edit(id=${trip.tripId})}" th:title="#{common.edit}"><i class="bi bi-pencil-square" aria-hidden="true"></i><span class="visually-hidden">[[#{common.edit}]]</span></a>
+                        <a class="rj-icon-btn is-info" th:href="@{/admin/trips/{id}/stations(id=${trip.tripId})}" th:title="#{common.stations}"><i class="bi bi-list-ol" aria-hidden="true"></i><span class="visually-hidden">[[#{common.stations}]]</span></a>
                         <form th:action="@{/admin/trips/{id}/cancel(id=${trip.tripId})}" method="post" class="d-inline">
-                            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Cancel this trip?')">
-                                <i class="fas fa-ban"></i><span>Cancel</span>
-                            </button>
+                            <button type="submit" class="rj-icon-btn is-danger" th:data-confirm="#{confirm.cancelTrip}" onclick="return confirm(this.dataset.confirm)" th:title="#{common.cancel}"><i class="bi bi-slash-circle" aria-hidden="true"></i><span class="visually-hidden">[[#{common.cancel}]]</span></button>
                         </form>
                     </td>
                 </tr>
                 <tr th:if="${trips == null or #lists.isEmpty(trips)}">
                     <td colspan="7">
                         <div class="admin-empty-state">
-                            <i class="fas fa-calendar-alt"></i>
-                            <strong>No train trips found</strong>
-                            <span>Create a trip to start scheduling departures.</span>
+                            <i class="bi bi-calendar3"></i>
+                            <strong>[[#{trip.noTrainTripsFound}]]</strong>
+                            <span>[[#{trip.createATripToStartScheduling}]]</span>
                         </div>
                     </td>
                 </tr>

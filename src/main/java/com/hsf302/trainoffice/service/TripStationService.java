@@ -15,4 +15,7 @@ public interface TripStationService {
     TripStation updateTripStation(Long tripId, Long tripStationId, TripStation tripStation);
 
     void deleteTripStation(Long tripId, Long tripStationId);
+
+    /** Thêm vào chuyến các ga của tuyến còn thiếu, giờ nội suy theo km. Trả về số ga đã thêm. */
+    int generateFromRoute(Long tripId);
 }

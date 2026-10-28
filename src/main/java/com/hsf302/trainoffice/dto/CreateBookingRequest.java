@@ -13,23 +13,23 @@ import java.util.List;
 
 @Data
 public class CreateBookingRequest {
-    @NotNull(message = "Train trip is required")
+    @NotNull(message = "{validation.trainTrip.required}")
     private Long trainTripId;
 
-    @NotNull(message = "Departure station is required")
+    @NotNull(message = "{validation.departureStation.required}")
     private Long departureStationId;
 
-    @NotNull(message = "Arrival station is required")
+    @NotNull(message = "{validation.arrivalStation.required}")
     private Long arrivalStationId;
 
-    @NotBlank(message = "Booker name is required")
+    @NotBlank(message = "{validation.bookerName.required}")
     private String bookerName;
 
-    @NotBlank(message = "Booker phone is required")
+    @NotBlank(message = "{validation.bookerPhone.required}")
     private String bookerPhone;
 
-    @NotBlank(message = "Booker email is required")
-    @Email(message = "Booker email is invalid")
+    @NotBlank(message = "{validation.bookerEmail.required}")
+    @Email(message = "{validation.bookerEmail.invalid}")
     private String bookerEmail;
 
     private PaymentMethod paymentMethod;
@@ -37,9 +37,9 @@ public class CreateBookingRequest {
     private Long groupDiscountPolicyId;
 
     @Valid
-    @NotEmpty(message = "At least one passenger is required")
+    @NotEmpty(message = "{validation.passengers.min}")
     private List<PassengerBookingRequest> passengers = new ArrayList<>();
 
-    @NotEmpty(message = "At least one seat is required")
+    @NotEmpty(message = "{validation.seats.min}")
     private List<Long> seatIds = new ArrayList<>();
 }

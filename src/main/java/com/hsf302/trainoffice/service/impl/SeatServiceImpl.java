@@ -1,5 +1,7 @@
 package com.hsf302.trainoffice.service.impl;
 
+
+import com.hsf302.trainoffice.config.I18n;
 import com.hsf302.trainoffice.entity.Seat;
 import com.hsf302.trainoffice.repository.SeatRepository;
 import com.hsf302.trainoffice.repository.TicketRepository;
@@ -59,11 +61,11 @@ public class SeatServiceImpl implements SeatService {
     @Override
     public Seat saveSeat(Seat seat) {
         if (seat.getCoach() == null || seat.getCoach().getCoachId() == null) {
-            throw new IllegalStateException("Coach is required for seat");
+            throw new IllegalStateException(I18n.t("err.coachIsRequiredForSeat"));
         }
 
         if (seat.getSeatNumber() == null || seat.getSeatNumber().isBlank()) {
-            throw new IllegalStateException("Seat number is required");
+            throw new IllegalStateException(I18n.t("err.seatNumberIsRequired"));
         }
 
         Long coachId = seat.getCoach().getCoachId();
@@ -71,7 +73,7 @@ public class SeatServiceImpl implements SeatService {
 
         if (seat.getSeatId() == null) {
             if (seatRepository.existsByCoach_CoachIdAndSeatNumber(coachId, seatNumber)) {
-                throw new IllegalStateException("Seat number already exists in this coach");
+                throw new IllegalStateException(I18n.t("err.seatNumberAlreadyExistsInThisCoach"));
             }
         } else {
             Optional<Seat> existing = seatRepository.findById(seat.getSeatId());
@@ -84,7 +86,7 @@ public class SeatServiceImpl implements SeatService {
 
                 if ((changedCoach || changedNumber)
                         && seatRepository.existsByCoach_CoachIdAndSeatNumber(coachId, seatNumber)) {
-                    throw new IllegalStateException("Seat number already exists in this coach");
+                    throw new IllegalStateException(I18n.t("err.seatNumberAlreadyExistsInThisCoach"));
                 }
             }
         }
@@ -96,11 +98,11 @@ public class SeatServiceImpl implements SeatService {
     @Transactional
     public void deleteSeat(Long id) {
         Seat seat = seatRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Seat not found with ID: " + id));
+                .orElseThrow(() -> new RuntimeException(I18n.t("err.seatNotFoundWithId", id)));
 
         if (ticketRepository.existsBySeat_SeatId(id)) {
             throw new ResourceInUseException(
-                    "Cannot delete this seat because it is already used by one or more tickets."
+                    I18n.t("err.cannotDeleteThisSeatBecauseItIs2")
             );
         }
 
@@ -110,7 +112,7 @@ public class SeatServiceImpl implements SeatService {
         } catch (DataIntegrityViolationException ex) {
             log.warn("Seat {} could not be deleted because a dependent record was added or still exists.", id, ex);
             throw new ResourceInUseException(
-                    "Cannot delete this seat because it is still in use.",
+                    I18n.t("err.cannotDeleteThisSeatBecauseItIs"),
                     ex
             );
         }

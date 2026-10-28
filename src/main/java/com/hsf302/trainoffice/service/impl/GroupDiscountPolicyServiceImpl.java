@@ -1,5 +1,7 @@
 package com.hsf302.trainoffice.service.impl;
 
+
+import com.hsf302.trainoffice.config.I18n;
 import com.hsf302.trainoffice.entity.GroupDiscountPolicy;
 import com.hsf302.trainoffice.repository.GroupDiscountPolicyRepository;
 import com.hsf302.trainoffice.service.GroupDiscountPolicyService;
@@ -52,16 +54,16 @@ public class GroupDiscountPolicyServiceImpl implements GroupDiscountPolicyServic
 
         if (policy.getPolicyId() == null) {
             if (groupDiscountPolicyRepository.existsByPolicyCodeIgnoreCase(policy.getPolicyCode())) {
-                throw new IllegalStateException("Group discount policy code already exists.");
+                throw new IllegalStateException(I18n.t("err.groupDiscountPolicyCodeAlreadyExists"));
             }
         } else {
             GroupDiscountPolicy oldPolicy = groupDiscountPolicyRepository.findById(policy.getPolicyId())
-                    .orElseThrow(() -> new IllegalArgumentException("Group discount policy does not exist."));
+                    .orElseThrow(() -> new IllegalArgumentException(I18n.t("err.groupDiscountPolicyDoesNotExist")));
 
             boolean changedCode = !oldPolicy.getPolicyCode().equalsIgnoreCase(policy.getPolicyCode());
 
             if (changedCode && groupDiscountPolicyRepository.existsByPolicyCodeIgnoreCase(policy.getPolicyCode())) {
-                throw new IllegalStateException("Group discount policy code already exists.");
+                throw new IllegalStateException(I18n.t("err.groupDiscountPolicyCodeAlreadyExists"));
             }
         }
 
@@ -71,7 +73,7 @@ public class GroupDiscountPolicyServiceImpl implements GroupDiscountPolicyServic
     @Override
     public void deletePolicy(Long id) {
         if (!groupDiscountPolicyRepository.existsById(id)) {
-            throw new IllegalArgumentException("Group discount policy does not exist.");
+            throw new IllegalArgumentException(I18n.t("err.groupDiscountPolicyDoesNotExist"));
         }
 
         groupDiscountPolicyRepository.deleteById(id);
@@ -114,24 +116,24 @@ public class GroupDiscountPolicyServiceImpl implements GroupDiscountPolicyServic
 
     private void validate(GroupDiscountPolicy policy) {
         if (policy.getPolicyCode() == null || policy.getPolicyCode().isBlank()) {
-            throw new IllegalArgumentException("Policy code is required.");
+            throw new IllegalArgumentException(I18n.t("err.policyCodeIsRequired"));
         }
 
         if (policy.getPolicyName() == null || policy.getPolicyName().isBlank()) {
-            throw new IllegalArgumentException("Policy name is required.");
+            throw new IllegalArgumentException(I18n.t("err.policyNameIsRequired"));
         }
 
         if (policy.getMinPassengers() == null || policy.getMinPassengers() < 2) {
-            throw new IllegalArgumentException("Minimum passengers must be at least 2.");
+            throw new IllegalArgumentException(I18n.t("err.minimumPassengersMustBeAtLeast2"));
         }
 
         if (policy.getMaxPassengers() != null && policy.getMaxPassengers() < policy.getMinPassengers()) {
-            throw new IllegalArgumentException("Maximum passengers must be greater than or equal to minimum passengers.");
+            throw new IllegalArgumentException(I18n.t("err.maximumPassengersMustBeGreaterThanOr"));
         }
 
         if (policy.getDiscountPercent().compareTo(BigDecimal.ZERO) < 0
                 || policy.getDiscountPercent().compareTo(BigDecimal.valueOf(100)) > 0) {
-            throw new IllegalArgumentException("Discount percent must be from 0 to 100.");
+            throw new IllegalArgumentException(I18n.t("err.discountPercentMustBeFrom0To"));
         }
     }
 }

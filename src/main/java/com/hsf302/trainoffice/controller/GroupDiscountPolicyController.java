@@ -1,5 +1,7 @@
 package com.hsf302.trainoffice.controller;
 
+
+import com.hsf302.trainoffice.config.I18n;
 import com.hsf302.trainoffice.entity.GroupDiscountPolicy;
 import com.hsf302.trainoffice.service.GroupDiscountPolicyService;
 import org.springframework.stereotype.Controller;
@@ -39,7 +41,7 @@ public class GroupDiscountPolicyController {
                     return "group-discount-policies/form";
                 })
                 .orElseGet(() -> {
-                    redirectAttributes.addFlashAttribute("errorMessage", "Group discount policy not found.");
+                    redirectAttributes.addFlashAttribute("errorMessage", I18n.t("msg.groupDiscount.notFound"));
                     return "redirect:/admin/group-discount-policies";
                 });
     }
@@ -50,7 +52,7 @@ public class GroupDiscountPolicyController {
                        RedirectAttributes redirectAttributes) {
         try {
             groupDiscountPolicyService.savePolicy(policy);
-            redirectAttributes.addFlashAttribute("successMessage", "Group discount policy saved successfully.");
+            redirectAttributes.addFlashAttribute("successMessage", I18n.t("msg.groupDiscount.saved"));
             return "redirect:/admin/group-discount-policies";
         } catch (Exception ex) {
             model.addAttribute("errorMessage", ex.getMessage());
@@ -63,7 +65,7 @@ public class GroupDiscountPolicyController {
                          RedirectAttributes redirectAttributes) {
         try {
             groupDiscountPolicyService.deletePolicy(id);
-            redirectAttributes.addFlashAttribute("successMessage", "Group discount policy deleted successfully.");
+            redirectAttributes.addFlashAttribute("successMessage", I18n.t("msg.groupDiscount.deleted"));
         } catch (Exception ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         }

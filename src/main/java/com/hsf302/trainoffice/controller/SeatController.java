@@ -1,5 +1,7 @@
 package com.hsf302.trainoffice.controller;
 
+
+import com.hsf302.trainoffice.config.I18n;
 import com.hsf302.trainoffice.entity.Coach;
 import com.hsf302.trainoffice.entity.Seat;
 import com.hsf302.trainoffice.entity.Train;
@@ -112,14 +114,14 @@ public class SeatController {
             seatService.deleteSeat(seatId);
             redirectAttributes.addFlashAttribute(
                     "successMessage",
-                    "Seat with ID " + seatId + " has been deleted."
+                    I18n.t("msg.seat.deleted", seatId)
             );
         } catch (ResourceInUseException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         } catch (Exception ex) {
             redirectAttributes.addFlashAttribute(
                     "errorMessage",
-                    "Cannot delete this seat. Please check that it exists and try again."
+                    I18n.t("msg.seat.deleteError")
             );
         }
 

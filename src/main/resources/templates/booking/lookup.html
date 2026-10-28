@@ -1,39 +1,47 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layouts/customer-layout :: layout('Booking Lookup', ~{::section}, 'history')}">
-<section class="booking-shell booking-section">
-    <div class="page-hero compact-hero">
-        <span class="page-eyebrow">My bookings</span>
-        <h1 class="page-title">Booking lookup</h1>
-        <p class="page-subtitle">Find guest bookings using the email and phone number used at booking time.</p>
-    </div>
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/customer-layout :: layout(#{booking.bookingLookup}, ~{::section}, 'history')}">
+<section class="rj-page">
+    <div class="rj-container rj-narrow">
+        <div class="rj-page-head">
+            <div>
+                <h1>[[#{booking.bookingLookup}]]</h1>
+                <p>[[#{booking.findGuestBookingsUsingTheEmail}]]</p>
+            </div>
+        </div>
 
-    <div class="railjet-card card">
-        <div class="card-body">
+        <div class="rj-card">
             <div class="alert alert-danger" th:if="${error}" th:text="${error}"></div>
-
-            <form th:action="@{/booking/lookup}" method="post" class="row g-3">
-                <div class="col-md-6">
-                    <label for="email" class="form-label">Email</label>
-                    <input id="email"
-                           name="email"
-                           type="email"
-                           class="form-control"
-                           th:value="${email}"
-                           required>
+            <form th:action="@{/booking/lookup}" method="post">
+                <div class="rj-form-grid">
+                    <div class="rj-field">
+                        <label for="email" class="form-label">Email</label>
+                        <input id="email"
+                               name="email"
+                               type="email"
+                               class="form-control"
+                               th:value="${email}"
+                               autocomplete="email"
+                               required>
+                    </div>
+                    <div class="rj-field">
+                        <label for="phone" class="form-label">[[#{common.phone}]]</label>
+                        <input id="phone"
+                               name="phone"
+                               type="tel"
+                               class="form-control"
+                               th:value="${phone}"
+                               autocomplete="tel"
+                               required>
+                    </div>
                 </div>
-                <div class="col-md-6">
-                    <label for="phone" class="form-label">Phone</label>
-                    <input id="phone"
-                           name="phone"
-                           type="text"
-                           class="form-control"
-                           th:value="${phone}"
-                           required>
-                </div>
-                <div class="col-12">
-                    <button type="submit" class="btn btn-primary">Find My Bookings</button>
-                    <a class="btn btn-outline-primary" th:href="@{/booking/search}">Search trip</a>
+                <div class="rj-form-actions">
+                    <a class="btn rj-btn-quiet" th:href="@{/booking/search}">
+                        <i class="bi bi-arrow-left"></i>[[#{common.searchTrip}]]
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-search"></i>[[#{booking.findMyBookings}]]
+                    </button>
                 </div>
             </form>
         </div>

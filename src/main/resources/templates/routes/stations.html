@@ -1,32 +1,32 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layouts/admin-layout :: layout('Route Stations', ~{::section}, 'routes')}">
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/admin-layout :: layout(#{route.routeStations}, ~{::section}, 'routes')}">
 <section>
     <div class="admin-page-hero">
         <div>
             <span class="admin-page-kicker">
-                <i class="fas fa-list-ol mr-1"></i>
-                Route Station Order
+                <i class="bi bi-list-ol"></i>
+                [[#{route.routeStationOrder}]]
             </span>
 
-            <h2>
+            <h1>
                 <span th:text="${route.routeCode}">HN-SG</span>
                 <span class="text-muted">/</span>
                 <span th:text="${route.routeName}">Ha Noi - Sai Gon</span>
-            </h2>
+            </h1>
 
-            <p>Drag and drop stations to arrange the travel sequence for this route.</p>
+            <p>[[#{route.dragAndDropStationsToArrange}]]</p>
         </div>
 
         <div class="admin-page-actions">
-            <a class="btn btn-outline-primary" th:href="@{/admin/routes}">
-                <i class="fas fa-arrow-left mr-1"></i>
-                Back to Routes
+            <a class="btn rj-btn-quiet" th:href="@{/admin/routes}">
+                <i class="bi bi-arrow-left"></i>
+                [[#{route.backToRoutes}]]
             </a>
 
             <a class="btn btn-primary" th:href="@{/admin/routes/{routeId}/stations/new(routeId=${route.routeId})}">
-                <i class="fas fa-plus mr-1"></i>
-                Add Station
+                <i class="bi bi-plus-lg"></i>
+                [[#{common.addStation}]]
             </a>
         </div>
     </div>
@@ -35,21 +35,21 @@
     <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
 
     <div class="alert alert-info route-station-note">
-        <strong>Tip:</strong>
-        Hold the drag handle, move a station to a new position, then click
-        <strong>Save Order</strong>. The station order will be updated automatically.
+        <strong>[[#{route.tip}]]</strong>
+        [[#{route.holdTheDragHandleMoveA}]]
+        <strong>[[#{route.saveOrder}]]</strong>[[#{route.theStationOrderWillBeUpdated}]]
     </div>
 
     <div class="card admin-table-card route-station-card">
         <div class="card-header d-flex align-items-center justify-content-between">
             <div>
-                <span class="admin-card-title">Station Sequence</span>
-                <small th:text="${#lists.size(routeStations)} + ' stations assigned'">
+                <span class="admin-card-title">[[#{route.stationSequence}]]</span>
+                <small th:text="#{route.stationsAssigned(${#lists.size(routeStations)})}">
                     0 stations assigned
                 </small>
             </div>
 
-            <span class="badge badge-info" th:text="${route.distanceKm} + ' km'">
+            <span class="rj-badge is-info no-dot" th:text="${route.distanceKm} + ' km'">
                 0 km
             </span>
         </div>
@@ -63,12 +63,12 @@
                     <thead>
                     <tr>
                         <th class="drag-col"></th>
-                        <th class="order-col">Order</th>
-                        <th class="station-col">Station</th>
-                        <th class="code-col">Code</th>
-                        <th class="city-col">City</th>
-                        <th class="km-col">KM Marker</th>
-                        <th class="actions-col text-right">Actions</th>
+                        <th class="order-col">[[#{common.order}]]</th>
+                        <th class="station-col">[[#{common.station}]]</th>
+                        <th class="code-col">[[#{common.code}]]</th>
+                        <th class="city-col">[[#{common.city}]]</th>
+                        <th class="km-col">[[#{route.kmMarker}]]</th>
+                        <th class="actions-col text-end">[[#{common.actions}]]</th>
                     </tr>
                     </thead>
 
@@ -79,8 +79,8 @@
                         th:attr="data-id=${routeStation.routeStationId}">
 
                         <td class="drag-col">
-                            <span class="drag-handle" title="Drag to reorder">
-                                <i class="fas fa-grip-vertical"></i>
+                            <span class="drag-handle" th:title="#{route.dragToReorder}">
+                                <i class="bi bi-grip-vertical"></i>
                             </span>
 
                             <input type="hidden"
@@ -99,11 +99,11 @@
                         <td class="station-col">
                             <div class="admin-identity">
                                 <span class="admin-avatar">
-                                    <i class="fas fa-map-marker-alt"></i>
+                                    <i class="bi bi-geo-alt"></i>
                                 </span>
 
                                 <span>
-                                    <strong th:text="${routeStation.station != null ? routeStation.station.stationName : 'Unknown station'}">
+                                    <strong th:text="${routeStation.station != null ? routeStation.station.stationName : #messages.msg('route.unknownStation')}">
                                         Station
                                     </strong>
 
@@ -115,7 +115,7 @@
                         </td>
 
                         <td class="code-col">
-                            <span class="badge badge-primary admin-badge-soft"
+                            <span class="rj-badge is-info admin-badge-soft no-dot"
                                   th:text="${routeStation.station != null ? routeStation.station.stationCode : '-'}">
                                 HN
                             </span>
@@ -127,34 +127,28 @@
                         </td>
 
                         <td class="km-col">
-                            <span class="badge badge-info admin-badge-soft"
+                            <span class="rj-badge is-info admin-badge-soft no-dot"
                                   th:text="${routeStation.distanceFromStartKm != null ? routeStation.distanceFromStartKm + ' km' : '0 km'}">
                                 0 km
                             </span>
                         </td>
 
-                        <td class="actions-col text-right">
-                            <a class="btn btn-sm btn-outline-warning"
-                               th:href="@{/admin/routes/{routeId}/stations/edit/{id}(routeId=${route.routeId},id=${routeStation.routeStationId})}">
-                                <i class="fas fa-edit"></i>
-                                <span>Edit</span>
-                            </a>
+                        <td class="actions-col text-end">
+                            <a class="rj-icon-btn is-warning"
+                               th:href="@{/admin/routes/{routeId}/stations/edit/{id}(routeId=${route.routeId},id=${routeStation.routeStationId})}" th:title="#{common.edit}"><i class="bi bi-pencil-square" aria-hidden="true"></i><span class="visually-hidden">[[#{common.edit}]]</span></a>
 
-                            <a class="btn btn-sm btn-outline-danger"
-                               onclick="return confirm('Remove this station from route?')"
-                               th:href="@{/admin/routes/{routeId}/stations/delete/{id}(routeId=${route.routeId},id=${routeStation.routeStationId})}">
-                                <i class="fas fa-trash"></i>
-                                <span>Delete</span>
-                            </a>
+                            <a class="rj-icon-btn is-danger"
+                               th:data-confirm="#{confirm.removeRouteStation}" onclick="return confirm(this.dataset.confirm)"
+                               th:href="@{/admin/routes/{routeId}/stations/delete/{id}(routeId=${route.routeId},id=${routeStation.routeStationId})}" th:title="#{common.delete}"><i class="bi bi-trash3" aria-hidden="true"></i><span class="visually-hidden">[[#{common.delete}]]</span></a>
                         </td>
                     </tr>
 
                     <tr th:if="${#lists.isEmpty(routeStations)}">
                         <td colspan="7">
                             <div class="admin-empty-state">
-                                <i class="fas fa-list-ol"></i>
-                                <strong>No stations assigned</strong>
-                                <span>Add stations to build the route sequence.</span>
+                                <i class="bi bi-list-ol"></i>
+                                <strong>[[#{route.noStationsAssigned}]]</strong>
+                                <span>[[#{route.addStationsToBuildTheRoute}]]</span>
                             </div>
                         </td>
                     </tr>
@@ -165,12 +159,12 @@
             <div class="card-footer d-flex align-items-center justify-content-between flex-wrap"
                  th:if="${!#lists.isEmpty(routeStations)}">
                 <small class="text-muted">
-                    Drag rows to change the station order.
+                    [[#{route.dragRowsToChangeTheStation}]]
                 </small>
 
                 <button type="submit" class="btn btn-success">
-                    <i class="fas fa-save mr-1"></i>
-                    Save Order
+                    <i class="bi bi-check2-circle"></i>
+                    [[#{route.saveOrder}]]
                 </button>
             </div>
         </form>
@@ -260,104 +254,5 @@
         });
     </script>
 
-    <style>
-        .route-station-note {
-            margin-bottom: 18px;
-        }
-
-        .route-station-card {
-            overflow: hidden;
-        }
-
-        .route-station-table {
-            width: 100%;
-            table-layout: fixed;
-        }
-
-        .route-station-table th,
-        .route-station-table td {
-            vertical-align: middle;
-            white-space: normal;
-            overflow-wrap: anywhere;
-        }
-
-        .route-station-table thead th {
-            white-space: nowrap;
-            font-size: 12px;
-            background: #061c38;
-            color: #fff;
-        }
-
-        .drag-col {
-            width: 54px;
-            text-align: center;
-        }
-
-        .order-col {
-            width: 90px;
-        }
-
-        .station-col {
-            width: 290px;
-        }
-
-        .code-col {
-            width: 110px;
-        }
-
-        .city-col {
-            width: 190px;
-        }
-
-        .km-col {
-            width: 140px;
-        }
-
-        .actions-col {
-            width: 210px;
-            white-space: nowrap !important;
-        }
-
-        .drag-handle {
-            width: 34px;
-            height: 34px;
-            border-radius: 10px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            cursor: grab;
-            color: #0b6fa4;
-            background: #e8f6ff;
-            border: 1px solid rgba(11, 111, 164, .18);
-        }
-
-        .drag-handle:active {
-            cursor: grabbing;
-        }
-
-        .route-station-row.dragging {
-            opacity: .55;
-            background: #f8fafc;
-        }
-
-        .route-order-badge {
-            width: 38px;
-            height: 38px;
-            border-radius: 999px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 800;
-            color: #0b6fa4;
-            background: #e8f6ff;
-            border: 1px solid rgba(11, 111, 164, .18);
-        }
-
-        @media (max-width: 1100px) {
-            .route-station-table {
-                min-width: 980px;
-            }
-        }
-    </style>
 </section>
 </html>

@@ -1,22 +1,22 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layouts/admin-layout :: layout('Discount Policies', ~{::section}, 'discounts')}">
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/admin-layout :: layout(#{common.discountPolicies}, ~{::section}, 'discounts')}">
 <section>
     <div class="admin-page-hero">
         <div>
             <span class="admin-page-kicker">
-                <i class="fas fa-percent mr-1"></i>
-                Fare Policy
+                <i class="bi bi-percent"></i>
+                [[#{discount.farePolicy}]]
             </span>
 
-            <h2>Discount Policies</h2>
+            <h1>[[#{common.discountPolicies}]]</h1>
 
-            <p>Manage passenger age ranges and discount percentages without changing code.</p>
+            <p>[[#{discount.managePassengerAgeRangesAndDiscount}]]</p>
         </div>
 
         <a class="btn btn-primary" th:href="@{/admin/discount-policies/new}">
-            <i class="fas fa-plus mr-1"></i>
-            Add Policy
+            <i class="bi bi-plus-lg"></i>
+            [[#{common.addPolicy}]]
         </a>
     </div>
 
@@ -26,24 +26,24 @@
     <div class="card admin-table-card">
         <div class="card-header d-flex align-items-center justify-content-between">
             <div>
-                <span class="admin-card-title">Policy Directory</span>
-                <small th:text="${#lists.size(policies)} + ' policies'">0 policies</small>
+                <span class="admin-card-title">[[#{discount.policyDirectory}]]</span>
+                <small th:text="#{common.nPolicies(${#lists.size(policies)})}">0 policies</small>
             </div>
 
-            <span class="badge badge-info">Dynamic Fare Rules</span>
+            <span class="rj-badge is-info no-dot">[[#{discount.dynamicFareRules}]]</span>
         </div>
 
         <div class="card-body table-responsive p-0">
             <table class="table table-hover mb-0">
                 <thead>
                 <tr>
-                    <th>Order</th>
-                    <th>Code</th>
-                    <th>Name</th>
-                    <th>Age Range</th>
-                    <th>Discount</th>
-                    <th>Status</th>
-                    <th class="text-right">Actions</th>
+                    <th>[[#{common.order}]]</th>
+                    <th>[[#{common.code}]]</th>
+                    <th>[[#{common.name}]]</th>
+                    <th>[[#{discount.ageRange}]]</th>
+                    <th>[[#{common.discount}]]</th>
+                    <th>[[#{common.status}]]</th>
+                    <th class="text-end">[[#{common.actions}]]</th>
                 </tr>
                 </thead>
 
@@ -52,7 +52,7 @@
                     <td th:text="${policy.displayOrder}">1</td>
 
                     <td>
-                        <span class="badge badge-primary admin-badge-soft"
+                        <span class="rj-badge is-info admin-badge-soft no-dot"
                               th:text="${policy.policyCode}">
                             ADULT
                         </span>
@@ -65,12 +65,12 @@
 
                     <td>
                         <span th:if="${policy.maxAge != null}"
-                              th:text="${policy.minAge + ' - ' + policy.maxAge + ' years old'}">
+                              th:text="${#messages.msg('discount.ageRangeValue', policy.minAge, policy.maxAge)}">
                             11 - 59 years old
                         </span>
 
                         <span th:if="${policy.maxAge == null}"
-                              th:text="${policy.minAge + '+ years old'}">
+                              th:text="${#messages.msg('discount.ageMinValue', policy.minAge)}">
                             60+ years old
                         </span>
                     </td>
@@ -80,32 +80,26 @@
                     </td>
 
                     <td>
-                        <span th:if="${policy.active == true}" class="badge badge-success">ACTIVE</span>
-                        <span th:if="${policy.active != true}" class="badge badge-secondary">INACTIVE</span>
+                        <span th:if="${policy.active == true}" class="rj-badge is-success no-dot">[[#{common.active}]]</span>
+                        <span th:if="${policy.active != true}" class="rj-badge is-neutral no-dot">[[#{common.inactive}]]</span>
                     </td>
 
-                    <td class="text-right">
-                        <a class="btn btn-sm btn-outline-warning"
-                           th:href="@{/admin/discount-policies/edit/{id}(id=${policy.policyId})}">
-                            <i class="fas fa-edit"></i>
-                            <span>Edit</span>
-                        </a>
+                    <td class="text-end">
+                        <a class="rj-icon-btn is-warning"
+                           th:href="@{/admin/discount-policies/edit/{id}(id=${policy.policyId})}" th:title="#{common.edit}"><i class="bi bi-pencil-square" aria-hidden="true"></i><span class="visually-hidden">[[#{common.edit}]]</span></a>
 
-                        <a class="btn btn-sm btn-outline-danger"
-                           onclick="return confirm('Delete this discount policy?')"
-                           th:href="@{/admin/discount-policies/delete/{id}(id=${policy.policyId})}">
-                            <i class="fas fa-trash"></i>
-                            <span>Delete</span>
-                        </a>
+                        <a class="rj-icon-btn is-danger"
+                           th:data-confirm="#{confirm.deleteDiscount}" onclick="return confirm(this.dataset.confirm)"
+                           th:href="@{/admin/discount-policies/delete/{id}(id=${policy.policyId})}" th:title="#{common.delete}"><i class="bi bi-trash3" aria-hidden="true"></i><span class="visually-hidden">[[#{common.delete}]]</span></a>
                     </td>
                 </tr>
 
                 <tr th:if="${#lists.isEmpty(policies)}">
                     <td colspan="7">
                         <div class="admin-empty-state">
-                            <i class="fas fa-percent"></i>
-                            <strong>No discount policies</strong>
-                            <span>Create policies for adult, child, senior, or custom passenger types.</span>
+                            <i class="bi bi-percent"></i>
+                            <strong>[[#{discount.noDiscountPolicies}]]</strong>
+                            <span>[[#{discount.createPoliciesForAdultChildSenior}]]</span>
                         </div>
                     </td>
                 </tr>

@@ -1,5 +1,7 @@
 package com.hsf302.trainoffice.service.impl;
 
+
+import com.hsf302.trainoffice.config.I18n;
 import com.hsf302.trainoffice.common.enums.TicketStatus;
 import com.hsf302.trainoffice.common.enums.BookingStatus;
 import com.hsf302.trainoffice.common.enums.TripStatus;
@@ -90,14 +92,14 @@ public class BookingServiceImpl implements com.hsf302.trainoffice.service.Bookin
     @Transactional(readOnly = true)
     public Booking getBookingById(Long bookingId) {
         return bookingRepository.findBasicDetailsByBookingId(bookingId)
-                .orElseThrow(() -> new IllegalArgumentException("Booking does not exist"));
+                .orElseThrow(() -> new IllegalArgumentException(I18n.t("err.bookingDoesNotExist")));
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<Booking> getBookingsForUser(User user) {
         if (user == null || user.getUserId() == null) {
-            throw new IllegalArgumentException("User is required");
+            throw new IllegalArgumentException(I18n.t("err.userIsRequired"));
         }
         return bookingRepository.findByUser_UserIdOrderByBookingDateDesc(user.getUserId());
     }
@@ -106,7 +108,7 @@ public class BookingServiceImpl implements com.hsf302.trainoffice.service.Bookin
     @Transactional(readOnly = true)
     public List<Booking> findGuestBookings(String email, String phone) {
         if (email == null || email.isBlank() || phone == null || phone.isBlank()) {
-            throw new IllegalArgumentException("Email and phone are required");
+            throw new IllegalArgumentException(I18n.t("err.emailAndPhoneAreRequired"));
         }
         return bookingRepository.findByUserIsNullAndBookerEmailIgnoreCaseAndBookerPhoneOrderByBookingDateDesc(
                 email.trim(),
@@ -123,14 +125,14 @@ public class BookingServiceImpl implements com.hsf302.trainoffice.service.Bookin
     @Transactional
     public Booking cancelPendingBooking(Long bookingId, User user) {
         if (user == null || user.getUserId() == null) {
-            throw new IllegalArgumentException("User is required");
+            throw new IllegalArgumentException(I18n.t("err.userIsRequired"));
         }
         Booking booking = getBookingById(bookingId);
         if (booking.getUser() == null || !booking.getUser().getUserId().equals(user.getUserId())) {
-            throw new IllegalArgumentException("Booking does not belong to current user");
+            throw new IllegalArgumentException(I18n.t("err.bookingDoesNotBelongToCurrentUser"));
         }
         if (booking.getBookingStatus() != BookingStatus.PENDING_PAYMENT) {
-            throw new IllegalArgumentException("Only pending payment bookings can be cancelled");
+            throw new IllegalArgumentException(I18n.t("err.onlyPendingPaymentBookingsCanBeCancelled"));
         }
 
         booking.setBookingStatus(BookingStatus.CANCELLED);
@@ -147,10 +149,10 @@ public class BookingServiceImpl implements com.hsf302.trainoffice.service.Bookin
     public Booking cancelPendingGuestBooking(Long bookingId) {
         Booking booking = getBookingById(bookingId);
         if (booking.getUser() != null) {
-            throw new IllegalArgumentException("Booking does not belong to a guest");
+            throw new IllegalArgumentException(I18n.t("err.bookingDoesNotBelongToAGuest"));
         }
         if (booking.getBookingStatus() != BookingStatus.PENDING_PAYMENT) {
-            throw new IllegalArgumentException("Only pending payment bookings can be cancelled");
+            throw new IllegalArgumentException(I18n.t("err.onlyPendingPaymentBookingsCanBeCancelled"));
         }
 
         booking.setBookingStatus(BookingStatus.CANCELLED);
@@ -166,7 +168,7 @@ public class BookingServiceImpl implements com.hsf302.trainoffice.service.Bookin
         validateRequest(request);
         List<Seat> fetchedSeats = seatRepository.findAllById(request.getSeatIds());
         if (fetchedSeats.size() != request.getSeatIds().size()) {
-            throw new IllegalArgumentException("One or more seats do not exist");
+            throw new IllegalArgumentException(I18n.t("err.oneOrMoreSeatsDoNotExist"));
         }
         Map<Long, Seat> seatsById = fetchedSeats.stream()
                 .collect(Collectors.toMap(Seat::getSeatId, Function.identity()));
@@ -175,21 +177,21 @@ public class BookingServiceImpl implements com.hsf302.trainoffice.service.Bookin
             seats.add(seatsById.get(seatId));
         }
         TrainTrip trainTrip = trainTripRepository.findById(request.getTrainTripId())
-                .orElseThrow(() -> new IllegalArgumentException("Train trip does not exist"));
+                .orElseThrow(() -> new IllegalArgumentException(I18n.t("err.trainTripDoesNotExist")));
         Station departureStation = stationRepository.findById(request.getDepartureStationId())
-                .orElseThrow(() -> new IllegalArgumentException("Departure station does not exist"));
+                .orElseThrow(() -> new IllegalArgumentException(I18n.t("err.departureStationDoesNotExist")));
         Station arrivalStation = stationRepository.findById(request.getArrivalStationId())
-                .orElseThrow(() -> new IllegalArgumentException("Arrival station does not exist"));
+                .orElseThrow(() -> new IllegalArgumentException(I18n.t("err.arrivalStationDoesNotExist")));
         Segment segment = validateSegment(trainTrip, departureStation, arrivalStation);
         if (trainTrip.getStatus() != TripStatus.SCHEDULED) {
-            throw new IllegalArgumentException("Train trip is not available for booking");
+            throw new IllegalArgumentException(I18n.t("err.trainTripIsNotAvailableForBooking"));
         }
         for (Long seatId : request.getSeatIds()) {
             Seat seat = seatsById.get(seatId);
             if (seat.getCoach() == null
                     || seat.getCoach().getTrain() == null
                     || !seat.getCoach().getTrain().getTrainId().equals(trainTrip.getTrain().getTrainId())) {
-                throw new IllegalArgumentException("Seat does not belong to this train trip: " + seatId);
+                throw new IllegalArgumentException(I18n.t("err.seatDoesNotBelongToThisTrain", seatId));
             }
             if (ticketRepository.existsActiveOverlappingSeatBooking(
                     seatId,
@@ -197,7 +199,7 @@ public class BookingServiceImpl implements com.hsf302.trainoffice.service.Bookin
                     segment.departureOrder,
                     segment.arrivalOrder,
                     ACTIVE_TICKET_STATUSES)) {
-                throw new IllegalArgumentException("Seat already booked: " + seatId);
+                throw new IllegalArgumentException(I18n.t("err.seatAlreadyBooked", seatId));
             }
         }
 
@@ -247,48 +249,48 @@ public class BookingServiceImpl implements com.hsf302.trainoffice.service.Bookin
 
     private void validateRequest(CreateBookingRequest request) {
         if (request == null) {
-            throw new IllegalArgumentException("Booking request is required");
+            throw new IllegalArgumentException(I18n.t("err.bookingRequestIsRequired"));
         }
 
         if (request.getTrainTripId() == null) {
-            throw new IllegalArgumentException("Train trip is required");
+            throw new IllegalArgumentException(I18n.t("err.trainTripIsRequired"));
         }
 
         if (request.getDepartureStationId() == null || request.getArrivalStationId() == null) {
-            throw new IllegalArgumentException("Departure and arrival stations are required");
+            throw new IllegalArgumentException(I18n.t("err.departureAndArrivalStationsAreRequired"));
         }
 
         if (request.getDepartureStationId().equals(request.getArrivalStationId())) {
-            throw new IllegalArgumentException("Departure station and arrival station must be different");
+            throw new IllegalArgumentException(I18n.t("err.departureStationAndArrivalStationMustBe"));
         }
 
         if (request.getBookerName() == null || request.getBookerName().isBlank()
                 || request.getBookerPhone() == null || request.getBookerPhone().isBlank()
                 || request.getBookerEmail() == null || request.getBookerEmail().isBlank()) {
-            throw new IllegalArgumentException("Booker contact information is required");
+            throw new IllegalArgumentException(I18n.t("err.bookerContactInformationIsRequired"));
         }
 
         if (request.getPassengers() == null || request.getPassengers().isEmpty()) {
-            throw new IllegalArgumentException("Booking must have at least one passenger");
+            throw new IllegalArgumentException(I18n.t("err.bookingMustHaveAtLeastOnePassenger"));
         }
 
         if (request.getSeatIds() == null || request.getSeatIds().isEmpty()) {
-            throw new IllegalArgumentException("Booking must have at least one seat");
+            throw new IllegalArgumentException(I18n.t("err.bookingMustHaveAtLeastOneSeat"));
         }
 
         if (request.getPassengers().size() != request.getSeatIds().size()) {
-            throw new IllegalArgumentException("Passenger count must match selected seat count");
+            throw new IllegalArgumentException(I18n.t("err.passengerCountMustMatchSelectedSeatCount"));
         }
 
         if (new HashSet<>(request.getSeatIds()).size() != request.getSeatIds().size()) {
-            throw new IllegalArgumentException("Seat cannot duplicate within the same booking");
+            throw new IllegalArgumentException(I18n.t("err.seatCannotDuplicateWithinTheSameBooking"));
         }
 
         Set<String> identities = new HashSet<>();
 
         for (PassengerBookingRequest passenger : request.getPassengers()) {
             if (passenger.getFullName() == null || passenger.getFullName().isBlank()) {
-                throw new IllegalArgumentException("Passenger full name is required");
+                throw new IllegalArgumentException(I18n.t("err.passengerFullNameIsRequired"));
             }
 
             validatePassengerAgeAndRelationship(passenger);
@@ -298,13 +300,13 @@ public class BookingServiceImpl implements com.hsf302.trainoffice.service.Bookin
 
                 if (age >= 16) {
                     if (passenger.getIdentityNumber() == null || passenger.getIdentityNumber().isBlank()) {
-                        throw new IllegalArgumentException("Passengers from 16 years old must have identity number");
+                        throw new IllegalArgumentException(I18n.t("err.passengersFrom16YearsOldMustHave"));
                     }
 
                     String identity = passenger.getIdentityNumber().trim();
 
                     if (!identities.add(identity)) {
-                        throw new IllegalArgumentException("Passenger identity number cannot duplicate within the same booking");
+                        throw new IllegalArgumentException(I18n.t("err.passengerIdentityNumberCannotDuplicateWithinThe"));
                     }
                 }
             }
@@ -313,14 +315,14 @@ public class BookingServiceImpl implements com.hsf302.trainoffice.service.Bookin
 
     private Segment validateSegment(TrainTrip trainTrip, Station departureStation, Station arrivalStation) {
         TripStation departure = tripStationRepository
-                .findByTrainTrip_TripIdAndStation_StationId(trainTrip.getTripId(), departureStation.getStationId())
-                .orElseThrow(() -> new IllegalArgumentException("Departure station is not part of this train trip"));
+                .findStop(trainTrip.getTripId(), departureStation.getStationId())
+                .orElseThrow(() -> new IllegalArgumentException(I18n.t("err.departureStationIsNotPartOfThis")));
         TripStation arrival = tripStationRepository
-                .findByTrainTrip_TripIdAndStation_StationId(trainTrip.getTripId(), arrivalStation.getStationId())
-                .orElseThrow(() -> new IllegalArgumentException("Arrival station is not part of this train trip"));
+                .findStop(trainTrip.getTripId(), arrivalStation.getStationId())
+                .orElseThrow(() -> new IllegalArgumentException(I18n.t("err.arrivalStationIsNotPartOfThis")));
         if (departure.getStationOrder() == null || arrival.getStationOrder() == null
                 || departure.getStationOrder() >= arrival.getStationOrder()) {
-            throw new IllegalArgumentException("Departure station must be before arrival station on the same train trip");
+            throw new IllegalArgumentException(I18n.t("err.departureStationMustBeBeforeArrivalStation"));
         }
         return new Segment(departure.getStationOrder(), arrival.getStationOrder());
     }
@@ -344,12 +346,12 @@ public class BookingServiceImpl implements com.hsf302.trainoffice.service.Bookin
     }
     private void validatePassengerAgeAndRelationship(PassengerBookingRequest passenger) {
         if (passenger.getDateOfBirth() == null) {
-            throw new IllegalArgumentException("Passenger date of birth is required");
+            throw new IllegalArgumentException(I18n.t("err.passengerDateOfBirthIsRequired"));
         }
 
         LocalDate today = LocalDate.now();
         if (passenger.getDateOfBirth().isAfter(today)) {
-            throw new IllegalArgumentException("Passenger date of birth cannot be in the future");
+            throw new IllegalArgumentException(I18n.t("err.passengerDateOfBirthCannotBeIn"));
         }
 
         int age = Period.between(passenger.getDateOfBirth(), today).getYears();
@@ -357,14 +359,14 @@ public class BookingServiceImpl implements com.hsf302.trainoffice.service.Bookin
 
         if (age >= 16) {
             if (passenger.getIdentityNumber() == null || passenger.getIdentityNumber().isBlank()) {
-                throw new IllegalArgumentException("Passengers from 16 years old must have identity number");
+                throw new IllegalArgumentException(I18n.t("err.passengersFrom16YearsOldMustHave"));
             }
         }
 
         if (age < 16) {
             if (passenger.getRelationshipToBooker() == null
                     || passenger.getRelationshipToBooker().isBlank()) {
-                throw new IllegalArgumentException("Passenger under 16 must have relationship to booker");
+                throw new IllegalArgumentException(I18n.t("err.passengerUnder16MustHaveRelationshipTo"));
             }
         }
     }

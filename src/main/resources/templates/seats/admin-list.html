@@ -1,42 +1,41 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layouts/admin-layout :: layout('Seat Inventory', ~{::section}, 'seats')}">
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/admin-layout :: layout(#{seat.seatInventory}, ~{::section}, 'seats')}">
 
 <section>
     <div class="admin-page-hero">
         <div>
             <span class="admin-page-kicker">
-                <i class="fas fa-chair mr-1"></i>
-                Seat Inventory
+                <i class="bi bi-grid-3x2-gap"></i>
+                [[#{seat.seatInventory}]]
             </span>
 
-            <h2>Seat Inventory</h2>
+            <h1>[[#{seat.seatInventory}]]</h1>
 
             <p th:if="${selectedCoach != null}"
-               th:text="'Filtered by coach: ' + ${selectedCoach.coachNumber}">
+               th:text="#{seat.filteredByCoach(${selectedCoach.coachNumber})}">
                 Filtered by coach
             </p>
 
             <p th:if="${selectedCoach == null and selectedTrain != null}"
-               th:text="'Filtered by train: ' + ${selectedTrain.trainCode}">
+               th:text="#{common.filteredByTrain(${selectedTrain.trainCode})}">
                 Filtered by train
             </p>
 
             <p th:if="${selectedCoach == null and selectedTrain == null}">
-                Seats are generated automatically from coach capacity or sleeper compartment layout.
+                [[#{seat.seatsAreGeneratedAutomaticallyFromCoach}]]
             </p>
         </div>
 
         <button class="btn btn-outline-secondary" disabled>
-            <i class="fas fa-lock mr-1"></i>
-            Read-only inventory
+            <i class="bi bi-lock"></i>
+            [[#{seat.readOnlyInventory}]]
         </button>
     </div>
 
     <div class="alert alert-info seat-note">
-        <strong>Seat management note:</strong>
-        Seats are generated automatically. To change seat quantity, update coach capacity.
-        For sleeper coaches, update compartment count and berths per compartment in the coach form.
+        <strong>[[#{seat.seatManagementNote}]]</strong>
+        [[#{seat.seatsAreGeneratedAutomaticallyToChange}]]
     </div>
 
     <div class="alert alert-success" th:if="${successMessage}" th:text="${successMessage}"></div>
@@ -46,13 +45,13 @@
         <div class="card-header">
             <form th:action="@{/admin/seats}" method="get" class="seat-filter-form">
                 <div class="seat-filter-group">
-                    <label class="form-label" for="trainId">Filter by train</label>
+                    <label class="form-label" for="trainId">[[#{common.filterByTrain}]]</label>
 
                     <select id="trainId"
-                            class="form-control"
+                            class="form-select"
                             name="trainId"
                             onchange="this.form.submit()">
-                        <option value="">All trains</option>
+                        <option value="">[[#{common.allTrains}]]</option>
 
                         <option th:each="train : ${allTrains}"
                                 th:value="${train.trainId}"
@@ -64,12 +63,12 @@
                 </div>
 
                 <div class="seat-filter-group">
-                    <label class="form-label" for="coachId">Filter by coach</label>
+                    <label class="form-label" for="coachId">[[#{seat.filterByCoach}]]</label>
 
                     <select id="coachId"
-                            class="form-control"
+                            class="form-select"
                             name="coachId">
-                        <option value="">All coaches</option>
+                        <option value="">[[#{seat.allCoaches}]]</option>
 
                         <option th:each="coach : ${allCoaches}"
                                 th:value="${coach.coachId}"
@@ -81,24 +80,24 @@
                 </div>
 
                 <div class="seat-filter-group seat-filter-search">
-                    <label class="form-label" for="keyword">Search seats</label>
+                    <label class="form-label" for="keyword">[[#{seat.searchSeats}]]</label>
 
                     <input id="keyword"
                            type="text"
                            name="keyword"
                            class="form-control"
                            th:value="${keyword}"
-                           placeholder="Search seat code, coach, type, compartment, berth level">
+                           th:placeholder="#{seat.searchSeatCodeCoachTypeCompartment}">
                 </div>
 
                 <div class="seat-filter-actions">
                     <button class="btn btn-primary" type="submit">
-                        <i class="fas fa-search mr-1"></i>
-                        Search
+                        <i class="bi bi-search"></i>
+                        [[#{common.search}]]
                     </button>
 
                     <a class="btn btn-outline-secondary" th:href="@{/admin/seats}">
-                        Clear
+                        [[#{common.clear}]]
                     </a>
                 </div>
             </form>
@@ -108,14 +107,14 @@
     <div class="card admin-table-card seat-table-card">
         <div class="card-header d-flex align-items-center justify-content-between">
             <div>
-                <span class="admin-card-title">Seat Directory</span>
+                <span class="admin-card-title">[[#{seat.seatDirectory}]]</span>
 
-                <small th:text="${totalItems} + ' seats found'">
+                <small th:text="#{seat.seatsFound(${totalItems})}">
                     0 seats found
                 </small>
             </div>
 
-            <span class="badge badge-info">Seat Management</span>
+            <span class="rj-badge is-info no-dot">[[#{seat.seatManagement}]]</span>
         </div>
 
         <div class="card-body table-responsive p-0">
@@ -123,15 +122,15 @@
                 <thead>
                 <tr>
                     <th class="seat-id-col">ID</th>
-                    <th>Seat / Berth</th>
-                    <th>Train</th>
-                    <th>Coach</th>
-                    <th>Compartment</th>
-                    <th>Berth Level</th>
-                    <th>Status</th>
-                    <th>Type</th>
-                    <th class="text-right">Extra Price</th>
-                    <th class="text-right">Actions</th>
+                    <th>[[#{common.seatBerth}]]</th>
+                    <th>[[#{common.train}]]</th>
+                    <th>[[#{common.coach}]]</th>
+                    <th>[[#{common.compartment}]]</th>
+                    <th>[[#{seat.berthLevel}]]</th>
+                    <th>[[#{common.status}]]</th>
+                    <th>[[#{common.type}]]</th>
+                    <th class="text-end">[[#{seat.extraPrice}]]</th>
+                    <th class="text-end">[[#{common.actions}]]</th>
                 </tr>
                 </thead>
 
@@ -146,7 +145,7 @@
                     <td>
                         <div class="seat-cell">
                             <span class="seat-cell-icon">
-                                <i class="fas fa-chair"></i>
+                                <i class="bi bi-grid-3x2-gap"></i>
                             </span>
 
                             <span class="seat-cell-info">
@@ -155,11 +154,11 @@
                                 </strong>
 
                                 <small th:if="${seat.compartment == null}">
-                                    Normal seat
+                                    [[#{seat.normalSeat}]]
                                 </small>
 
                                 <small th:if="${seat.compartment != null}"
-                                       th:text="'Sleeper berth in ' + ${seat.compartment.compartmentNumber}">
+                                       th:text="#{seat.sleeperBerthIn(${seat.compartment.compartmentNumber})}">
                                     Sleeper berth
                                 </small>
                             </span>
@@ -167,14 +166,14 @@
                     </td>
 
                     <td>
-                        <span class="badge badge-primary admin-badge-soft"
+                        <span class="rj-badge is-info admin-badge-soft no-dot"
                               th:text="${seat.coach != null and seat.coach.train != null ? seat.coach.train.trainCode : 'N/A'}">
                             SE1
                         </span>
                     </td>
 
                     <td>
-                        <span class="badge badge-secondary admin-badge-soft"
+                        <span class="rj-badge is-neutral admin-badge-soft no-dot"
                               th:text="${seat.coach != null ? seat.coach.coachNumber : 'N/A'}">
                             C01
                         </span>
@@ -182,7 +181,7 @@
 
                     <td>
                         <span th:if="${seat.compartment != null}"
-                              class="badge badge-info admin-badge-soft"
+                              class="rj-badge is-info admin-badge-soft no-dot"
                               th:text="${seat.compartment.compartmentNumber}">
                             K01
                         </span>
@@ -194,7 +193,7 @@
 
                     <td>
                         <span th:if="${seat.berthLevel != null}"
-                              class="badge badge-dark"
+                              class="rj-badge is-neutral no-dot"
                               th:text="${seat.berthLevel}">
                             LOWER
                         </span>
@@ -206,13 +205,13 @@
 
                     <td>
     <span th:if="${seat.active == true}"
-          class="badge badge-success">
-        ACTIVE
+          class="rj-badge is-success no-dot">
+        [[#{common.active}]]
     </span>
 
                         <span th:if="${seat.active != true}"
-                              class="badge badge-secondary">
-        RETIRED
+                              class="rj-badge is-neutral no-dot">
+        [[#{seat.retired}]]
     </span>
                     </td>
 
@@ -222,20 +221,19 @@
                         </span>
                     </td>
 
-                    <td class="text-right"
+                    <td class="text-end"
                         th:text="${seat.extraPrice != null ? #numbers.formatDecimal(seat.extraPrice, 0, 'COMMA', 0, 'POINT') + ' VND' : '0 VND'}">
                         0 VND
                     </td>
-                    <td class="text-right">
+                    <td class="text-end">
                         <form th:action="@{/admin/seats/{seatId}/delete(seatId=${seat.seatId})}"
                               method="post"
-                              onsubmit="return confirm('Are you sure you want to delete seat ' + this.dataset.seatNumber + '? This action is only allowed when the seat has not been used by any ticket.');"
+                              th:data-confirm="#{seat.deleteConfirm}" onsubmit="return confirm(this.dataset.confirm.replace('{0}', this.dataset.seatNumber));"
                               th:attr="data-seat-number=${seat.seatNumber}"
                               class="d-inline">
                             <input type="hidden" name="trainId" th:value="${selectedTrainId}">
                             <input type="hidden" name="coachId" th:value="${selectedCoachId}">
-                            <button type="submit" class="btn btn-sm btn-outline-danger">
-                                <i class="fas fa-trash"></i>
+                            <button type="submit" class="rj-icon-btn is-danger" th:title="#{common.delete}"><i class="bi bi-trash3" aria-hidden="true"></i>
                             </button>
                         </form>
                     </td>
@@ -244,9 +242,9 @@
                 <tr th:if="${#lists.isEmpty(seats)}">
                     <td colspan="10">
                         <div class="admin-empty-state">
-                            <i class="fas fa-chair"></i>
-                            <strong>No seats found</strong>
-                            <span>Try another keyword, train, or coach filter.</span>
+                            <i class="bi bi-grid-3x2-gap"></i>
+                            <strong>[[#{seat.noSeatsFound}]]</strong>
+                            <span>[[#{seat.tryAnotherKeywordTrainOrCoach}]]</span>
                         </div>
                     </td>
                 </tr>
@@ -257,7 +255,7 @@
         <div class="card-footer seat-pagination-footer"
              th:if="${totalPages > 1}">
             <small class="text-muted"
-                   th:text="'Page ' + ${currentPage} + ' of ' + ${totalPages}">
+                   th:text="#{common.pageOf(${currentPage}, ${totalPages})}">
                 Page 1 of 1
             </small>
 
@@ -267,7 +265,7 @@
                         th:classappend="${currentPage <= 1} ? ' disabled'">
                         <a class="page-link"
                            th:href="@{/admin/seats(page=${currentPage - 1}, keyword=${keyword}, trainId=${selectedTrainId}, coachId=${selectedCoachId})}">
-                            Previous
+                            [[#{common.previous}]]
                         </a>
                     </li>
 
@@ -285,7 +283,7 @@
                         th:classappend="${currentPage >= totalPages} ? ' disabled'">
                         <a class="page-link"
                            th:href="@{/admin/seats(page=${currentPage + 1}, keyword=${keyword}, trainId=${selectedTrainId}, coachId=${selectedCoachId})}">
-                            Next
+                            [[#{common.next}]]
                         </a>
                     </li>
                 </ul>
@@ -293,178 +291,5 @@
         </div>
     </div>
 
-    <style>
-        .seat-note {
-            margin-bottom: 18px;
-        }
-
-        .seat-filter-form {
-            display: grid;
-            grid-template-columns: minmax(180px, 1fr) minmax(190px, 1fr) minmax(280px, 2fr) auto;
-            gap: 12px;
-            align-items: end;
-        }
-
-        .seat-filter-group {
-            min-width: 0;
-        }
-
-        .seat-filter-group .form-control {
-            min-height: 42px;
-        }
-
-        .seat-filter-actions {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            white-space: nowrap;
-        }
-
-        .seat-filter-actions .btn {
-            min-height: 42px;
-            padding-left: 18px;
-            padding-right: 18px;
-        }
-
-        .seat-table-card {
-            overflow: hidden;
-        }
-
-        .seat-inventory-table {
-            width: 100%;
-            table-layout: fixed;
-        }
-
-        .seat-inventory-table th,
-        .seat-inventory-table td {
-            vertical-align: middle;
-            white-space: normal;
-            overflow-wrap: anywhere;
-        }
-
-        .seat-inventory-table thead th {
-            white-space: nowrap;
-            font-size: 12px;
-        }
-
-        .seat-id-col {
-            width: 70px;
-        }
-
-        .seat-inventory-table th:nth-child(2),
-        .seat-inventory-table td:nth-child(2) {
-            width: 260px;
-        }
-
-        .seat-inventory-table th:nth-child(3),
-        .seat-inventory-table td:nth-child(3) {
-            width: 100px;
-        }
-
-        .seat-inventory-table th:nth-child(4),
-        .seat-inventory-table td:nth-child(4) {
-            width: 100px;
-        }
-
-        .seat-inventory-table th:nth-child(5),
-        .seat-inventory-table td:nth-child(5) {
-            width: 140px;
-        }
-
-        .seat-inventory-table th:nth-child(6),
-        .seat-inventory-table td:nth-child(6) {
-            width: 130px;
-        }
-
-        .seat-inventory-table th:nth-child(7),
-        .seat-inventory-table td:nth-child(7) {
-            width: 170px;
-        }
-
-        .seat-inventory-table th:nth-child(8),
-        .seat-inventory-table td:nth-child(8) {
-            width: 150px;
-        }
-
-        .seat-cell {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            min-width: 0;
-        }
-
-        .seat-cell-icon {
-            width: 38px;
-            height: 38px;
-            flex: 0 0 38px;
-            border-radius: 10px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            color: #0b74ad;
-            background: #e8f6ff;
-        }
-
-        .seat-cell-info {
-            min-width: 0;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .seat-cell-info strong {
-            color: #061c38;
-            font-weight: 900;
-            line-height: 1.2;
-        }
-
-        .seat-cell-info small {
-            color: #64748b;
-            font-weight: 700;
-            line-height: 1.25;
-        }
-
-        .seat-pagination-footer {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-
-        @media (max-width: 1200px) {
-            .seat-filter-form {
-                grid-template-columns: 1fr 1fr;
-            }
-
-            .seat-filter-search {
-                grid-column: span 2;
-            }
-
-            .seat-filter-actions {
-                grid-column: span 2;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .seat-filter-form {
-                grid-template-columns: 1fr;
-            }
-
-            .seat-filter-search,
-            .seat-filter-actions {
-                grid-column: auto;
-            }
-
-            .seat-filter-actions {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .seat-pagination-footer {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-        }
-    </style>
 </section>
 </html>

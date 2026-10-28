@@ -1,24 +1,24 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layouts/admin-layout :: layout('Group Discount Policy Form', ~{::section}, 'group-discounts')}">
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/admin-layout :: layout(#{groupDiscount.groupDiscountPolicyForm}, ~{::section}, 'group-discounts')}">
 <section>
     <div class="admin-page-hero">
         <div>
             <span class="admin-page-kicker">
-                <i class="fas fa-users mr-1"></i>
-                Group Fare Policy
+                <i class="bi bi-people"></i>
+                [[#{groupDiscount.groupFarePolicy}]]
             </span>
 
-            <h2 th:text="${policy.policyId == null ? 'Create Group Discount Policy' : 'Update Group Discount Policy'}">
+            <h1 th:text="${policy.policyId == null ? #messages.msg('groupDiscount.createGroupDiscountPolicy') : #messages.msg('groupDiscount.updateGroupDiscountPolicy')}">
                 Group Discount Policy Form
-            </h2>
+            </h1>
 
-            <p>Configure passenger count range and group discount percentage.</p>
+            <p>[[#{groupDiscount.configurePassengerCountRangeAndGroup}]]</p>
         </div>
 
-        <a class="btn btn-outline-primary" th:href="@{/admin/group-discount-policies}">
-            <i class="fas fa-arrow-left mr-1"></i>
-            Back to group policies
+        <a class="btn rj-btn-quiet" th:href="@{/admin/group-discount-policies}">
+            <i class="bi bi-arrow-left"></i>
+            [[#{groupDiscount.backToGroupPolicies}]]
         </a>
     </div>
 
@@ -26,8 +26,8 @@
 
     <div class="card admin-form-card">
         <div class="card-header">
-            <span class="admin-card-title">Group Policy Information</span>
-            <small>Example: Family Combo, 4 - 6 passengers, discount 8%.</small>
+            <span class="admin-card-title">[[#{groupDiscount.groupPolicyInformation}]]</span>
+            <small>[[#{groupDiscount.exampleFamilyCombo46Passengers}]]</small>
         </div>
 
         <form th:action="@{/admin/group-discount-policies/save}" th:object="${policy}" method="post">
@@ -36,7 +36,7 @@
             <div class="card-body">
                 <div class="row">
                     <div class="col-lg-3 mb-3">
-                        <label class="form-label">Policy Code</label>
+                        <label class="form-label">[[#{common.policyCode}]]</label>
                         <input class="form-control"
                                th:field="*{policyCode}"
                                placeholder="FAMILY_COMBO"
@@ -44,15 +44,15 @@
                     </div>
 
                     <div class="col-lg-5 mb-3">
-                        <label class="form-label">Policy Name</label>
+                        <label class="form-label">[[#{common.policyName}]]</label>
                         <input class="form-control"
                                th:field="*{policyName}"
-                               placeholder="Family Combo"
+                               th:placeholder="#{groupDiscount.familyCombo}"
                                required>
                     </div>
 
                     <div class="col-lg-2 mb-3">
-                        <label class="form-label">Display Order</label>
+                        <label class="form-label">[[#{common.displayOrder}]]</label>
                         <input class="form-control"
                                type="number"
                                min="1"
@@ -60,15 +60,15 @@
                     </div>
 
                     <div class="col-lg-2 mb-3">
-                        <label class="form-label">Active</label>
-                        <select class="form-control" th:field="*{active}">
-                            <option th:value="true">Active</option>
-                            <option th:value="false">Inactive</option>
+                        <label class="form-label">[[#{common.active}]]</label>
+                        <select class="form-select" th:field="*{active}">
+                            <option th:value="true">[[#{common.active}]]</option>
+                            <option th:value="false">[[#{common.inactive}]]</option>
                         </select>
                     </div>
 
                     <div class="col-lg-3 mb-3">
-                        <label class="form-label">Min Passengers</label>
+                        <label class="form-label">[[#{groupDiscount.minPassengers}]]</label>
                         <input class="form-control"
                                type="number"
                                min="2"
@@ -77,16 +77,16 @@
                     </div>
 
                     <div class="col-lg-3 mb-3">
-                        <label class="form-label">Max Passengers</label>
+                        <label class="form-label">[[#{groupDiscount.maxPassengers}]]</label>
                         <input class="form-control"
                                type="number"
                                min="2"
                                th:field="*{maxPassengers}"
-                               placeholder="Empty = no limit">
+                               th:placeholder="#{common.emptyNoLimit}">
                     </div>
 
                     <div class="col-lg-3 mb-3">
-                        <label class="form-label">Discount Percent</label>
+                        <label class="form-label">[[#{common.discountPercent}]]</label>
                         <div class="input-group">
                             <input class="form-control"
                                    type="number"
@@ -95,29 +95,27 @@
                                    step="0.01"
                                    th:field="*{discountPercent}"
                                    required>
-                            <div class="input-group-append">
-                                <span class="input-group-text">%</span>
-                            </div>
+                            <span class="input-group-text">%</span>
                         </div>
                     </div>
 
                     <div class="col-lg-12 mb-3">
-                        <label class="form-label">Description</label>
+                        <label class="form-label">[[#{common.description}]]</label>
                         <input class="form-control"
                                th:field="*{description}"
-                               placeholder="Optional note">
+                               th:placeholder="#{common.optionalNote}">
                     </div>
                 </div>
             </div>
 
             <div class="card-footer d-flex justify-content-end gap-2">
                 <a class="btn btn-outline-secondary" th:href="@{/admin/group-discount-policies}">
-                    Cancel
+                    [[#{common.cancel}]]
                 </a>
 
                 <button class="btn btn-primary" type="submit">
-                    <i class="fas fa-save mr-1"></i>
-                    Save Group Policy
+                    <i class="bi bi-check2-circle"></i>
+                    [[#{groupDiscount.saveGroupPolicy}]]
                 </button>
             </div>
         </form>

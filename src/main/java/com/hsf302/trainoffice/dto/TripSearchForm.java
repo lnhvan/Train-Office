@@ -1,5 +1,6 @@
 package com.hsf302.trainoffice.dto;
 
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -10,13 +11,13 @@ import java.time.LocalDate;
 @Data
 public class TripSearchForm {
 
-    @NotNull(message = "Departure station is required")
+    @NotNull(message = "{validation.departureStation.required}")
     private Long departureStationId;
 
-    @NotNull(message = "Arrival station is required")
+    @NotNull(message = "{validation.arrivalStation.required}")
     private Long arrivalStationId;
 
-    @NotNull(message = "Departure date is required")
+    @NotNull(message = "{validation.departureDate.required}")
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate departureDate;
 
@@ -25,6 +26,7 @@ public class TripSearchForm {
 
     private Boolean roundTrip = false;
 
-    @Min(value = 1, message = "Passenger count must be greater than 0")
+    @Min(value = 1, message = "{validation.passengerCount.min}")
+    @Max(value = 10, message = "{validation.passengerCount.max}")
     private int passengerCount = 1;
 }

@@ -1,152 +1,100 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layouts/customer-layout :: layout('My Tickets', ~{::section}, 'tickets')}">
-
-<section class="rail-ticket-page rail-my-ticket-page">
-    <link rel="stylesheet" th:href="@{/css/rail-ticket-pages.css}">
-
-    <div class="rail-ticket-container rail-my-ticket-container">
-        <header class="rail-page-head rail-my-ticket-head">
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/customer-layout :: layout(#{common.myTickets}, ~{::section}, 'tickets')}">
+<section class="rj-page">
+    <div class="rj-container">
+        <div class="rj-page-head">
             <div>
-                <span class="rail-page-eyebrow">Train tickets</span>
-
-                <h1 class="rail-page-title">My Tickets</h1>
-
-                <p class="rail-page-subtitle">
-                    View tickets created from your paid bookings. You can print confirmed tickets or request a refund when eligible.
-                </p>
+                <h1>[[#{common.myTickets}]]</h1>
+                <p>[[#{ticket.viewTicketsCreatedFromYourPaid}]]</p>
             </div>
-
-            <div class="rail-page-actions"
+            <div class="rj-page-actions"
                  th:if="${tickets != null and !#lists.isEmpty(tickets)}">
-                <button type="button" class="rail-primary-btn" onclick="window.print()">
+                <button type="button" class="btn btn-outline-secondary" onclick="window.print()">
                     <i class="bi bi-printer"></i>
-                    Print All
+                    [[#{ticket.printAll}]]
                 </button>
             </div>
-        </header>
-
-        <div class="rail-alert danger" th:if="${error}" th:text="${error}"></div>
-        <div class="rail-alert success" th:if="${successMessage}" th:text="${successMessage}"></div>
-        <div class="rail-alert danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
-
-        <div class="rail-ticket-list"
-             th:if="${tickets != null and !#lists.isEmpty(tickets)}">
-
-            <article class="rail-glass-card rail-family-ticket rail-ticket-row"
-                     th:each="ticket, stat : ${tickets}"
-                     th:classappend="${stat.index > 0} ? ' muted'">
-
-                <div class="rail-ticket-main-info">
-                    <span class="rail-summary-label">Passenger</span>
-
-                    <div class="rail-history-code"
-                         th:text="${ticket.passenger != null ? ticket.passenger.fullName : '-'}">
-                        Passenger
-                    </div>
-
-                    <div class="rail-ticket-code">
-                        <i class="bi bi-ticket-perforated"></i>
-                        <span th:text="${ticket.ticketCode}">RJ-T001</span>
-                    </div>
-                </div>
-
-                <div class="rail-ticket-field">
-                    <small>Coach</small>
-
-                    <strong th:text="${ticket.seat != null and ticket.seat.coach != null ? ticket.seat.coach.coachNumber : '-'}">
-                        C01
-                    </strong>
-                </div>
-                <div class="rail-ticket-field">
-                    <small>Compartment</small>
-
-                    <strong th:text="${ticket.seat != null and ticket.seat.compartment != null ? ticket.seat.compartment.compartmentNumber : '-'}">
-                        K01
-                    </strong>
-                </div>
-                <div class="rail-ticket-field">
-                    <small>Seat</small>
-
-                    <strong>
-                        <span th:text="${ticket.seat != null ? ticket.seat.seatNumber : '-'}">01A</span>
-                        <small class="d-block mt-1"
-                               th:if="${ticket.seat != null and ticket.seat.berthLevel != null}"
-                               th:text="${ticket.seat.berthLevel}">
-                            LOWER
-                        </small>
-                    </strong>
-                </div>
-
-                <div class="rail-ticket-status-block">
-                    <div class="rail-ticket-class">
-                        <small>Class</small>
-
-                        <strong th:text="${ticket.seat != null and ticket.seat.seatType != null ? ticket.seat.seatType : 'Standard'}">
-                            Standard
-                        </strong>
-                    </div>
-
-                    <div class="mt-2">
-                        <span class="rail-chip"
-                              th:if="${ticket.ticketStatus == null}">
-                            UNKNOWN
-                        </span>
-
-                        <span class="rail-chip"
-                              th:if="${ticket.ticketStatus != null and ticket.ticketStatus.name() != 'REFUNDED'}"
-                              th:classappend="${ticket.ticketStatus.name() == 'CONFIRMED'} ? ' success' : ' neutral'"
-                              th:text="${ticket.ticketStatus}">
-                            CONFIRMED
-                        </span>
-
-                        <span class="rail-chip success"
-                              th:if="${ticket.ticketStatus != null and ticket.ticketStatus.name() == 'REFUNDED'}">
-                            REFUNDED
-                        </span>
-                    </div>
-                </div>
-
-                <div class="rail-ticket-list-actions">
-                    <a class="rail-danger-btn"
-                       th:if="${ticket.ticketStatus != null and ticket.ticketStatus.name() == 'CONFIRMED'}"
-                       th:href="@{/tickets/{id}/refund(id=${ticket.ticketId})}">
-                        Refund
-                    </a>
-
-                    <a class="rail-icon-btn"
-                       th:if="${ticket.ticketStatus != null and ticket.ticketStatus.name() != 'REFUNDED'}"
-                       th:href="@{/tickets/{id}/print(id=${ticket.ticketId})}"
-                       title="Print ticket">
-                        <i class="bi bi-printer"></i>
-                    </a>
-
-                    <a class="rail-secondary-btn"
-                       th:href="@{/tickets/{id}(id=${ticket.ticketId})}">
-                        Details
-                    </a>
-                </div>
-            </article>
         </div>
 
-        <div class="rail-glass-card rail-empty-state rail-ticket-empty-state"
+        <div class="alert alert-danger" th:if="${error}" th:text="${error}"></div>
+        <div class="alert alert-success" th:if="${successMessage}" th:text="${successMessage}"></div>
+        <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+
+        <ul class="rj-ticket-list"
+            th:if="${tickets != null and !#lists.isEmpty(tickets)}">
+            <li class="rj-ticket"
+                th:each="ticket, stat : ${tickets}"
+                th:classappend="${ticket.ticketStatus != null and ticket.ticketStatus.name() == 'REFUNDED'} ? ' is-void'">
+                <div class="rj-ticket-main">
+                    <div class="rj-ticket-person">
+                        <small>[[#{common.passenger}]]</small>
+                        <strong th:text="${ticket.passenger != null ? ticket.passenger.fullName : '-'}">Passenger</strong>
+                        <span class="rj-code"><i class="bi bi-ticket-perforated"></i> <span th:text="${ticket.ticketCode}">RJ-T001</span></span>
+                    </div>
+                    <dl class="rj-ticket-fields">
+                        <div>
+                            <dt>[[#{common.coach}]]</dt>
+                            <dd th:text="${ticket.seat != null and ticket.seat.coach != null ? ticket.seat.coach.coachNumber : '-'}">C01</dd>
+                        </div>
+                        <div>
+                            <dt>[[#{common.compartment}]]</dt>
+                            <dd th:text="${ticket.seat != null and ticket.seat.compartment != null ? ticket.seat.compartment.compartmentNumber : '-'}">K01</dd>
+                        </div>
+                        <div>
+                            <dt>[[#{common.seat}]]</dt>
+                            <dd>
+                                <span th:text="${ticket.seat != null ? ticket.seat.seatNumber : '-'}">01A</span>
+                                <small class="d-block"
+                                       th:if="${ticket.seat != null and ticket.seat.berthLevel != null}"
+                                       th:text="${ticket.seat.berthLevel == 'LOWER' ? #messages.msg('booking.level1LowerBerth') :
+          (ticket.seat.berthLevel == 'MIDDLE' ? #messages.msg('booking.level2MiddleBerth') :
+          (ticket.seat.berthLevel == 'UPPER' ? #messages.msg('booking.level3UpperBerth') : ticket.seat.berthLevel))}">LOWER</small>
+                            </dd>
+                        </div>
+                        <div>
+                            <dt>[[#{ticket.class}]]</dt>
+                            <dd th:text="${ticket.seat != null and ticket.seat.seatType != null ? ticket.seat.seatType : #messages.msg('ticket.standard')}">Standard</dd>
+                        </div>
+                    </dl>
+                </div>
+                <div class="rj-ticket-stub-side">
+                    <span class="rj-badge is-neutral"
+                          th:if="${ticket.ticketStatus == null}">[[#{common.unknown}]]</span>
+                    <span class="rj-badge"
+                          th:if="${ticket.ticketStatus != null and ticket.ticketStatus.name() != 'REFUNDED'}"
+                          th:classappend="${ticket.ticketStatus.name() == 'CONFIRMED'} ? ' is-success' : ' is-neutral'"
+                          th:text="${#messages.msgOrNull('enum.' + (ticket.ticketStatus)) ?: (ticket.ticketStatus)}">CONFIRMED</span>
+                    <span class="rj-badge is-info"
+                          th:if="${ticket.ticketStatus != null and ticket.ticketStatus.name() == 'REFUNDED'}">[[#{common.refunded}]]</span>
+                    <div class="rj-ticket-actions">
+                        <a class="btn btn-sm btn-primary"
+                           th:href="@{/tickets/{id}(id=${ticket.ticketId})}">[[#{common.details}]]</a>
+                        <a class="rj-icon-btn"
+                           th:if="${ticket.ticketStatus != null and ticket.ticketStatus.name() != 'REFUNDED'}"
+                           th:href="@{/tickets/{id}/print(id=${ticket.ticketId})}"
+                           th:title="#{ticket.printTicket}" th:aria-label="#{ticket.printTicket}">
+                            <i class="bi bi-printer"></i>
+                        </a>
+                        <a class="rj-icon-btn is-danger"
+                           th:if="${ticket.ticketStatus != null and ticket.ticketStatus.name() == 'CONFIRMED'}"
+                           th:href="@{/tickets/{id}/refund(id=${ticket.ticketId})}"
+                           th:title="#{common.refund}" th:aria-label="#{common.refund}">
+                            <i class="bi bi-arrow-counterclockwise"></i>
+                        </a>
+                    </div>
+                </div>
+            </li>
+        </ul>
+
+        <div class="rj-card rj-empty"
              th:if="${tickets == null or #lists.isEmpty(tickets)}">
-
-            <div class="rail-empty-icon">
-                <i class="bi bi-ticket-perforated"></i>
-            </div>
-
-            <span class="rail-page-eyebrow">No ticket records</span>
-
-            <h2>No tickets yet</h2>
-
-            <p>
-                Your confirmed tickets will appear here after your payment is completed successfully.
-            </p>
-
-            <a class="rail-primary-btn" th:href="@{/booking/search}">
+            <i class="bi bi-ticket-perforated"></i>
+            <strong>[[#{ticket.noTicketsYet}]]</strong>
+            <span>[[#{ticket.yourConfirmedTicketsWillAppearHere}]]</span>
+            <a class="btn btn-primary" th:href="@{/booking/search}">
                 <i class="bi bi-search"></i>
-                Book a Trip
+                [[#{ticket.bookATrip}]]
             </a>
         </div>
     </div>

@@ -1,5 +1,7 @@
 package com.hsf302.trainoffice.controller;
 
+
+import com.hsf302.trainoffice.config.I18n;
 import com.hsf302.trainoffice.entity.DiscountPolicy;
 import com.hsf302.trainoffice.service.DiscountPolicyService;
 import org.springframework.stereotype.Controller;
@@ -39,7 +41,7 @@ public class DiscountPolicyController {
                     return "discount-policies/form";
                 })
                 .orElseGet(() -> {
-                    redirectAttributes.addFlashAttribute("errorMessage", "Discount policy not found.");
+                    redirectAttributes.addFlashAttribute("errorMessage", I18n.t("msg.discount.notFound"));
                     return "redirect:/admin/discount-policies";
                 });
     }
@@ -50,7 +52,7 @@ public class DiscountPolicyController {
                        RedirectAttributes redirectAttributes) {
         try {
             discountPolicyService.savePolicy(policy);
-            redirectAttributes.addFlashAttribute("successMessage", "Discount policy saved successfully.");
+            redirectAttributes.addFlashAttribute("successMessage", I18n.t("msg.discount.saved"));
             return "redirect:/admin/discount-policies";
 
         } catch (Exception ex) {
@@ -64,7 +66,7 @@ public class DiscountPolicyController {
                          RedirectAttributes redirectAttributes) {
         try {
             discountPolicyService.deletePolicy(id);
-            redirectAttributes.addFlashAttribute("successMessage", "Discount policy deleted successfully.");
+            redirectAttributes.addFlashAttribute("successMessage", I18n.t("msg.discount.deleted"));
 
         } catch (Exception ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());

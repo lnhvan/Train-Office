@@ -1,15 +1,15 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layouts/admin-layout :: layout('Edit Trip Station', ~{::section}, 'trips')}">
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/admin-layout :: layout(#{tripStation.editTripStation}, ~{::section}, 'trips')}">
 <section>
     <div class="admin-page-hero">
         <div>
-            <span class="admin-page-kicker"><i class="fas fa-edit mr-1"></i> Update Stop</span>
-            <h2>Edit Trip Station</h2>
-            <p th:text="${trip.train != null ? trip.train.trainName : 'Trip'}">Trip</p>
+            <span class="admin-page-kicker"><i class="bi bi-pencil-square"></i> [[#{tripStation.updateStop}]]</span>
+            <h1>[[#{tripStation.editTripStation}]]</h1>
+            <p th:text="${trip.train != null ? trip.train.trainName : #messages.msg('common.trip')}">Trip</p>
         </div>
-        <a class="btn btn-outline-primary" th:href="@{/admin/trips/{tripId}/stations(tripId=${trip.tripId})}">
-            <i class="fas fa-arrow-left mr-1"></i> Back to timeline
+        <a class="btn rj-btn-quiet" th:href="@{/admin/trips/{tripId}/stations(tripId=${trip.tripId})}">
+            <i class="bi bi-arrow-left"></i> [[#{tripStation.backToTimeline}]]
         </a>
     </div>
 
@@ -17,36 +17,38 @@
 
     <div class="card admin-form-card trip-form-card">
         <div class="card-header">
-            <span class="admin-card-title">Stop Details</span>
-            <small th:text="'Editing stop #' + ${tripStation.tripStationId}">Editing stop</small>
+            <span class="admin-card-title">[[#{tripStation.stopDetails}]]</span>
+            <small th:text="#{tripStation.editingStop} + ${tripStation.tripStationId}">Editing stop</small>
         </div>
         <form th:action="@{/admin/trips/{tripId}/stations/{id}/update(tripId=${trip.tripId},id=${tripStation.tripStationId})}" th:object="${tripStation}" method="post">
             <div class="card-body">
                 <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Station</label>
-                        <select class="form-control" th:field="*{station.stationId}" required>
-                            <option th:each="station : ${stations}" th:value="${station.stationId}" th:text="${station.stationCode + ' - ' + station.stationName}"></option>
+                    <div class="col-12 mb-3">
+                        <label class="form-label" for="routeStationId">[[#{tripStation.routeStation}]]</label>
+                        <select class="form-select" id="routeStationId" name="routeStation.routeStationId" required>
+                            <option value="">[[#{common.selectStation}]]</option>
+                            <option th:each="rs : ${routeStations}"
+                                    th:value="${rs.routeStationId}"
+                                    th:selected="${tripStation.routeStation != null and tripStation.routeStation.routeStationId == rs.routeStationId}"
+                                    th:text="${rs.stationOrder + '. ' + rs.station.stationName + ' (' + rs.station.stationCode + ') · ' + #numbers.formatDecimal(rs.distanceFromStartKm != null ? rs.distanceFromStartKm : 0, 1, 0) + ' km'}">1. Ha Noi (HAN) · 0 km</option>
                         </select>
+                        <div class="form-text">[[#{tripStation.orderFollowsRoute}]]</div>
+                        <div class="text-danger small mt-1" th:if="${#lists.isEmpty(routeStations)}">[[#{tripStation.routeHasNoStations}]]</div>
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label class="form-label">Station order</label>
-                        <input class="form-control" type="number" min="1" th:field="*{stationOrder}" required>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Arrival time</label>
+                        <label class="form-label">[[#{common.arrivalTime}]]</label>
                         <input class="form-control" type="datetime-local" th:field="*{arrivalTime}">
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label class="form-label">Departure time</label>
+                        <label class="form-label">[[#{common.departureTime}]]</label>
                         <input class="form-control" type="datetime-local" th:field="*{departureTime}">
                     </div>
                 </div>
             </div>
             <div class="card-footer d-flex justify-content-end gap-2">
-                <a class="btn btn-outline-secondary" th:href="@{/admin/trips/{tripId}/stations(tripId=${trip.tripId})}">Cancel</a>
+                <a class="btn btn-outline-secondary" th:href="@{/admin/trips/{tripId}/stations(tripId=${trip.tripId})}">[[#{common.cancel}]]</a>
                 <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-save mr-1"></i> Update Stop
+                    <i class="bi bi-check2-circle"></i> [[#{tripStation.updateStop}]]
                 </button>
             </div>
         </form>

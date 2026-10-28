@@ -10,14 +10,15 @@ import lombok.Setter;
 @Setter
 @Data
 public class ChangePasswordRequest {
-    @NotBlank(message = "The current password cannot be left blank.")
-    @Size(min = 6, message = "The current password must be 6 characters long.")
+    @NotBlank(message = "{validation.currentPassword.required}")
+    @Size(min = 6, message = "{validation.currentPassword.min}")
     private String currentPassword;
 
-    @NotBlank(message = "The new password cannot be left blank.")
-    @Size(min = 6, message = "The new password must be 6 characters long.")
+    @NotBlank(message = "{validation.newPassword.required}")
+    @Size(min = 6, message = "{validation.newPassword.min}")
+    @Size(max = 64, message = "{validation.password.max}")
     private String newPassword;
 
-    @NotBlank(message = "Password confirmation cannot be left blank.")
+    @NotBlank(message = "{validation.confirmPassword.required}")
     private String confirmNewPassword;
 }

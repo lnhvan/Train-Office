@@ -1,5 +1,7 @@
 package com.hsf302.trainoffice.service.impl;
 
+
+import com.hsf302.trainoffice.config.I18n;
 import com.hsf302.trainoffice.dto.BookingPriceSummary;
 import com.hsf302.trainoffice.dto.FareBreakdownItem;
 import com.hsf302.trainoffice.dto.PassengerBookingRequest;
@@ -100,7 +102,7 @@ public class BookingPricingServiceImpl implements BookingPricingService {
 
             String passengerName = passenger != null && passenger.getFullName() != null
                     ? passenger.getFullName()
-                    : "Passenger " + (i + 1);
+                    : I18n.t("booking.passengerN", i + 1);
 
             String passengerType = passenger != null
                     ? passenger.getPassengerType()
@@ -124,7 +126,7 @@ public class BookingPricingServiceImpl implements BookingPricingService {
 
             String passengerPolicyName = passengerPolicy != null
                     ? passengerPolicy.getPolicyName()
-                    : "Default";
+                    : I18n.t("booking.standardFare");
 
             String coachNumber = seat.getCoach() != null
                     ? seat.getCoach().getCoachNumber()
@@ -182,14 +184,14 @@ public class BookingPricingServiceImpl implements BookingPricingService {
         }
 
         GroupDiscountPolicy policy = groupDiscountPolicyService.getPolicyById(groupDiscountPolicyId)
-                .orElseThrow(() -> new IllegalArgumentException("Selected group discount policy does not exist."));
+                .orElseThrow(() -> new IllegalArgumentException(I18n.t("err.selectedGroupDiscountPolicyDoesNotExist")));
 
         if (!Boolean.TRUE.equals(policy.getActive())) {
-            throw new IllegalArgumentException("Selected group discount policy is inactive.");
+            throw new IllegalArgumentException(I18n.t("err.selectedGroupDiscountPolicyIsInactive"));
         }
 
         if (!groupDiscountPolicyService.matchesPassengerCount(policy, passengerCount)) {
-            throw new IllegalArgumentException("Selected group discount policy does not match passenger count.");
+            throw new IllegalArgumentException(I18n.t("err.selectedGroupDiscountPolicyDoesNotMatch"));
         }
 
         return policy;
@@ -223,9 +225,9 @@ public class BookingPricingServiceImpl implements BookingPricingService {
         String normalized = berthLevel.trim().toUpperCase();
 
         return switch (normalized) {
-            case "LOWER" -> "Level 1 / Lower berth";
-            case "MIDDLE" -> "Level 2 / Middle berth";
-            case "UPPER" -> "Level 3 / Upper berth";
+            case "LOWER" -> I18n.t("js.berthLower");
+            case "MIDDLE" -> I18n.t("js.berthMiddle");
+            case "UPPER" -> I18n.t("js.berthUpper");
             default -> normalized.replace("_", " ");
         };
     }

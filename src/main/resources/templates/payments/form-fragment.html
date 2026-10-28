@@ -1,112 +1,108 @@
 ﻿<div xmlns:th="http://www.thymeleaf.org" th:fragment="paymentForm(title)">
-    <div class="card">
-        <div class="card-header">
-            <h3 class="card-title" th:text="${title}">Payment Form</h3>
+    <div class="admin-page-hero">
+        <a class="btn rj-btn-quiet" th:href="@{/admin/payments}">
+            <i class="bi bi-arrow-left"></i> [[#{common.back}]]
+        </a>
+        <div>
+            <span class="admin-page-kicker"><i class="bi bi-credit-card"></i> [[#{common.payments}]]</span>
+            <h1 th:text="${title}">Payment Form</h1>
         </div>
+    </div>
 
+    <div class="alert alert-danger"
+         th:if="${errorMessage}"
+         th:text="${errorMessage}">
+    </div>
+
+    <div class="card admin-form-card">
         <form th:action="@{/admin/payments/save}" method="post">
             <div class="card-body">
-                <div class="alert alert-danger"
-                     th:if="${errorMessage}"
-                     th:text="${errorMessage}">
-                </div>
-
                 <input type="hidden"
                        name="paymentId"
                        th:value="${payment != null ? payment.paymentId : ''}">
 
-                <div class="form-group">
-                    <label for="bookingId">Booking</label>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label" for="bookingId">[[#{common.booking}]]</label>
+                        <select id="bookingId"
+                                class="form-select"
+                                name="bookingId"
+                                required>
+                            <option value="">[[#{payment.selectBooking}]]</option>
+                            <option th:each="booking : ${allBookings}"
+                                    th:value="${booking.bookingId}"
+                                    th:selected="${payment != null and payment.booking != null and payment.booking.bookingId == booking.bookingId}"
+                                    th:text="${booking.bookingNumber}">
+                                RJ0001
+                            </option>
+                        </select>
+                    </div>
 
-                    <select id="bookingId"
-                            class="form-control"
-                            name="bookingId"
-                            required>
-                        <option value="">Select booking</option>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label" for="paymentMethod">[[#{payment.paymentMethod}]]</label>
+                        <select id="paymentMethod"
+                                class="form-select"
+                                name="paymentMethod"
+                                required>
+                            <option value="">[[#{payment.selectMethod}]]</option>
+                            <option th:each="method : ${paymentMethods}"
+                                    th:value="${method}"
+                                    th:selected="${payment != null and payment.paymentMethod != null and payment.paymentMethod == method}"
+                                    th:text="${#messages.msgOrNull('enum.' + (method)) ?: (method)}">
+                                VNPAY
+                            </option>
+                        </select>
+                    </div>
 
-                        <option th:each="booking : ${allBookings}"
-                                th:value="${booking.bookingId}"
-                                th:selected="${payment != null and payment.booking != null and payment.booking.bookingId == booking.bookingId}"
-                                th:text="${booking.bookingNumber}">
-                            RJ0001
-                        </option>
-                    </select>
-                </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label" for="amount">[[#{common.amount}]]</label>
+                        <div class="input-group">
+                            <input id="amount"
+                                   name="amount"
+                                   type="number"
+                                   step="0.01"
+                                   min="0"
+                                   class="form-control"
+                                   th:value="${payment != null ? payment.amount : ''}"
+                                   required>
+                            <span class="input-group-text">VND</span>
+                        </div>
+                    </div>
 
-                <div class="form-group">
-                    <label for="paymentMethod">Payment Method</label>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label" for="paymentStatus">[[#{payment.paymentStatus}]]</label>
+                        <select id="paymentStatus"
+                                class="form-select"
+                                name="paymentStatus">
+                            <option value="">[[#{payment.default}]]</option>
+                            <option th:each="status : ${paymentStatuses}"
+                                    th:value="${status}"
+                                    th:selected="${payment != null and payment.paymentStatus != null and payment.paymentStatus == status}"
+                                    th:text="${#messages.msgOrNull('enum.' + (status)) ?: (status)}">
+                                PENDING
+                            </option>
+                        </select>
+                    </div>
 
-                    <select id="paymentMethod"
-                            class="form-control"
-                            name="paymentMethod"
-                            required>
-                        <option value="">Select method</option>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label" for="transactionCode">[[#{payment.transactionCode}]]</label>
+                        <input id="transactionCode"
+                               name="transactionCode"
+                               class="form-control"
+                               th:value="${payment != null ? payment.transactionCode : ''}">
+                    </div>
 
-                        <option th:each="method : ${paymentMethods}"
-                                th:value="${method}"
-                                th:selected="${payment != null and payment.paymentMethod != null and payment.paymentMethod == method}"
-                                th:text="${method}">
-                            VNPAY
-                        </option>
-                    </select>
-                </div>
 
-                <div class="form-group">
-                    <label for="amount">Amount</label>
-
-                    <input id="amount"
-                           name="amount"
-                           type="number"
-                           step="0.01"
-                           min="0"
-                           class="form-control"
-                           th:value="${payment != null ? payment.amount : ''}"
-                           required>
-                </div>
-
-                <div class="form-group">
-                    <label for="transactionCode">Transaction Code</label>
-
-                    <input id="transactionCode"
-                           name="transactionCode"
-                           class="form-control"
-                           th:value="${payment != null ? payment.transactionCode : ''}">
-                </div>
-
-                <div class="form-group">
-                    <label for="otpCode">OTP Code</label>
-
-                    <input id="otpCode"
-                           name="otpCode"
-                           class="form-control"
-                           th:value="${payment != null ? payment.otpCode : ''}">
-                </div>
-
-                <div class="form-group">
-                    <label for="paymentStatus">Payment Status</label>
-
-                    <select id="paymentStatus"
-                            class="form-control"
-                            name="paymentStatus">
-                        <option value="">Default</option>
-
-                        <option th:each="status : ${paymentStatuses}"
-                                th:value="${status}"
-                                th:selected="${payment != null and payment.paymentStatus != null and payment.paymentStatus == status}"
-                                th:text="${status}">
-                            PENDING
-                        </option>
-                    </select>
                 </div>
             </div>
 
-            <div class="card-footer d-flex justify-content-between">
-                <a class="btn btn-secondary" th:href="@{/admin/payments}">
-                    Back
+            <div class="card-footer">
+                <a class="btn btn-outline-secondary" th:href="@{/admin/payments}">
+                    [[#{common.cancel}]]
                 </a>
-
                 <button class="btn btn-primary" type="submit">
-                    Save
+                    <i class="bi bi-check2-circle"></i>
+                    [[#{common.save}]]
                 </button>
             </div>
         </form>

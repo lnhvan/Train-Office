@@ -1,5 +1,7 @@
 package com.hsf302.trainoffice.service.impl;
 
+
+import com.hsf302.trainoffice.config.I18n;
 import com.hsf302.trainoffice.entity.Passenger;
 import com.hsf302.trainoffice.repository.PassengerRepository;
 import com.hsf302.trainoffice.service.PassengerService;
@@ -44,16 +46,16 @@ public class PassengerServiceImpl implements PassengerService {
 
     private void validatePassenger(Passenger passenger) {
         if (passenger == null) {
-            throw new IllegalArgumentException("Passenger is required.");
+            throw new IllegalArgumentException(I18n.t("err.passengerIsRequired"));
         }
         if (passenger.getFullName() == null || passenger.getFullName().isBlank()) {
-            throw new IllegalArgumentException("Passenger full name is required.");
+            throw new IllegalArgumentException(I18n.t("err.passengerFullNameIsRequired2"));
         }
         if (passenger.getFullName().length() > 100) {
-            throw new IllegalArgumentException("Passenger full name is too long.");
+            throw new IllegalArgumentException(I18n.t("err.passengerFullNameIsTooLong"));
         }
         if (passenger.getIdentityNumber() != null && passenger.getIdentityNumber().length() > 30) {
-            throw new IllegalArgumentException("Identity number is too long.");
+            throw new IllegalArgumentException(I18n.t("err.identityNumberIsTooLong"));
         }
     }
 

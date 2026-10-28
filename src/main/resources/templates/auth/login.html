@@ -1,102 +1,121 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.language}" data-bs-theme="dark" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign In | RailJet</title>
-
-    <link rel="stylesheet" th:href="@{/css/bootstrap.css}">
-    <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link rel="stylesheet" th:href="@{/css/rail-auth.css}">
+    <title>[[#{auth.signInRailjet}]]</title>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" th:href="@{/css/rj-base.css}">
+    <link rel="stylesheet" th:href="@{/css/rj-auth.css}">
 </head>
-
-<body>
-<a class="auth-back" th:href="@{/booking/search}">
-    <i class="bi bi-arrow-left"></i>
-    Booking page
-</a>
-
-<main class="auth-page">
-    <section class="auth-card">
-        <div class="auth-brand">
-            <h1>RailJet</h1>
-            <p>Technological Elegance</p>
+<body class="rj-auth">
+<div class="lang-switcher--floating"><div th:replace="~{fragments/language-switcher :: languageSwitcher('dark')}"></div></div>
+<main class="rj-auth-layout">
+    <aside class="rj-auth-aside" aria-hidden="true">
+        <a class="rj-auth-brand" th:href="@{/booking/search}"><i class="bi bi-train-front-fill"></i>RailJet</a>
+        <div class="rj-auth-aside-copy">
+            <p class="rj-auth-aside-title">[[#{booking.crossDistance}]]<br>[[#{booking.masterTime}]]</p>
+            <p>[[#{auth.technologicalElegance}]]</p>
         </div>
+        <div class="rj-auth-track"><span></span><span></span></div>
+    </aside>
 
-        <div class="auth-alert error"
-             th:if="${error}"
-             th:text="${error}">
-            Invalid email or password.
-        </div>
+    <section class="rj-auth-panel">
+        <a class="rj-back-link" th:href="@{/booking/search}">
+            <i class="bi bi-arrow-left"></i>
+            [[#{auth.bookingPage}]]
+        </a>
+        <div class="rj-auth-card">
+            <h1>[[#{auth.signIn}]]</h1>
+            <p class="rj-auth-sub">[[#{auth.technologicalElegance}]]</p>
 
-        <div class="auth-alert success"
-             th:if="${successMessage}"
-             th:text="${successMessage}">
-            Action completed successfully.
-        </div>
+            <div class="alert alert-info"
+                 th:if="${infoMessage}"
+                 th:text="${infoMessage}">
+                Please sign in to continue.
+            </div>
+            <div class="alert alert-danger"
+                 th:if="${error}"
+                 th:text="${error}">
+                Invalid email or password.
+            </div>
+            <div class="alert alert-success"
+                 th:if="${successMessage}"
+                 th:text="${successMessage}">
+                Action completed successfully.
+            </div>
 
-        <form class="auth-form"
-              th:action="@{/login}"
-              method="post">
-
-            <div class="auth-field">
-                <label for="email">Email</label>
-
-                <div class="auth-input-wrap">
-                    <i class="bi bi-envelope auth-input-icon"></i>
-
-                    <input id="email"
-                           name="email"
-                           type="email"
-                           class="auth-input"
-                           placeholder="example@email.com"
-                           required>
+            <form th:action="@{/login}"
+                  method="post"
+                  data-disable-on-submit="true">
+                <input type="hidden" name="redirect" th:if="${redirect != null}" th:value="${redirect}">
+                <div class="rj-field">
+                    <label class="form-label" for="email">Email</label>
+                    <div class="rj-input-icon">
+                        <i class="bi bi-envelope"></i>
+                        <input id="email"
+                               name="email"
+                               type="email"
+                               class="form-control"
+                               placeholder="example@email.com"
+                               th:value="${email}"
+                               autocomplete="email"
+                               autofocus
+                               required>
+                    </div>
                 </div>
 
-            </div>
-
-            <div class="auth-field">
-                <label for="password">Password</label>
-
-                <div class="auth-input-wrap">
-                    <i class="bi bi-lock auth-input-icon"></i>
-
-                    <input id="password"
-                           name="password"
-                           type="password"
-                           class="auth-input password-input"
-                           placeholder="••••••••"
-                           required>
-
-                    <button class="auth-toggle password-toggle"
-                            type="button"
-                            aria-label="Toggle password visibility">
-                        <i class="bi bi-eye-slash"></i>
-                    </button>
+                <div class="rj-field">
+                    <div class="rj-label-row">
+                        <label class="form-label" for="password">[[#{common.password}]]</label>
+                        <a class="rj-link-sm" th:href="@{/forgot-password}">[[#{auth.forgotPassword}]]</a>
+                    </div>
+                    <div class="auth-input-wrap rj-input-icon">
+                        <i class="bi bi-lock"></i>
+                        <input id="password"
+                               name="password"
+                               type="password"
+                               class="form-control password-input"
+                               th:placeholder="#{auth.enterYourPassword}"
+                               autocomplete="current-password"
+                               required>
+                        <button class="rj-reveal password-toggle"
+                                type="button"
+                                th:aria-label="#{auth.togglePasswordVisibility}">
+                            <i class="bi bi-eye-slash"></i>
+                        </button>
+                    </div>
                 </div>
+
+                <button class="btn btn-primary btn-lg rj-btn-block" type="submit">
+                    [[#{auth.signIn}]]
+                </button>
+            </form>
+
+            <div class="rj-auth-divider">
+                <span>[[#{auth.or}]]</span>
             </div>
 
-            <div class="auth-row">
-                <a class="auth-link" th:href="@{/forgot-password}">
-                    Forgot password?
-                </a>
-            </div>
-
-            <button class="auth-btn" type="submit">
-                Sign in
-            </button>
-        </form>
-
-        <div class="auth-footnote">
-            Do not have an account?
-            <a class="auth-link" th:href="@{/register}">
-                Create one
+            <a class="btn btn-outline-light btn-lg rj-btn-block rj-google-btn"
+               th:href="${redirect != null} ? @{/oauth2/login/google(redirect=${redirect})} : @{/oauth2/login/google}">
+                <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true">
+                    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                    <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                    <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                </svg>
+                <span>[[#{auth.signInWithGoogle}]]</span>
             </a>
+
+            <p class="rj-auth-foot">
+                [[#{auth.doNotHaveAnAccount}]]
+                <a th:href="${redirect != null} ? @{/register(redirect=${redirect})} : @{/register}">[[#{auth.createOne}]]</a>
+            </p>
         </div>
     </section>
 </main>
-
 <script th:src="@{/js/rail-auth.js}"></script>
 </body>
 </html>

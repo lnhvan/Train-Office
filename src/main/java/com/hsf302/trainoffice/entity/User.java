@@ -85,10 +85,26 @@ public class User {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    /**
+     * Phiên bản token đăng nhập. JWT mang số này; tăng lên khi đổi / đặt lại mật khẩu
+     * để mọi JWT đã cấp trước đó hết hiệu lực. Cột cho phép NULL (dữ liệu cũ) = 0.
+     */
+    @Column(name = "token_version")
+    private Integer tokenVersion;
+
     @Builder.Default
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     @ToString.Exclude
     private List<Booking> bookings = new ArrayList<>();
+
+    public int currentTokenVersion() {
+        return tokenVersion == null ? 0 : tokenVersion;
+    }
+
+    /** Thu hồi mọi JWT đã cấp cho tài khoản này. */
+    public void revokeTokens() {
+        tokenVersion = currentTokenVersion() + 1;
+    }
 
     @PrePersist
     void onCreate() {

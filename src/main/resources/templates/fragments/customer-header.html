@@ -1,171 +1,104 @@
-<nav class="navbar navbar-expand-lg customer-navbar rail-midnight-header"
-     xmlns:th="http://www.thymeleaf.org"
-     th:fragment="customerHeader(activeMenu)">
-
-    <div class="container rail-header-container">
-        <a class="navbar-brand rail-header-brand" th:href="@{/booking/search}">
-            <i class="bi bi-train-front-fill me-2"></i>
-            RailJet
+<header class="rj-header"
+        xmlns:th="http://www.thymeleaf.org"
+        th:fragment="customerHeader(activeMenu)">
+    <nav class="navbar navbar-expand-lg rj-container" th:aria-label="#{common.mainNavigation}">
+        <a class="rj-brand" th:href="@{/booking/search}">
+            <span class="rj-brand-mark"><i class="bi bi-train-front-fill"></i></span>
+            <span>RailJet</span>
         </a>
 
-        <button class="navbar-toggler rail-header-toggler"
+        <button class="navbar-toggler rj-nav-toggle"
                 type="button"
                 data-bs-toggle="collapse"
                 data-bs-target="#customerNav"
                 aria-controls="customerNav"
                 aria-expanded="false"
-                aria-label="Open menu">
-            <span class="navbar-toggler-icon"></span>
+                th:aria-label="#{common.openMenu}">
+            <i class="bi bi-list"></i>
         </button>
 
         <div id="customerNav" class="collapse navbar-collapse">
-            <ul class="navbar-nav ms-auto align-items-lg-center rail-header-menu">
-
+            <ul class="navbar-nav rj-nav">
                 <li class="nav-item">
-                    <a class="nav-link rail-header-link"
+                    <a class="nav-link"
                        th:classappend="${activeMenu == 'booking'} ? ' active'"
-                       th:href="@{/booking/search}">
-                        <i class="bi bi-search me-1"></i>
-                        Search trip
-                    </a>
+                       th:attr="aria-current=${activeMenu == 'booking'} ? 'page' : null"
+                       th:href="@{/booking/search}">[[#{common.searchTrip}]]</a>
                 </li>
-
-                <li class="nav-item" th:if="${session.currentUser != null}">
-                    <a class="nav-link rail-header-link"
-                       th:classappend="${activeMenu == 'history'} ? ' active'"
-                       th:href="@{/booking/history}">
-                        <i class="bi bi-calendar-check me-1"></i>
-                        My bookings
-                    </a>
-                </li>
-
-                <li class="nav-item" th:if="${session.currentUser != null}">
-                    <a class="nav-link rail-header-link"
-                       th:classappend="${activeMenu == 'tickets'} ? ' active'"
-                       th:href="@{/tickets}">
-                        <i class="bi bi-ticket-perforated me-1"></i>
-                        My tickets
-                    </a>
-                </li>
-
-                <li class="nav-item" th:if="${session.currentUser != null}">
-                    <a class="nav-link rail-header-link"
-                       th:classappend="${activeMenu == 'profile'} ? ' active'"
-                       th:href="@{/profile}">
-                        <i class="bi bi-person-circle me-1"></i>
-                        Profile
-                    </a>
-                </li>
-
                 <li class="nav-item">
-                    <a class="nav-link rail-header-link"
+                    <a class="nav-link"
                        th:classappend="${activeMenu == 'allTrips'} ? ' active'"
-                       th:href="@{/booking/all-trips}">
-                        <i class="bi bi-list-ul me-1"></i>
-                        All trips
-                    </a>
+                       th:attr="aria-current=${activeMenu == 'allTrips'} ? 'page' : null"
+                       th:href="@{/booking/all-trips}">[[#{common.allTrips}]]</a>
                 </li>
-
-                <li class="nav-item ms-lg-3" th:if="${session.currentUser == null}">
-                    <a class="btn rail-register-btn btn-sm" th:href="@{/register}">
-                        Register
-                    </a>
+                <li class="nav-item" th:if="${currentUser != null}">
+                    <a class="nav-link"
+                       th:classappend="${activeMenu == 'history'} ? ' active'"
+                       th:attr="aria-current=${activeMenu == 'history'} ? 'page' : null"
+                       th:href="@{/booking/history}">[[#{common.myBookings}]]</a>
                 </li>
-
-                <li class="nav-item" th:if="${session.currentUser == null}">
-                    <a class="btn rail-login-btn btn-sm" th:href="@{/login}">
-                        Login
-                    </a>
+                <li class="nav-item" th:if="${currentUser != null}">
+                    <a class="nav-link"
+                       th:classappend="${activeMenu == 'tickets'} ? ' active'"
+                       th:attr="aria-current=${activeMenu == 'tickets'} ? 'page' : null"
+                       th:href="@{/tickets}">[[#{common.myTickets}]]</a>
                 </li>
+            </ul>
 
-                <li class="nav-item ms-lg-3"
-                    th:if="${session.currentUser != null and session.currentUser.role.name() == 'ADMIN'}">
-                    <a class="btn rail-admin-btn btn-sm" th:href="@{/admin}">
-                        <i class="bi bi-speedometer2 me-1"></i>
-                        Admin
-                    </a>
-                </li>
+            <div class="rj-header-tools">
+                <div th:replace="~{fragments/language-switcher :: languageSwitcher('dark')}"></div>
 
-                <li class="nav-item dropdown ms-lg-3" th:if="${session.currentUser != null}">
-                    <a class="nav-link dropdown-toggle rail-user-trigger"
-                       href="#"
-                       role="button"
-                       data-bs-toggle="dropdown"
-                       aria-expanded="false">
+                <a class="btn btn-sm rj-btn-quiet"
+                   th:if="${currentUser == null}"
+                   th:href="@{/login}">[[#{common.login}]]</a>
+                <a class="btn btn-sm btn-primary"
+                   th:if="${currentUser == null}"
+                   th:href="@{/register}">[[#{common.register}]]</a>
 
-                        <span class="rail-user-avatar">
-                            <i class="bi bi-person-fill"></i>
-                        </span>
+                <div class="dropdown" th:if="${currentUser != null}">
+                    <button class="rj-account"
+                            type="button"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                        <span class="rj-avatar"
+                              th:text="${currentUser.fullName != null and !#strings.isEmpty(currentUser.fullName) ? #strings.toUpperCase(#strings.substring(currentUser.fullName, 0, 1)) : #strings.toUpperCase(#strings.substring(currentUser.email, 0, 1))}">R</span>
+                        <span class="rj-account-name"
+                              th:text="${currentUser.fullName != null and !#strings.isEmpty(currentUser.fullName) ? currentUser.fullName : currentUser.email}">user@example.com</span>
+                        <i class="bi bi-chevron-down"></i>
+                    </button>
 
-                        <span class="rail-user-name"
-                              th:text="${session.currentUser.fullName != null and !#strings.isEmpty(session.currentUser.fullName) ? session.currentUser.fullName : session.currentUser.email}">
-                            user@example.com
-                        </span>
-                    </a>
-
-                    <ul class="dropdown-menu dropdown-menu-end rail-user-dropdown">
-                        <li class="dropdown-header rail-dropdown-header">
-                            <div class="small text-muted">Signed in as</div>
-
-                            <div class="fw-semibold rail-dropdown-email"
-                                 th:text="${session.currentUser.email}">
-                                user@example.com
-                            </div>
-
-                            <div class="small text-muted"
-                                 th:text="${session.currentUser.role}">
-                                CUSTOMER
-                            </div>
+                    <ul class="dropdown-menu dropdown-menu-end rj-account-menu">
+                        <li class="rj-account-head">
+                            <small>[[#{common.signedInAs}]]</small>
+                            <strong th:text="${currentUser.email}">user@example.com</strong>
+                            <span class="rj-badge is-info no-dot"
+                                  th:text="${#messages.msgOrNull('enum.' + (currentUser.role)) ?: (currentUser.role)}">CUSTOMER</span>
                         </li>
-
                         <li><hr class="dropdown-divider"></li>
-
-                        <li>
-                            <a class="dropdown-item" th:href="@{/booking/search}">
-                                <i class="bi bi-search me-2"></i>
-                                Search trip
-                            </a>
-                        </li>
-
-                        <li>
-                            <a class="dropdown-item" th:href="@{/booking/history}">
-                                <i class="bi bi-calendar-check me-2"></i>
-                                My bookings
-                            </a>
-                        </li>
-
-                        <li>
-                            <a class="dropdown-item" th:href="@{/tickets}">
-                                <i class="bi bi-ticket-perforated me-2"></i>
-                                My tickets
-                            </a>
-                        </li>
-
                         <li>
                             <a class="dropdown-item" th:href="@{/profile}">
-                                <i class="bi bi-person-circle me-2"></i>
-                                Profile
+                                <i class="bi bi-person"></i>[[#{common.profile}]]
                             </a>
                         </li>
-
                         <li>
                             <a class="dropdown-item" th:href="@{/change-password}">
-                                <i class="bi bi-shield-lock me-2"></i>
-                                Change Password
+                                <i class="bi bi-shield-lock"></i>[[#{common.changePassword}]]
                             </a>
                         </li>
-
+                        <li th:if="${currentUser.role.name() == 'ADMIN'}">
+                            <a class="dropdown-item" th:href="@{/admin}">
+                                <i class="bi bi-speedometer2"></i>[[#{common.admin}]]
+                            </a>
+                        </li>
                         <li><hr class="dropdown-divider"></li>
-
                         <li>
-                            <a class="dropdown-item text-danger" th:href="@{/logout}">
-                                <i class="bi bi-box-arrow-right me-2"></i>
-                                Logout
+                            <a class="dropdown-item rj-danger-item" th:href="@{/logout}">
+                                <i class="bi bi-box-arrow-right"></i>[[#{common.logout}]]
                             </a>
                         </li>
                     </ul>
-                </li>
-            </ul>
+                </div>
+            </div>
         </div>
-    </div>
-</nav>
+    </nav>
+</header>

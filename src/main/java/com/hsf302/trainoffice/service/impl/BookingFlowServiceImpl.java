@@ -1,5 +1,7 @@
 package com.hsf302.trainoffice.service.impl;
 
+
+import com.hsf302.trainoffice.config.I18n;
 import com.hsf302.trainoffice.dto.BookingConfirmationView;
 import com.hsf302.trainoffice.dto.BookingSession;
 import com.hsf302.trainoffice.dto.CreateBookingRequest;
@@ -127,10 +129,10 @@ public class BookingFlowServiceImpl implements BookingFlowService {
     @Override
     public void savePassengerInfo(BookingSession bookingSession, PassengerInfoForm form) {
         if (bookingSession == null) {
-            throw new IllegalArgumentException("Booking session is required");
+            throw new IllegalArgumentException(I18n.t("err.bookingSessionIsRequired"));
         }
         if (form.getPassengers().size() != bookingSession.getPassengerCount()) {
-            throw new IllegalArgumentException("Passenger count must match selected seat count");
+            throw new IllegalArgumentException(I18n.t("err.passengerCountMustMatchSelectedSeatCount"));
         }
         form.getPassengers().forEach(passenger -> passenger.setPassengerType(
                 discountPolicyService.resolvePassengerType(passenger.getDateOfBirth())
@@ -144,7 +146,7 @@ public class BookingFlowServiceImpl implements BookingFlowService {
         validateReadyForConfirmation(bookingSession);
 
         TrainTrip trip = trainTripService.getTripById(bookingSession.getTrainTripId())
-                .orElseThrow(() -> new IllegalArgumentException("Train trip does not exist"));
+                .orElseThrow(() -> new IllegalArgumentException(I18n.t("err.trainTripDoesNotExist")));
 
         TripSegment segment = trainTripService.getValidSegment(
                 bookingSession.getTrainTripId(),
@@ -191,14 +193,14 @@ public class BookingFlowServiceImpl implements BookingFlowService {
         }
 
         GroupDiscountPolicy policy = groupDiscountPolicyService.getPolicyById(groupDiscountPolicyId)
-                .orElseThrow(() -> new IllegalArgumentException("Selected group discount policy does not exist."));
+                .orElseThrow(() -> new IllegalArgumentException(I18n.t("err.selectedGroupDiscountPolicyDoesNotExist")));
 
         if (!Boolean.TRUE.equals(policy.getActive())) {
-            throw new IllegalArgumentException("Selected group discount policy is inactive.");
+            throw new IllegalArgumentException(I18n.t("err.selectedGroupDiscountPolicyIsInactive"));
         }
 
         if (!groupDiscountPolicyService.matchesPassengerCount(policy, bookingSession.getPassengerCount())) {
-            throw new IllegalArgumentException("Selected group discount policy does not match passenger count.");
+            throw new IllegalArgumentException(I18n.t("err.selectedGroupDiscountPolicyDoesNotMatch"));
         }
 
         bookingSession.setSelectedGroupDiscountPolicyId(groupDiscountPolicyId);
@@ -224,7 +226,7 @@ public class BookingFlowServiceImpl implements BookingFlowService {
     @Override
     public Booking createBooking(BookingSession bookingSession, User user) {
         if (user == null) {
-            throw new IllegalArgumentException("Please log in before booking.");
+            throw new IllegalArgumentException(I18n.t("err.pleaseLogInBeforeBooking"));
         }
 
         CreateBookingRequest request = buildCreateBookingRequest(bookingSession);
@@ -235,7 +237,7 @@ public class BookingFlowServiceImpl implements BookingFlowService {
     private void validateSelectedSeats(SeatSelectionForm form) {
         if (form.getSeatIds().size() != form.getPassengerCount()
                 || new HashSet<>(form.getSeatIds()).size() != form.getSeatIds().size()) {
-            throw new IllegalArgumentException("Please select exactly " + form.getPassengerCount() + " seats");
+            throw new IllegalArgumentException(I18n.t("err.pleaseSelectExactlySeats", form.getPassengerCount()));
         }
         TripSegment segment = trainTripService.getValidSegment(
                 form.getTrainTripId(),
@@ -251,17 +253,17 @@ public class BookingFlowServiceImpl implements BookingFlowService {
                 .collect(Collectors.toSet());
         for (Long seatId : form.getSeatIds()) {
             if (!validSeatIds.contains(seatId)) {
-                throw new IllegalArgumentException("Seat does not belong to this train trip: " + seatId);
+                throw new IllegalArgumentException(I18n.t("err.seatDoesNotBelongToThisTrain", seatId));
             }
             if (blockedSeatIds.contains(seatId)) {
-                throw new IllegalArgumentException("One or more selected seats are no longer available");
+                throw new IllegalArgumentException(I18n.t("err.oneOrMoreSelectedSeatsAreNo"));
             }
         }
     }
 
     private void validateReadyForConfirmation(BookingSession bookingSession) {
         if (bookingSession == null || bookingSession.getPassengerInfo() == null) {
-            throw new IllegalArgumentException("Please complete booking information first");
+            throw new IllegalArgumentException(I18n.t("err.pleaseCompleteBookingInformationFirst"));
         }
     }
 
@@ -272,7 +274,7 @@ public class BookingFlowServiceImpl implements BookingFlowService {
                 segment.getArrivalOrder());
         for (Long seatId : bookingSession.getSeatIds()) {
             if (blockedSeatIds.contains(seatId)) {
-                throw new IllegalArgumentException("One or more selected seats are no longer available");
+                throw new IllegalArgumentException(I18n.t("err.oneOrMoreSelectedSeatsAreNo"));
             }
         }
     }
@@ -286,7 +288,7 @@ public class BookingFlowServiceImpl implements BookingFlowService {
                 .map(seatsById::get)
                 .toList();
         if (selectedSeats.contains(null)) {
-            throw new IllegalArgumentException("One or more selected seats do not exist");
+            throw new IllegalArgumentException(I18n.t("err.oneOrMoreSelectedSeatsDoNot"));
         }
         return selectedSeats;
     }

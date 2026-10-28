@@ -1,248 +1,156 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layouts/customer-layout :: layout('Round Trip Results', ~{::section}, 'booking')}">
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/customer-layout :: layout(#{booking.roundTripResults}, ~{::section}, 'booking')}">
+<section class="rj-page">
+    <div class="rj-container">
+        <a class="rj-back-link" th:href="@{/booking/search}">
+            <i class="bi bi-arrow-left"></i>[[#{booking.newSearch}]]
+        </a>
 
-<section class="rail-result-page">
-    <link rel="stylesheet" th:href="@{/css/rail-trip-results.css}">
-
-    <div class="rail-result-container">
-        <header class="rail-result-header">
-            <span class="rail-result-eyebrow">
-                <i class="bi bi-calendar2-check"></i>
-                Search results
-            </span>
-
-            <h1>Search Results</h1>
-
-            <p>
-                Review your selected itinerary.
-            </p>
-        </header>
-
-        <div class="rail-result-actions">
-            <a class="btn btn-outline-light" th:href="@{/booking/search}">
-                <i class="bi bi-arrow-left"></i>
-                New search
-            </a>
+        <div class="rj-page-head">
+            <div>
+                <h1>[[#{booking.searchResults}]]</h1>
+                <p>[[#{booking.reviewYourSelectedItinerary}]]</p>
+            </div>
         </div>
 
-        <div class="rail-alert rail-alert-danger"
-             th:if="${outboundError}">
+        <div class="alert alert-danger" th:if="${outboundError}">
             <i class="bi bi-exclamation-triangle"></i>
-            <span th:text="${outboundError}">
-                Outbound search failed.
-            </span>
+            <span th:text="${outboundError}">Outbound search failed.</span>
         </div>
 
-        <div class="rail-alert rail-alert-warning"
+        <div class="alert alert-warning"
              th:if="${inboundTrips == null or #lists.isEmpty(inboundTrips)}">
             <i class="bi bi-exclamation-triangle"></i>
-            <span>
-                No return trips found for the selected date. Please try another date or search for one-way tickets.
-            </span>
+            <span>[[#{booking.noReturnTripsFoundForThe}]]</span>
         </div>
 
-        <div class="rail-round-layout">
-            <section class="rail-round-panel">
-                <div class="rail-round-panel-header">
-                    <h2 class="rail-round-panel-title">
-                        <i class="bi bi-train-front"></i>
-                        Outbound
-                    </h2>
-
-                    <span class="rail-round-date"
+        <div class="rj-round">
+            <section class="rj-round-col" aria-labelledby="outboundTitle">
+                <header class="rj-round-head">
+                    <h2 id="outboundTitle"><i class="bi bi-arrow-right-circle"></i>[[#{booking.outbound}]]</h2>
+                    <span class="rj-chip rj-num"
                           th:if="${departureDate != null}"
-                          th:text="${#temporals.format(departureDate, 'dd/MM/yyyy')}">
-                        02/07/2026
-                    </span>
-                </div>
+                          th:text="${#temporals.format(departureDate, 'dd/MM/yyyy')}">02/07/2026</span>
+                </header>
 
-                <div class="rail-round-table-wrap"
-                     th:if="${outboundTrips != null and !#lists.isEmpty(outboundTrips)}">
-
-                    <table class="rail-round-table">
-                        <thead>
-                        <tr>
-                            <th>Train ID</th>
-                            <th>Route</th>
-                            <th>Departs</th>
-                            <th>Arrives</th>
-                            <th>Price</th>
-                            <th class="text-end">Action</th>
-                        </tr>
-                        </thead>
-
-                        <tbody>
-                        <tr th:each="result : ${outboundTrips}">
-                            <td>
-                                <strong th:text="${result.trainTrip.train != null ? result.trainTrip.train.trainCode : 'N/A'}">
-                                    RJ-902
-                                </strong>
-                            </td>
-
-                            <td>
-                                <span th:text="${result.segment.departureStop.station.stationName}">
-                                    Neo-Tokyo
-                                </span>
-
-                                <span> → </span>
-
-                                <span th:text="${result.segment.arrivalStop.station.stationName}">
-                                    Kyoto Hub
-                                </span>
-                            </td>
-
-                            <td th:text="${result.trainTrip.departureTime != null ? #temporals.format(result.trainTrip.departureTime, 'HH:mm') : '--:--'}">
-                                08:15
-                            </td>
-
-                            <td th:text="${result.trainTrip.arrivalTime != null ? #temporals.format(result.trainTrip.arrivalTime, 'HH:mm') : '--:--'}">
-                                10:45
-                            </td>
-
-                            <td class="rail-round-price">
+                <ol class="rj-trip-list is-compact"
+                    th:if="${outboundTrips != null and !#lists.isEmpty(outboundTrips)}">
+                    <li class="rj-trip" th:each="result : ${outboundTrips}">
+                        <div class="rj-trip-body">
+                            <div class="rj-trip-meta">
+                                <span class="rj-train-code"
+                                      th:text="${result.trainTrip.train != null ? result.trainTrip.train.trainCode : 'N/A'}">RJ-902</span>
+                            </div>
+                            <div class="rj-route is-compact">
+                                <div class="rj-route-stop">
+                                    <span class="rj-route-time"
+                                          th:text="${result.segment.departureTime != null ? #temporals.format(result.segment.departureTime, 'HH:mm') : '--:--'}">08:15</span>
+                                    <span class="rj-route-station" th:text="${result.segment.departureStop.station.stationName}">Ha Noi</span>
+                                </div>
+                                <div class="rj-route-track" aria-hidden="true">
+                                    <span class="rj-route-dot is-start"></span>
+                                    <span class="rj-route-dot is-end"></span>
+                                </div>
+                                <div class="rj-route-stop is-end">
+                                    <span class="rj-route-time"
+                                          th:text="${result.segment.arrivalTime != null ? #temporals.format(result.segment.arrivalTime, 'HH:mm') : '--:--'}">10:45</span>
+                                    <span class="rj-day-offset" th:if="${result.segment.dayOffset > 0}" th:text="#{booking.plusDays(${result.segment.dayOffset})}">+1 ngày</span>
+                                    <span class="rj-route-station" th:text="${result.segment.arrivalStop.station.stationName}">Vinh</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="rj-trip-buy">
+                            <span class="rj-price rj-num">
                                 <span th:if="${result.trainTrip.basePrice != null}"
-                                      th:text="${#numbers.formatDecimal(result.trainTrip.basePrice, 0, 'COMMA', 0, 'POINT')} + ' VND'">
-                                    14,500 VND
-                                </span>
+                                      th:text="${#numbers.formatDecimal(result.trainTrip.basePrice, 0, 'COMMA', 0, 'POINT')}">14,500</span>
+                                <span th:if="${result.trainTrip.basePrice == null}">0</span>
+                                <small>VND</small>
+                            </span>
+                            <a class="btn btn-sm btn-primary"
+                               th:href="@{/booking/{tripId}/seats(
+                                    tripId=${result.trainTrip.tripId},
+                                    departureStationId=${result.segment.departureStop.station.stationId},
+                                    arrivalStationId=${result.segment.arrivalStop.station.stationId},
+                                    passengerCount=${result.passengerCount}
+                               )}">
+                                [[#{booking.select}]]
+                            </a>
+                        </div>
+                    </li>
+                </ol>
 
-                                <span th:if="${result.trainTrip.basePrice == null}">
-                                    0 VND
-                                </span>
-                            </td>
-
-                            <td class="text-end">
-                                <a class="rail-select-btn"
-                                   th:if="${session.currentUser != null}"
-                                   th:href="@{/booking/{tripId}/seats(
-                                        tripId=${result.trainTrip.tripId},
-                                        departureStationId=${result.segment.departureStop.station.stationId},
-                                        arrivalStationId=${result.segment.arrivalStop.station.stationId},
-                                        passengerCount=${result.passengerCount}
-                                   )}">
-                                    Select
-                                </a>
-
-                                <a class="rail-select-btn"
-                                   th:if="${session.currentUser == null}"
-                                   th:href="@{/booking/login-required}">
-                                    Select
-                                </a>
-                            </td>
-                        </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="rail-round-empty"
+                <div class="rj-card rj-empty"
                      th:if="${outboundTrips == null or #lists.isEmpty(outboundTrips)}">
-                    No outbound trips found for the selected date.
+                    <i class="bi bi-calendar-x"></i>
+                    <span>[[#{booking.noOutboundTripsFoundForThe}]]</span>
                 </div>
             </section>
 
-            <section class="rail-round-panel">
-                <div class="rail-round-panel-header">
-                    <h2 class="rail-round-panel-title"
-                        th:classappend="${inboundTrips == null or #lists.isEmpty(inboundTrips)} ? ' muted'">
-                        <i class="bi bi-train-front"></i>
-                        Inbound
-                    </h2>
-
-                    <span class="rail-round-date"
+            <section class="rj-round-col" aria-labelledby="inboundTitle">
+                <header class="rj-round-head"
+                        th:classappend="${inboundTrips == null or #lists.isEmpty(inboundTrips)} ? ' is-muted'">
+                    <h2 id="inboundTitle"><i class="bi bi-arrow-left-circle"></i>[[#{booking.inbound}]]</h2>
+                    <span class="rj-chip rj-num"
                           th:if="${returnDate != null}"
-                          th:text="${#temporals.format(returnDate, 'dd/MM/yyyy')}">
-                        09/07/2026
-                    </span>
-                </div>
+                          th:text="${#temporals.format(returnDate, 'dd/MM/yyyy')}">09/07/2026</span>
+                </header>
 
-                <div class="rail-alert rail-alert-danger m-4"
-                     th:if="${inboundError}">
+                <div class="alert alert-danger" th:if="${inboundError}">
                     <i class="bi bi-exclamation-triangle"></i>
-                    <span th:text="${inboundError}">
-                        Inbound search failed.
-                    </span>
+                    <span th:text="${inboundError}">Inbound search failed.</span>
                 </div>
 
-                <div class="rail-round-table-wrap"
-                     th:if="${inboundTrips != null and !#lists.isEmpty(inboundTrips)}">
-
-                    <table class="rail-round-table">
-                        <thead>
-                        <tr>
-                            <th>Train ID</th>
-                            <th>Route</th>
-                            <th>Departs</th>
-                            <th>Arrives</th>
-                            <th>Price</th>
-                            <th class="text-end">Action</th>
-                        </tr>
-                        </thead>
-
-                        <tbody>
-                        <tr th:each="result : ${inboundTrips}">
-                            <td>
-                                <strong th:text="${result.trainTrip.train != null ? result.trainTrip.train.trainCode : 'N/A'}">
-                                    RJ-904
-                                </strong>
-                            </td>
-
-                            <td>
-                                <span th:text="${result.segment.departureStop.station.stationName}">
-                                    Kyoto Hub
-                                </span>
-
-                                <span> → </span>
-
-                                <span th:text="${result.segment.arrivalStop.station.stationName}">
-                                    Neo-Tokyo
-                                </span>
-                            </td>
-
-                            <td th:text="${result.trainTrip.departureTime != null ? #temporals.format(result.trainTrip.departureTime, 'HH:mm') : '--:--'}">
-                                09:30
-                            </td>
-
-                            <td th:text="${result.trainTrip.arrivalTime != null ? #temporals.format(result.trainTrip.arrivalTime, 'HH:mm') : '--:--'}">
-                                12:00
-                            </td>
-
-                            <td class="rail-round-price">
+                <ol class="rj-trip-list is-compact"
+                    th:if="${inboundTrips != null and !#lists.isEmpty(inboundTrips)}">
+                    <li class="rj-trip" th:each="result : ${inboundTrips}">
+                        <div class="rj-trip-body">
+                            <div class="rj-trip-meta">
+                                <span class="rj-train-code"
+                                      th:text="${result.trainTrip.train != null ? result.trainTrip.train.trainCode : 'N/A'}">RJ-904</span>
+                            </div>
+                            <div class="rj-route is-compact">
+                                <div class="rj-route-stop">
+                                    <span class="rj-route-time"
+                                          th:text="${result.segment.departureTime != null ? #temporals.format(result.segment.departureTime, 'HH:mm') : '--:--'}">09:30</span>
+                                    <span class="rj-route-station" th:text="${result.segment.departureStop.station.stationName}">Vinh</span>
+                                </div>
+                                <div class="rj-route-track" aria-hidden="true">
+                                    <span class="rj-route-dot is-start"></span>
+                                    <span class="rj-route-dot is-end"></span>
+                                </div>
+                                <div class="rj-route-stop is-end">
+                                    <span class="rj-route-time"
+                                          th:text="${result.segment.arrivalTime != null ? #temporals.format(result.segment.arrivalTime, 'HH:mm') : '--:--'}">12:00</span>
+                                    <span class="rj-day-offset" th:if="${result.segment.dayOffset > 0}" th:text="#{booking.plusDays(${result.segment.dayOffset})}">+1 ngày</span>
+                                    <span class="rj-route-station" th:text="${result.segment.arrivalStop.station.stationName}">Ha Noi</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="rj-trip-buy">
+                            <span class="rj-price rj-num">
                                 <span th:if="${result.trainTrip.basePrice != null}"
-                                      th:text="${#numbers.formatDecimal(result.trainTrip.basePrice, 0, 'COMMA', 0, 'POINT')} + ' VND'">
-                                    13,200 VND
-                                </span>
+                                      th:text="${#numbers.formatDecimal(result.trainTrip.basePrice, 0, 'COMMA', 0, 'POINT')}">13,200</span>
+                                <span th:if="${result.trainTrip.basePrice == null}">0</span>
+                                <small>VND</small>
+                            </span>
+                            <a class="btn btn-sm btn-primary"
+                               th:href="@{/booking/{tripId}/seats(
+                                    tripId=${result.trainTrip.tripId},
+                                    departureStationId=${result.segment.departureStop.station.stationId},
+                                    arrivalStationId=${result.segment.arrivalStop.station.stationId},
+                                    passengerCount=${result.passengerCount}
+                               )}">
+                                [[#{booking.select}]]
+                            </a>
+                        </div>
+                    </li>
+                </ol>
 
-                                <span th:if="${result.trainTrip.basePrice == null}">
-                                    0 VND
-                                </span>
-                            </td>
-
-                            <td class="text-end">
-                                <a class="rail-select-btn"
-                                   th:if="${session.currentUser != null}"
-                                   th:href="@{/booking/{tripId}/seats(
-                                        tripId=${result.trainTrip.tripId},
-                                        departureStationId=${result.segment.departureStop.station.stationId},
-                                        arrivalStationId=${result.segment.arrivalStop.station.stationId},
-                                        passengerCount=${result.passengerCount}
-                                   )}">
-                                    Select
-                                </a>
-
-                                <a class="rail-select-btn"
-                                   th:if="${session.currentUser == null}"
-                                   th:href="@{/booking/login-required}">
-                                    Select
-                                </a>
-                            </td>
-                        </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="rail-round-empty"
+                <div class="rj-card rj-empty"
                      th:if="${inboundTrips == null or #lists.isEmpty(inboundTrips)}">
-                    Select an outbound journey first to view available returns.
+                    <i class="bi bi-calendar-x"></i>
+                    <span>[[#{booking.selectAnOutboundJourneyFirstTo}]]</span>
                 </div>
             </section>
         </div>

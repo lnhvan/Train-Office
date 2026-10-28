@@ -1,34 +1,21 @@
-﻿<div class="rail-flash-container"
+﻿<div class="rj-toast-stack"
      xmlns:th="http://www.thymeleaf.org"
      th:fragment="toast"
-     th:if="${toastMessage != null or successMessage != null or errorMessage != null}">
-
-    <div class="rail-flash"
-         th:classappend="${errorMessage != null} ? ' danger' : ' success'">
-
-        <div class="rail-flash-icon">
-            <i th:class="${errorMessage != null} ? 'bi bi-exclamation-triangle-fill' : 'bi bi-check-circle-fill'"></i>
+     th:if="${toastMessage != null or successMessage != null or errorMessage != null}"
+     role="status"
+     aria-live="polite">
+    <div class="rj-toast"
+         th:classappend="${errorMessage != null} ? ' is-danger' : ' is-success'">
+        <i class="rj-toast-icon"
+           th:classappend="${errorMessage != null} ? ' bi bi-exclamation-octagon-fill' : ' bi bi-check-circle-fill'"></i>
+        <div>
+            <strong th:text="${toastTitle ?: (errorMessage != null ? #messages.msg('common.actionFailed') : 'RailJet')}">RailJet</strong>
+            <p th:text="${toastMessage ?: (successMessage ?: errorMessage)}">Message</p>
         </div>
-
-        <div class="rail-flash-content">
-            <div class="rail-flash-title-row">
-                <strong th:text="${toastTitle ?: (errorMessage != null ? 'Action failed' : 'RailJet')}">
-                    RailJet
-                </strong>
-
-                <small>Now</small>
-            </div>
-
-            <div class="rail-flash-message"
-                 th:text="${toastMessage ?: (successMessage ?: errorMessage)}">
-                Message
-            </div>
-        </div>
-
         <button type="button"
-                class="rail-flash-close"
-                onclick="this.closest('.rail-flash-container').remove()"
-                aria-label="Close">
+                class="rj-toast-close"
+                onclick="this.closest('.rj-toast-stack').remove()"
+                th:aria-label="#{common.close}">
             <i class="bi bi-x-lg"></i>
         </button>
     </div>

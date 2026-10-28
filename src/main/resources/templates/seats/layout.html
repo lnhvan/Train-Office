@@ -1,31 +1,31 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layouts/admin-layout :: layout('Seat Layout', ~{::section}, 'seats')}">
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/admin-layout :: layout(#{seat.seatLayout}, ~{::section}, 'seats')}">
 <section>
     <div class="admin-page-hero">
         <div>
-            <span class="admin-page-kicker"><i class="fas fa-th mr-1"></i> Seat Map</span>
-            <h2>Seat Layout</h2>
-            <p>Visual overview of seats in the selected coach.</p>
+            <span class="admin-page-kicker"><i class="bi bi-grid-3x3-gap"></i> [[#{seat.seatMap}]]</span>
+            <h1>[[#{seat.seatLayout}]]</h1>
+            <p>[[#{seat.visualOverviewOfSeatsInThe}]]</p>
         </div>
-        <a class="btn btn-outline-primary" th:href="@{/admin/seats}">
-            <i class="fas fa-arrow-left mr-1"></i> Back to seats
+        <a class="btn rj-btn-quiet" th:href="@{/admin/seats}">
+            <i class="bi bi-arrow-left"></i> [[#{seat.backToSeats}]]
         </a>
     </div>
 
     <div class="card admin-table-card">
         <div class="card-header">
-            <span class="admin-card-title">Seat Map</span>
-            <small th:text="${#lists.size(seats)} + ' seats'">0 seats</small>
+            <span class="admin-card-title">[[#{seat.seatMap}]]</span>
+            <small th:text="#{common.nSeats(${#lists.size(seats)})}">0 seats</small>
         </div>
         <div class="card-body">
             <div class="seat-map-grid admin-seat-map">
                 <button type="button" class="seat available" th:each="seat : ${seats}" th:text="${seat.seatNumber}">A1</button>
             </div>
             <div class="admin-empty-state" th:if="${#lists.isEmpty(seats)}">
-                <i class="fas fa-chair"></i>
-                <strong>No seats to display</strong>
-                <span>Add seats before using the layout view.</span>
+                <i class="bi bi-grid-3x2-gap"></i>
+                <strong>[[#{seat.noSeatsToDisplay}]]</strong>
+                <span>[[#{seat.addSeatsBeforeUsingTheLayout}]]</span>
             </div>
         </div>
     </div>

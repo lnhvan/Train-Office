@@ -1,52 +1,41 @@
 <!DOCTYPE html>
-<html lang="en"
+<html th:lang="${#locale.language}"
       xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layouts/customer-layout :: layout('Payment Failed', ~{::section}, 'booking')}">
+      th:replace="~{layouts/customer-layout :: layout(#{payment.paymentFailed}, ~{::section}, 'booking')}">
+<section class="rj-page">
+    <div class="rj-container rj-narrow">
+        <article class="rj-card rj-result">
+            <div class="rj-result-icon is-danger"><i class="bi bi-exclamation-lg"></i></div>
+            <h1>[[#{payment.paymentFailed}]]</h1>
+            <p>[[#{payment.paymentWasNotCompletedPleaseTry}]]</p>
 
-<section class="rail-payment-page rail-payment-failed-page">
-    <link rel="stylesheet" th:href="@{/css/rail-payment.css}">
-
-    <div class="rail-payment-shell">
-        <div class="rail-payment-card rail-payment-result-card rail-payment-result-failed">
-            <div class="rail-payment-status-icon rail-payment-status-failed">
-                <i class="bi bi-exclamation-circle"></i>
+            <div class="rj-ticket-stub">
+                <dl class="rj-rows rj-stub-rows">
+                    <div>
+                        <dt>[[#{common.bookingNumber}]]</dt>
+                        <dd class="rj-code" th:text="${bookingCode != null ? bookingCode : (booking != null ? booking.bookingCode : 'RJ1782996611446')}">RJ1782996611446</dd>
+                    </div>
+                    <div>
+                        <dt>[[#{common.status}]]</dt>
+                        <dd>
+                            <span class="rj-badge is-danger"
+                                  th:text="${#messages.msgOrNull('enum.' + (paymentStatus != null ? paymentStatus : 'PENDING_PAYMENT')) ?: (paymentStatus != null ? paymentStatus : 'PENDING_PAYMENT')}">PENDING_PAYMENT</span>
+                        </dd>
+                    </div>
+                </dl>
             </div>
 
-            <h1 class="rail-payment-title">Payment Failed</h1>
-            <p class="rail-payment-subtitle">
-                Payment was not completed. Please try again or choose another payment method.
-            </p>
-
-            <div class="rail-payment-summary-box">
-                <div class="rail-payment-summary-row">
-                    <span>Booking Number</span>
-                    <strong th:text="${bookingCode != null ? bookingCode : (booking != null ? booking.bookingCode : 'RJ1782996611446')}">RJ1782996611446</strong>
-                </div>
-
-                <div class="rail-payment-summary-row">
-                    <span>Status</span>
-                    <strong class="rail-payment-status-text rail-payment-status-text-failed"
-                            th:text="${paymentStatus != null ? paymentStatus : 'PENDING_PAYMENT'}">PENDING_PAYMENT</strong>
-                </div>
-            </div>
-
-            <a class="rail-payment-primary-btn"
-               th:href="@{/payments}">
-                Retry Payment
-            </a>
-
-            <div class="rail-payment-action-row">
-                <a class="rail-payment-secondary-btn"
-                   th:href="@{/booking/history}">
-                    My Bookings
+            <div class="rj-result-actions">
+                <a class="btn btn-primary btn-lg rj-btn-block" th:href="@{/payments}">
+                    <i class="bi bi-arrow-repeat"></i>
+                    [[#{payment.retryPayment}]]
                 </a>
-
-                <a class="rail-payment-secondary-btn"
-                   th:href="@{/support}">
-                    Support
-                </a>
+                <div class="rj-result-secondary">
+                    <a class="btn btn-outline-secondary" th:href="@{/booking/history}">[[#{common.myBookings}]]</a>
+                    <a class="btn btn-outline-secondary" th:href="@{/support}">[[#{payment.support}]]</a>
+                </div>
             </div>
-        </div>
+        </article>
     </div>
 </section>
 </html>

@@ -1,38 +1,38 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layouts/admin-layout :: layout('Coach Detail', ~{::section}, 'coaches')}">
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/admin-layout :: layout(#{coach.coachDetail}, ~{::section}, 'coaches')}">
 <section>
     <div class="admin-page-hero">
         <div>
-            <span class="admin-page-kicker"><i class="fas fa-subway mr-1"></i> Coach Detail</span>
-            <h2 th:text="${detail.coachNumber}">Coach</h2>
-            <p th:text="${detail.train != null ? detail.train.trainCode : 'No train'}">Train</p>
+            <span class="admin-page-kicker"><i class="bi bi-train-lightrail-front"></i> [[#{coach.coachDetail}]]</span>
+            <h1 th:text="${detail.coachNumber}">Coach</h1>
+            <p th:text="${detail.train != null ? detail.train.trainCode : #messages.msg('coach.noTrain')}">Train</p>
         </div>
         <div class="admin-page-actions">
-            <a class="btn btn-outline-primary" th:href="@{/admin/coaches}">
-                <i class="fas fa-arrow-left mr-1"></i> Back
+            <a class="btn rj-btn-quiet" th:href="@{/admin/coaches}">
+                <i class="bi bi-arrow-left"></i> [[#{common.back}]]
             </a>
             <a class="btn btn-outline-info" th:href="@{/admin/seats(coachId=${detail.coachId})}">
-                <i class="fas fa-chair mr-1"></i> Seats
+                <i class="bi bi-grid-3x2-gap"></i> [[#{common.seats}]]
             </a>
             <a class="btn btn-warning" th:href="@{/admin/coaches/edit/{id}(id=${detail.coachId})}">
-                <i class="fas fa-edit mr-1"></i> Edit
+                <i class="bi bi-pencil-square"></i> [[#{common.edit}]]
             </a>
         </div>
     </div>
 
     <div class="card admin-detail-card">
         <div class="card-header">
-            <span class="admin-card-title">Coach Information</span>
-            <small>Coach type and passenger capacity</small>
+            <span class="admin-card-title">[[#{coach.coachInformation}]]</span>
+            <small>[[#{coach.coachTypeAndPassengerCapacity}]]</small>
         </div>
         <div class="card-body">
             <dl class="admin-detail-grid">
                 <dt>ID</dt><dd th:text="${detail.coachId}">1</dd>
-                <dt>Train</dt><dd th:text="${detail.train != null ? detail.train.trainCode : '-'}">SE1</dd>
-                <dt>Coach Number</dt><dd th:text="${detail.coachNumber}">C01</dd>
-                <dt>Type</dt><dd th:text="${detail.coachType}">SOFT_SEAT</dd>
-                <dt>Capacity</dt><dd><span class="capacity-pill" th:text="${detail.capacity} + ' seats'">64 seats</span></dd>
+                <dt>[[#{common.train}]]</dt><dd th:text="${detail.train != null ? detail.train.trainCode : '-'}">SE1</dd>
+                <dt>[[#{coach.coachNumber}]]</dt><dd th:text="${detail.coachNumber}">C01</dd>
+                <dt>[[#{common.type}]]</dt><dd th:text="${detail.coachType}">SOFT_SEAT</dd>
+                <dt>[[#{coach.capacity}]]</dt><dd><span class="capacity-pill" th:text="#{common.nSeats(${detail.capacity})}">64 seats</span></dd>
             </dl>
         </div>
     </div>

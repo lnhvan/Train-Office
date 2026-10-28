@@ -1,5 +1,8 @@
 package com.hsf302.trainoffice.controller;
 
+
+import com.hsf302.trainoffice.security.CurrentUser;
+import com.hsf302.trainoffice.config.I18n;
 import com.hsf302.trainoffice.dto.RefundRequestForm;
 import com.hsf302.trainoffice.entity.User;
 import com.hsf302.trainoffice.service.RefundService;
@@ -33,7 +36,7 @@ public class TicketRefundController {
         if (user == null) {
             redirectAttributes.addFlashAttribute(
                     "error",
-                    "Please log in to request a refund."
+                    I18n.t("msg.refund.loginRequired")
             );
             return "redirect:/login";
         }
@@ -71,7 +74,7 @@ public class TicketRefundController {
         if (user == null) {
             redirectAttributes.addFlashAttribute(
                     "error",
-                    "Please log in to request a refund."
+                    I18n.t("msg.refund.loginRequired")
             );
             return "redirect:/login";
         }
@@ -86,7 +89,7 @@ public class TicketRefundController {
 
             redirectAttributes.addFlashAttribute(
                     "successMessage",
-                    "Refund request has been sent successfully. Please wait for admin approval."
+                    I18n.t("msg.refund.sent")
             );
 
             return "redirect:/tickets";
@@ -97,14 +100,14 @@ public class TicketRefundController {
             return "refunds/customer-request";
 
         } catch (Exception ex) {
-            model.addAttribute("errorMessage", "Cannot create refund request. Please try again.");
+            model.addAttribute("errorMessage", I18n.t("msg.refund.createError"));
             model.addAttribute("ticketId", ticketId);
             return "refunds/customer-request";
         }
     }
 
+    /** Người dùng đăng nhập (JWT) của request hiện tại; null nếu chưa đăng nhập. */
     private User currentUser(HttpSession session) {
-        Object sessionUser = session.getAttribute("currentUser");
-        return sessionUser instanceof User user ? user : null;
+        return CurrentUser.get();
     }
 }

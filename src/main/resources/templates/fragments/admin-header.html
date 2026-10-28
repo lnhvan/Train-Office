@@ -1,39 +1,37 @@
-<nav class="main-header navbar navbar-expand velocity-admin-topbar"
-     xmlns:th="http://www.thymeleaf.org" th:fragment="adminHeader">
-    <ul class="navbar-nav">
-        <li class="nav-item">
-            <a class="nav-link" data-widget="pushmenu" href="#" role="button">
-                <i class="fas fa-bars"></i>
-            </a>
-        </li>
-        <li class="nav-item d-none d-sm-inline-block">
-            <a th:href="@{/admin/dashboard}" class="nav-link">
-                <i class="fas fa-chart-line mr-1"></i>Dashboard
-            </a>
-        </li>
-        <li class="nav-item d-none d-sm-inline-block">
-            <a th:href="@{/admin/users}" class="nav-link">
-                <i class="fas fa-users mr-1"></i>Users
-            </a>
-        </li>
-    </ul>
+<header class="rj-admin-topbar"
+        xmlns:th="http://www.thymeleaf.org" th:fragment="adminHeader">
+    <button class="rj-admin-burger"
+            type="button"
+            data-rj-sidebar-toggle
+            aria-controls="rjAdminSidebar"
+            aria-expanded="false"
+            th:aria-label="#{common.openMenu}">
+        <i class="bi bi-list"></i>
+    </button>
 
-    <ul class="navbar-nav ml-auto">
-        <li class="nav-item">
-            <a class="nav-link" th:href="@{/}">
-                <i class="fas fa-globe mr-1"></i>View site
-            </a>
-        </li>
-        <li class="nav-item" th:if="${session.currentUser != null}">
-            <a class="nav-link velocity-user-link" th:href="@{/profile}">
-                <span class="velocity-user-avatar"><i class="fas fa-user"></i></span>
-                <span class="d-none d-md-inline" th:text="${session.currentUser.email}">Admin</span>
-            </a>
-        </li>
-        <li class="nav-item" th:if="${session.currentUser != null}">
-            <a class="nav-link text-danger" th:href="@{/logout}">
-                <i class="fas fa-sign-out-alt mr-1"></i>Logout
-            </a>
-        </li>
-    </ul>
-</nav>
+    <nav class="rj-admin-quick" th:aria-label="#{common.quickAccess}">
+        <a th:href="@{/admin/dashboard}">
+            <i class="bi bi-graph-up"></i>[[#{common.dashboard}]]
+        </a>
+        <a th:href="@{/admin/users}">
+            <i class="bi bi-person-badge"></i>[[#{common.users}]]
+        </a>
+    </nav>
+
+    <div class="rj-admin-topbar-end">
+        <div th:replace="~{fragments/language-switcher :: languageSwitcher('light')}"></div>
+
+        <a class="rj-admin-toplink" th:href="@{/}">
+            <i class="bi bi-globe2"></i><span>[[#{common.viewSite}]]</span>
+        </a>
+
+        <a class="rj-admin-user" th:if="${currentUser != null}" th:href="@{/profile}">
+            <span class="rj-admin-user-avatar"><i class="bi bi-person"></i></span>
+            <span class="rj-admin-user-email" th:text="${currentUser.email}">Admin</span>
+        </a>
+
+        <a class="rj-admin-toplink is-danger" th:if="${currentUser != null}" th:href="@{/logout}">
+            <i class="bi bi-box-arrow-right"></i><span>[[#{common.logout}]]</span>
+        </a>
+    </div>
+</header>

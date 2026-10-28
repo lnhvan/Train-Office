@@ -1,22 +1,22 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layouts/admin-layout :: layout('Group Discount Policies', ~{::section}, 'group-discounts')}">
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/admin-layout :: layout(#{groupDiscount.groupDiscountPolicies}, ~{::section}, 'group-discounts')}">
 <section>
     <div class="admin-page-hero">
         <div>
             <span class="admin-page-kicker">
-                <i class="fas fa-users mr-1"></i>
-                Group Fare Policy
+                <i class="bi bi-people"></i>
+                [[#{groupDiscount.groupFarePolicy}]]
             </span>
 
-            <h2>Group Discount Policies</h2>
+            <h1>[[#{groupDiscount.groupDiscountPolicies}]]</h1>
 
-            <p>Manage booking-level discounts based on passenger count.</p>
+            <p>[[#{groupDiscount.manageBookingLevelDiscountsBasedOn}]]</p>
         </div>
 
         <a class="btn btn-primary" th:href="@{/admin/group-discount-policies/new}">
-            <i class="fas fa-plus mr-1"></i>
-            Add Policy
+            <i class="bi bi-plus-lg"></i>
+            [[#{common.addPolicy}]]
         </a>
     </div>
 
@@ -26,24 +26,24 @@
     <div class="card admin-table-card">
         <div class="card-header d-flex align-items-center justify-content-between">
             <div>
-                <span class="admin-card-title">Group Policy Directory</span>
-                <small th:text="${#lists.size(policies)} + ' policies'">0 policies</small>
+                <span class="admin-card-title">[[#{groupDiscount.groupPolicyDirectory}]]</span>
+                <small th:text="#{common.nPolicies(${#lists.size(policies)})}">0 policies</small>
             </div>
 
-            <span class="badge badge-info">Dynamic Group Rules</span>
+            <span class="rj-badge is-info no-dot">[[#{groupDiscount.dynamicGroupRules}]]</span>
         </div>
 
         <div class="card-body table-responsive p-0">
             <table class="table table-hover mb-0">
                 <thead>
                 <tr>
-                    <th>Order</th>
-                    <th>Code</th>
-                    <th>Name</th>
-                    <th>Passenger Range</th>
-                    <th>Discount</th>
-                    <th>Status</th>
-                    <th class="text-right">Actions</th>
+                    <th>[[#{common.order}]]</th>
+                    <th>[[#{common.code}]]</th>
+                    <th>[[#{common.name}]]</th>
+                    <th>[[#{groupDiscount.passengerRange}]]</th>
+                    <th>[[#{common.discount}]]</th>
+                    <th>[[#{common.status}]]</th>
+                    <th class="text-end">[[#{common.actions}]]</th>
                 </tr>
                 </thead>
 
@@ -52,7 +52,7 @@
                     <td th:text="${policy.displayOrder}">1</td>
 
                     <td>
-                        <span class="badge badge-primary admin-badge-soft"
+                        <span class="rj-badge is-info admin-badge-soft no-dot"
                               th:text="${policy.policyCode}">
                             GROUP
                         </span>
@@ -65,12 +65,12 @@
 
                     <td>
                         <span th:if="${policy.maxPassengers != null}"
-                              th:text="${policy.minPassengers + ' - ' + policy.maxPassengers + ' passengers'}">
+                              th:text="${#messages.msg('common.passengerRange', policy.minPassengers, policy.maxPassengers)}">
                             3 - 5 passengers
                         </span>
 
                         <span th:if="${policy.maxPassengers == null}"
-                              th:text="${policy.minPassengers + '+ passengers'}">
+                              th:text="${#messages.msg('common.passengerMin', policy.minPassengers)}">
                             10+ passengers
                         </span>
                     </td>
@@ -80,32 +80,26 @@
                     </td>
 
                     <td>
-                        <span th:if="${policy.active == true}" class="badge badge-success">ACTIVE</span>
-                        <span th:if="${policy.active != true}" class="badge badge-secondary">INACTIVE</span>
+                        <span th:if="${policy.active == true}" class="rj-badge is-success no-dot">[[#{common.active}]]</span>
+                        <span th:if="${policy.active != true}" class="rj-badge is-neutral no-dot">[[#{common.inactive}]]</span>
                     </td>
 
-                    <td class="text-right">
-                        <a class="btn btn-sm btn-outline-warning"
-                           th:href="@{/admin/group-discount-policies/edit/{id}(id=${policy.policyId})}">
-                            <i class="fas fa-edit"></i>
-                            <span>Edit</span>
-                        </a>
+                    <td class="text-end">
+                        <a class="rj-icon-btn is-warning"
+                           th:href="@{/admin/group-discount-policies/edit/{id}(id=${policy.policyId})}" th:title="#{common.edit}"><i class="bi bi-pencil-square" aria-hidden="true"></i><span class="visually-hidden">[[#{common.edit}]]</span></a>
 
-                        <a class="btn btn-sm btn-outline-danger"
-                           onclick="return confirm('Delete this group discount policy?')"
-                           th:href="@{/admin/group-discount-policies/delete/{id}(id=${policy.policyId})}">
-                            <i class="fas fa-trash"></i>
-                            <span>Delete</span>
-                        </a>
+                        <a class="rj-icon-btn is-danger"
+                           th:data-confirm="#{confirm.deleteGroupDiscount}" onclick="return confirm(this.dataset.confirm)"
+                           th:href="@{/admin/group-discount-policies/delete/{id}(id=${policy.policyId})}" th:title="#{common.delete}"><i class="bi bi-trash3" aria-hidden="true"></i><span class="visually-hidden">[[#{common.delete}]]</span></a>
                     </td>
                 </tr>
 
                 <tr th:if="${#lists.isEmpty(policies)}">
                     <td colspan="7">
                         <div class="admin-empty-state">
-                            <i class="fas fa-users"></i>
-                            <strong>No group discount policies</strong>
-                            <span>Create group or combo fare rules for multi-passenger bookings.</span>
+                            <i class="bi bi-people"></i>
+                            <strong>[[#{groupDiscount.noGroupDiscountPolicies}]]</strong>
+                            <span>[[#{groupDiscount.createGroupOrComboFareRules}]]</span>
                         </div>
                     </td>
                 </tr>

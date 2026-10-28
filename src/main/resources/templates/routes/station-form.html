@@ -1,15 +1,15 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layouts/admin-layout :: layout('Route Station Form', ~{::section}, 'routes')}">
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/admin-layout :: layout(#{route.routeStationForm}, ~{::section}, 'routes')}">
 <section>
     <div class="admin-page-hero">
         <div>
             <span class="admin-page-kicker">
-                <i class="fas fa-map-marked-alt mr-1"></i>
-                Route Station
+                <i class="bi bi-map"></i>
+                [[#{route.routeStation}]]
             </span>
 
-            <h2>Route Station Form</h2>
+            <h1>[[#{route.routeStationForm}]]</h1>
 
             <p>
                 <span th:text="${route.routeCode}">HN-SG</span>
@@ -18,9 +18,9 @@
             </p>
         </div>
 
-        <a class="btn btn-outline-primary" th:href="@{/admin/routes/{routeId}/stations(routeId=${route.routeId})}">
-            <i class="fas fa-arrow-left mr-1"></i>
-            Back to sequence
+        <a class="btn rj-btn-quiet" th:href="@{/admin/routes/{routeId}/stations(routeId=${route.routeId})}">
+            <i class="bi bi-arrow-left"></i>
+            [[#{route.backToSequence}]]
         </a>
     </div>
 
@@ -28,9 +28,9 @@
 
     <div class="card admin-form-card route-station-form-card">
         <div class="card-header">
-            <span class="admin-card-title">Station Placement</span>
+            <span class="admin-card-title">[[#{route.stationPlacement}]]</span>
             <small>
-                Select one station, set its order, and enter the railway kilometer marker for this route.
+                [[#{route.selectOneStationSetItsOrder}]]
             </small>
         </div>
 
@@ -38,17 +38,15 @@
             <div class="card-body">
                 <div class="row">
                     <div class="col-lg-4 mb-3">
-                        <label class="form-label" for="station">Station</label>
+                        <label class="form-label" for="station">[[#{common.station}]]</label>
 
                         <div class="input-group">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">
-                                    <i class="fas fa-map-marker-alt"></i>
+                            <span class="input-group-text">
+                                    <i class="bi bi-geo-alt"></i>
                                 </span>
-                            </div>
 
-                            <select id="station" class="form-control" name="station.stationId" required>
-                                <option value="">Select station</option>
+                            <select id="station" class="form-select" name="station.stationId" required>
+                                <option value="">[[#{common.selectStation}]]</option>
 
                                 <option th:each="station : ${stations}"
                                         th:value="${station.stationId}"
@@ -61,37 +59,33 @@
                     </div>
 
                     <div class="col-lg-4 mb-3">
-                        <label class="form-label" for="stationOrder">Station Order</label>
+                        <label class="form-label" for="stationOrder">[[#{common.stationOrder}]]</label>
 
                         <div class="input-group">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">
-                                    <i class="fas fa-list-ol"></i>
+                            <span class="input-group-text">
+                                    <i class="bi bi-list-ol"></i>
                                 </span>
-                            </div>
 
                             <input id="stationOrder"
                                    class="form-control"
                                    type="number"
                                    min="1"
                                    th:field="*{stationOrder}"
-                                   placeholder="Auto if empty">
+                                   th:placeholder="#{route.autoIfEmpty}">
                         </div>
 
                         <small class="form-text text-muted">
-                            Empty = automatically added to the end of this route.
+                            [[#{route.emptyAutomaticallyAddedToTheEnd}]]
                         </small>
                     </div>
 
                     <div class="col-lg-4 mb-3">
-                        <label class="form-label" for="distanceFromStartKm">KM Marker</label>
+                        <label class="form-label" for="distanceFromStartKm">[[#{route.kmMarker}]]</label>
 
                         <div class="input-group">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">
-                                    <i class="fas fa-road"></i>
+                            <span class="input-group-text">
+                                    <i class="bi bi-sign-railroad"></i>
                                 </span>
-                            </div>
 
                             <input id="distanceFromStartKm"
                                    class="form-control"
@@ -99,11 +93,11 @@
                                    min="0"
                                    step="0.1"
                                    th:field="*{distanceFromStartKm}"
-                                   placeholder="Example: 1500">
+                                   th:placeholder="#{route.example1500}">
                         </div>
 
                         <small class="form-text text-muted">
-                            Example: TPHCM = 1000, Cà Mau = 1500, route distance = 500 km.
+                            [[#{route.exampleHoChiMinhCity1000}]]
                         </small>
                     </div>
                 </div>
@@ -112,12 +106,12 @@
             <div class="card-footer d-flex justify-content-end gap-2">
                 <a class="btn btn-outline-secondary"
                    th:href="@{/admin/routes/{routeId}/stations(routeId=${route.routeId})}">
-                    Cancel
+                    [[#{common.cancel}]]
                 </a>
 
                 <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-save mr-1"></i>
-                    Save Placement
+                    <i class="bi bi-check2-circle"></i>
+                    [[#{route.savePlacement}]]
                 </button>
             </div>
         </form>

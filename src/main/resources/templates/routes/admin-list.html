@@ -1,23 +1,23 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layouts/admin-layout :: layout('Route Management', ~{::section}, 'routes')}">
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/admin-layout :: layout(#{route.routeManagement}, ~{::section}, 'routes')}">
 
 <section>
     <div class="admin-page-hero">
         <div>
             <span class="admin-page-kicker">
-                <i class="fas fa-route mr-1"></i>
-                Route Infrastructure
+                <i class="bi bi-signpost-split"></i>
+                [[#{route.routeInfrastructure}]]
             </span>
 
-            <h2>Route Management</h2>
+            <h1>[[#{route.routeManagement}]]</h1>
 
-            <p>Manage railway routes and define ordered stations for each route.</p>
+            <p>[[#{route.manageRailwayRoutesAndDefineOrdered}]]</p>
         </div>
 
         <a th:href="@{/admin/routes/new}" class="btn btn-primary">
-            <i class="fas fa-plus mr-1"></i>
-            Add Route
+            <i class="bi bi-plus-lg"></i>
+            [[#{route.addRoute}]]
         </a>
     </div>
 
@@ -28,25 +28,25 @@
         <div class="card-header">
             <form th:action="@{/admin/routes}" method="get" class="row g-2">
                 <div class="col-lg-9 col-md-12">
-                    <label class="form-label">Search routes</label>
+                    <label class="form-label">[[#{route.searchRoutes}]]</label>
 
                     <input type="text"
                            name="keyword"
                            class="form-control"
                            th:value="${keyword}"
-                           placeholder="Search route code, route name, or distance">
+                           th:placeholder="#{route.searchRouteCodeRouteNameOr}">
                 </div>
 
                 <div class="col-lg-3 col-md-12 d-flex align-items-end">
                     <div class="w-100 d-flex gap-2">
                         <button class="btn btn-primary flex-fill" type="submit">
-                            <i class="fas fa-search mr-1"></i>
-                            Search
+                            <i class="bi bi-search"></i>
+                            [[#{common.search}]]
                         </button>
 
                         <a class="btn btn-outline-secondary"
                            th:href="@{/admin/routes}">
-                            Clear
+                            [[#{common.clear}]]
                         </a>
                     </div>
                 </div>
@@ -57,11 +57,11 @@
     <div class="card admin-table-card">
         <div class="card-header d-flex align-items-center justify-content-between">
             <div>
-                <span class="admin-card-title">Route Directory</span>
-                <small th:text="${totalItems} + ' routes found'">0 routes found</small>
+                <span class="admin-card-title">[[#{route.routeDirectory}]]</span>
+                <small th:text="#{route.routesFound(${totalItems})}">0 routes found</small>
             </div>
 
-            <span class="badge badge-primary">Routes</span>
+            <span class="rj-badge is-info no-dot">[[#{common.routes}]]</span>
         </div>
 
         <div class="card-body table-responsive p-0">
@@ -69,10 +69,10 @@
                 <thead>
                 <tr>
                     <th>ID</th>
-                    <th>Route</th>
-                    <th>Code</th>
-                    <th>Distance</th>
-                    <th class="text-right">Actions</th>
+                    <th>[[#{common.route}]]</th>
+                    <th>[[#{common.code}]]</th>
+                    <th>[[#{route.distance}]]</th>
+                    <th class="text-end">[[#{common.actions}]]</th>
                 </tr>
                 </thead>
 
@@ -85,18 +85,18 @@
                     <td>
                         <div class="admin-identity">
                             <span class="admin-avatar">
-                                <i class="fas fa-route"></i>
+                                <i class="bi bi-signpost-split"></i>
                             </span>
 
                             <span>
                                 <strong th:text="${route.routeName}">Route</strong>
-                                <small>Manage station order</small>
+                                <small>[[#{route.manageStationOrder}]]</small>
                             </span>
                         </div>
                     </td>
 
                     <td>
-                        <span class="badge badge-primary admin-badge-soft"
+                        <span class="rj-badge is-info admin-badge-soft no-dot"
                               th:text="${route.routeCode}">
                             HN-SG
                         </span>
@@ -107,34 +107,25 @@
                         <span class="text-muted">km</span>
                     </td>
 
-                    <td class="text-right">
-                        <a class="btn btn-sm btn-outline-info"
-                           th:href="@{/admin/routes/{routeId}/stations(routeId=${route.routeId})}">
-                            <i class="fas fa-list-ol"></i>
-                            <span>Manage Stations</span>
-                        </a>
+                    <td class="text-end">
+                        <a class="rj-icon-btn is-info"
+                           th:href="@{/admin/routes/{routeId}/stations(routeId=${route.routeId})}" th:title="#{route.manageStations}"><i class="bi bi-list-ol" aria-hidden="true"></i><span class="visually-hidden">[[#{route.manageStations}]]</span></a>
 
-                        <a class="btn btn-sm btn-outline-warning"
-                           th:href="@{'/admin/routes/edit/' + ${route.routeId}}">
-                            <i class="fas fa-edit"></i>
-                            <span>Edit</span>
-                        </a>
+                        <a class="rj-icon-btn is-warning"
+                           th:href="@{'/admin/routes/edit/' + ${route.routeId}}" th:title="#{common.edit}"><i class="bi bi-pencil-square" aria-hidden="true"></i><span class="visually-hidden">[[#{common.edit}]]</span></a>
 
-                        <a class="btn btn-sm btn-outline-danger"
-                           onclick="return confirm('Delete this route?')"
-                           th:href="@{'/admin/routes/delete/' + ${route.routeId}}">
-                            <i class="fas fa-trash"></i>
-                            <span>Delete</span>
-                        </a>
+                        <a class="rj-icon-btn is-danger"
+                           th:data-confirm="#{confirm.deleteRoute}" onclick="return confirm(this.dataset.confirm)"
+                           th:href="@{'/admin/routes/delete/' + ${route.routeId}}" th:title="#{common.delete}"><i class="bi bi-trash3" aria-hidden="true"></i><span class="visually-hidden">[[#{common.delete}]]</span></a>
                     </td>
                 </tr>
 
                 <tr th:if="${#lists.isEmpty(routes)}">
                     <td colspan="5">
                         <div class="admin-empty-state">
-                            <i class="fas fa-route"></i>
-                            <strong>No routes found</strong>
-                            <span>Try another keyword or create a new route.</span>
+                            <i class="bi bi-signpost-split"></i>
+                            <strong>[[#{route.noRoutesFound}]]</strong>
+                            <span>[[#{route.tryAnotherKeywordOrCreateA}]]</span>
                         </div>
                     </td>
                 </tr>
@@ -145,7 +136,7 @@
         <div class="card-footer d-flex align-items-center justify-content-between flex-wrap"
              th:if="${totalPages > 1}">
             <small class="text-muted"
-                   th:text="'Page ' + ${currentPage} + ' of ' + ${totalPages}">
+                   th:text="#{common.pageOf(${currentPage}, ${totalPages})}">
                 Page 1 of 1
             </small>
 
@@ -155,7 +146,7 @@
                         th:classappend="${currentPage <= 1} ? ' disabled'">
                         <a class="page-link"
                            th:href="@{/admin/routes(page=${currentPage - 1}, keyword=${keyword})}">
-                            Previous
+                            [[#{common.previous}]]
                         </a>
                     </li>
 
@@ -173,7 +164,7 @@
                         th:classappend="${currentPage >= totalPages} ? ' disabled'">
                         <a class="page-link"
                            th:href="@{/admin/routes(page=${currentPage + 1}, keyword=${keyword})}">
-                            Next
+                            [[#{common.next}]]
                         </a>
                     </li>
                 </ul>

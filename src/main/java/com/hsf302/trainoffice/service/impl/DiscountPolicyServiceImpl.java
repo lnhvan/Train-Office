@@ -1,5 +1,7 @@
 package com.hsf302.trainoffice.service.impl;
 
+
+import com.hsf302.trainoffice.config.I18n;
 import com.hsf302.trainoffice.entity.DiscountPolicy;
 import com.hsf302.trainoffice.repository.DiscountPolicyRepository;
 import com.hsf302.trainoffice.service.DiscountPolicyService;
@@ -47,11 +49,11 @@ public class DiscountPolicyServiceImpl implements DiscountPolicyService {
     @Override
     public Optional<DiscountPolicy> findMatchingActivePolicy(LocalDate dateOfBirth) {
         if (dateOfBirth == null) {
-            throw new IllegalArgumentException("Passenger date of birth is required");
+            throw new IllegalArgumentException(I18n.t("err.passengerDateOfBirthIsRequired"));
         }
         LocalDate today = LocalDate.now();
         if (dateOfBirth.isAfter(today)) {
-            throw new IllegalArgumentException("Passenger date of birth cannot be in the future");
+            throw new IllegalArgumentException(I18n.t("err.passengerDateOfBirthCannotBeIn"));
         }
         return findMatchingActivePolicyByAge(Period.between(dateOfBirth, today).getYears());
     }
@@ -59,7 +61,7 @@ public class DiscountPolicyServiceImpl implements DiscountPolicyService {
     @Override
     public Optional<DiscountPolicy> findMatchingActivePolicyByAge(int age) {
         if (age < 0) {
-            throw new IllegalArgumentException("Passenger age cannot be negative");
+            throw new IllegalArgumentException(I18n.t("err.passengerAgeCannotBeNegative"));
         }
         return getActivePolicies().stream()
                 .filter(policy -> matchesAge(policy, age))
@@ -80,16 +82,16 @@ public class DiscountPolicyServiceImpl implements DiscountPolicyService {
 
         if (policy.getPolicyId() == null) {
             if (discountPolicyRepository.existsByPolicyCodeIgnoreCase(policy.getPolicyCode())) {
-                throw new IllegalStateException("Policy code already exists.");
+                throw new IllegalStateException(I18n.t("err.policyCodeAlreadyExists"));
             }
         } else {
             DiscountPolicy oldPolicy = discountPolicyRepository.findById(policy.getPolicyId())
-                    .orElseThrow(() -> new IllegalArgumentException("Discount policy does not exist."));
+                    .orElseThrow(() -> new IllegalArgumentException(I18n.t("err.discountPolicyDoesNotExist")));
 
             boolean changedCode = !oldPolicy.getPolicyCode().equalsIgnoreCase(policy.getPolicyCode());
 
             if (changedCode && discountPolicyRepository.existsByPolicyCodeIgnoreCase(policy.getPolicyCode())) {
-                throw new IllegalStateException("Policy code already exists.");
+                throw new IllegalStateException(I18n.t("err.policyCodeAlreadyExists"));
             }
         }
 
@@ -99,7 +101,7 @@ public class DiscountPolicyServiceImpl implements DiscountPolicyService {
     @Override
     public void deletePolicy(Long id) {
         if (!discountPolicyRepository.existsById(id)) {
-            throw new IllegalArgumentException("Discount policy does not exist.");
+            throw new IllegalArgumentException(I18n.t("err.discountPolicyDoesNotExist"));
         }
 
         discountPolicyRepository.deleteById(id);
@@ -142,24 +144,24 @@ public class DiscountPolicyServiceImpl implements DiscountPolicyService {
 
     private void validate(DiscountPolicy policy) {
         if (policy.getPolicyCode() == null || policy.getPolicyCode().isBlank()) {
-            throw new IllegalArgumentException("Policy code is required.");
+            throw new IllegalArgumentException(I18n.t("err.policyCodeIsRequired"));
         }
 
         if (policy.getPolicyName() == null || policy.getPolicyName().isBlank()) {
-            throw new IllegalArgumentException("Policy name is required.");
+            throw new IllegalArgumentException(I18n.t("err.policyNameIsRequired"));
         }
 
         if (policy.getMinAge() == null || policy.getMinAge() < 0) {
-            throw new IllegalArgumentException("Minimum age must be greater than or equal to 0.");
+            throw new IllegalArgumentException(I18n.t("err.minimumAgeMustBeGreaterThanOr"));
         }
 
         if (policy.getMaxAge() != null && policy.getMaxAge() < policy.getMinAge()) {
-            throw new IllegalArgumentException("Maximum age must be greater than or equal to minimum age.");
+            throw new IllegalArgumentException(I18n.t("err.maximumAgeMustBeGreaterThanOr"));
         }
 
         if (policy.getDiscountPercent().compareTo(BigDecimal.ZERO) < 0
                 || policy.getDiscountPercent().compareTo(BigDecimal.valueOf(100)) > 0) {
-            throw new IllegalArgumentException("Discount percent must be from 0 to 100.");
+            throw new IllegalArgumentException(I18n.t("err.discountPercentMustBeFrom0To"));
         }
     }
 }

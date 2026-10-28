@@ -9,40 +9,40 @@ import lombok.Data;
 @Data
 public class RefundRequestForm {
 
-    @NotBlank(message = "Customer name is required")
-    @Size(min = 2, max = 100, message = "Customer name must be between 2 and 100 characters")
+    @NotBlank(message = "{validation.customerName.required}")
+    @Size(min = 2, max = 100, message = "{validation.customerName.size}")
     private String customerName;
 
-    @NotBlank(message = "Customer phone is required")
+    @NotBlank(message = "{validation.customerPhone.required}")
     @Pattern(
             regexp = "^(0|\\+84)[0-9]{9,10}$",
-            message = "Customer phone must be a valid Vietnamese phone number"
+            message = "{validation.customerPhone.pattern}"
     )
     private String customerPhone;
 
-    @Email(message = "Customer email is invalid")
-    @Size(max = 120, message = "Customer email must not exceed 120 characters")
+    @Email(message = "{validation.customerEmail.invalid}")
+    @Size(max = 120, message = "{validation.customerEmail.max}")
     private String customerEmail;
 
-    @NotBlank(message = "Bank name is required")
-    @Size(min = 2, max = 100, message = "Bank name must be between 2 and 100 characters")
+    @NotBlank(message = "{validation.bankName.required}")
+    @Size(min = 2, max = 100, message = "{validation.bankName.size}")
     private String bankName;
 
-    @NotBlank(message = "Bank account number is required")
+    @NotBlank(message = "{validation.bankAccount.required}")
     @Pattern(
             regexp = "^[0-9]{6,30}$",
-            message = "Bank account number must contain 6 to 30 digits"
+            message = "{validation.bankAccount.pattern}"
     )
     private String bankAccountNumber;
 
-    @NotBlank(message = "Bank account holder is required")
+    @NotBlank(message = "{validation.bankHolder.required}")
     @Pattern(
             regexp = "^[A-Za-zÀ-ỹ\\s'.-]{2,100}$",
-            message = "Bank account holder name is invalid"
+            message = "{validation.bankHolder.pattern}"
     )
     private String bankAccountHolder;
 
-    @NotBlank(message = "Refund reason is required")
-    @Size(min = 5, max = 500, message = "Refund reason must be between 5 and 500 characters")
+    @NotBlank(message = "{validation.refundReason.required}")
+    @Size(min = 5, max = 500, message = "{validation.refundReason.size}")
     private String reason;
 }

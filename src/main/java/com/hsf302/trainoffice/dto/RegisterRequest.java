@@ -9,22 +9,23 @@ import lombok.Data;
 @Data
 public class RegisterRequest {
 
-    @NotBlank(message = "The full name cannot be left blank!")
-    @Size(max = 100, message = "Full name (maximum 100 characters)")
+    @NotBlank(message = "{validation.fullName.required}")
+    @Size(max = 100, message = "{validation.fullName.max}")
     @Pattern(
             regexp = "^[\\p{L}\\s]+$",
-            message = "Full names can only contain letters and spaces."
+            message = "{validation.fullName.pattern}"
     )
     private String fullName;
 
-    @NotBlank(message = "Email address should not be left blank.")
-    @Email(message = "Invalid email")
+    @NotBlank(message = "{validation.email.required}")
+    @Email(message = "{validation.email.invalid}")
     private String email;
 
-    @NotBlank(message = "The password cannot be left blank.")
-    @Size(min = 6, message = "The password must be 6 characters long.")
+    @NotBlank(message = "{validation.password.required}")
+    @Size(min = 6, message = "{validation.password.min}")
+    @Size(max = 64, message = "{validation.password.max}")
     private String password;
 
-    @NotBlank(message = "Password confirmation cannot be left blank.")
+    @NotBlank(message = "{validation.confirmPassword.required}")
     private String confirmPassword;
 }

@@ -1,3 +1,14 @@
+/* i18n: chuỗi lấy từ window.RAILJET_I18N (fragments/i18n-js.html), có giá trị mặc định tiếng Anh */
+function rjT(key, fallback) {
+    const args = Array.prototype.slice.call(arguments, 2);
+    if (typeof window.railT === 'function') {
+        return window.railT.apply(null, [key, fallback].concat(args));
+    }
+    return String(fallback).replace(/\{(\d+)\}/g, function (match, index) {
+        return args[index] !== undefined ? args[index] : match;
+    });
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     setupPassengerValidation();
     setupSeatSelection();
@@ -62,14 +73,14 @@ function setupPassengerValidation() {
         }
 
         if (!dobInput.value) {
-            typeDisplay.options[0].textContent = 'Enter date of birth';
+            typeDisplay.options[0].textContent = rjT('js.enterDob', 'Enter date of birth');
             typeDisplay.value = 'DEFAULT';
             typeHidden.value = 'DEFAULT';
         } else if (matchingOption) {
             typeDisplay.value = matchingOption.value;
             typeHidden.value = matchingOption.value;
         } else {
-            typeDisplay.options[0].textContent = 'Default - 0%';
+            typeDisplay.options[0].textContent = rjT('js.defaultZero', 'Default - 0%');
             typeDisplay.value = 'DEFAULT';
             typeHidden.value = 'DEFAULT';
         }
@@ -141,6 +152,8 @@ function setupSeatSelection() {
     const checkboxes = Array.from(document.querySelectorAll('.rail-seat-checkbox'));
 
     const passengerCountInput = document.getElementById('passengerCountInput');
+    const seatLimitHint = document.getElementById('seatLimitHint');
+    const maxPassengers = Number(form.dataset.maxPassengers || 10);
     const selectedList = document.getElementById('selectedSeatList');
     const selectedCountText = document.getElementById('selectedCountText');
     const selectedTotalText = document.getElementById('selectedTotalText');
@@ -193,15 +206,15 @@ function setupSeatSelection() {
         const normalized = String(value || '').trim().toUpperCase();
 
         if (normalized === 'LOWER') {
-            return 'Level 1 / Lower berth';
+            return rjT('js.berthLower', 'Level 1 / Lower berth');
         }
 
         if (normalized === 'MIDDLE') {
-            return 'Level 2 / Middle berth';
+            return rjT('js.berthMiddle', 'Level 2 / Middle berth');
         }
 
         if (normalized === 'UPPER') {
-            return 'Level 3 / Upper berth';
+            return rjT('js.berthUpper', 'Level 3 / Upper berth');
         }
 
         return normalized.replaceAll('_', ' ');
@@ -325,8 +338,8 @@ function setupSeatSelection() {
             }
 
             const coachId = option.dataset.coachId || checkbox.dataset.coachId || '0';
-            const coachNumber = option.dataset.coachNumber || checkbox.dataset.coachNumber || 'Unknown';
-            const coachType = option.dataset.coachType || checkbox.dataset.coachType || 'Standard';
+            const coachNumber = option.dataset.coachNumber || checkbox.dataset.coachNumber || rjT('js.unknown', 'Unknown');
+            const coachType = option.dataset.coachType || checkbox.dataset.coachType || rjT('js.standard', 'Standard');
             const coachCapacity = option.dataset.coachCapacity || '0';
             const extraPrice = numberValue(checkbox.dataset.seatExtraPrice);
 
@@ -402,7 +415,7 @@ function setupSeatSelection() {
 
     function getCoachPriceText(coach) {
         if (!coach) {
-            return 'Included';
+            return rjT('js.included', 'Included');
         }
 
         if (coach.minExtraPrice === coach.maxExtraPrice) {
@@ -414,7 +427,7 @@ function setupSeatSelection() {
 
     function getCoachPriceShortText(coach) {
         if (!coach) {
-            return 'Included';
+            return rjT('js.included', 'Included');
         }
 
         if (coach.minExtraPrice === coach.maxExtraPrice) {
@@ -437,13 +450,13 @@ function setupSeatSelection() {
             button.type = 'button';
             button.className = 'rj-coach-tab';
             button.dataset.coachId = coach.id;
-            button.title = 'Coach price: ' + getCoachPriceText(coach);
+            button.title = rjT('js.coachPriceTitle', 'Coach price: {0}', getCoachPriceText(coach));
 
             button.innerHTML =
                 '<i class="bi bi-train-front"></i>' +
                 '<div class="rj-coach-tab-content">' +
-                '<strong>Coach ' + coach.number + '</strong>' +
-                '<small>' + coach.type + ' • ' + coach.availableSeats + '/' + coach.totalSeats + ' available</small>' +
+                '<strong>' + rjT('js.coachN', 'Coach {0}', coach.number) + '</strong>' +
+                '<small>' + coach.type + ' • ' + rjT('js.availableOf', '{0}/{1} available', coach.availableSeats, coach.totalSeats) + '</small>' +
                 '<em class="rj-coach-price">' + getCoachPriceShortText(coach) + '</em>' +
                 '</div>';
 
@@ -490,7 +503,7 @@ function setupSeatSelection() {
 
             button.innerHTML =
                 '<strong>' + compartment.number + '</strong>' +
-                '<small>' + compartment.availableSeats + '/' + compartment.totalSeats + ' berths available</small>';
+                '<small>' + rjT('js.berthsAvailableOf', '{0}/{1} berths available', compartment.availableSeats, compartment.totalSeats) + '</small>';
 
             button.addEventListener('click', function () {
                 showCompartment(index);
@@ -536,20 +549,19 @@ function setupSeatSelection() {
         });
 
         if (currentCoachMeta) {
-            currentCoachMeta.textContent =
-                activeCoach.type +
-                ' • Compartment ' +
-                activeCompartment.number +
-                ' • ' +
-                activeCompartment.availableSeats +
-                ' available of ' +
-                activeCompartment.totalSeats +
-                ' berths';
+            currentCoachMeta.textContent = rjT(
+                'js.compartmentMeta',
+                '{0} • Compartment {1} • {2} available of {3} berths',
+                activeCoach.type,
+                activeCompartment.number,
+                activeCompartment.availableSeats,
+                activeCompartment.totalSeats
+            );
         }
 
         if (currentCoachSeatCount) {
             currentCoachSeatCount.textContent =
-                activeCompartment.number + ' • ' + activeCompartment.availableSeats + ' berths available';
+                rjT('js.compartmentSeatCount', '{0} • {1} berths available', activeCompartment.number, activeCompartment.availableSeats);
         }
 
         if (seatMap) {
@@ -575,6 +587,11 @@ function setupSeatSelection() {
 
         const activeCoach = coaches[activeCoachIndex];
 
+        // Toa giường nằm: vẽ khoang như giường tầng (2 cột, tầng trên ở trên), không có lối đi giữa.
+        if (seatMap) {
+            seatMap.classList.toggle('is-sleeper', Boolean(activeCoach.isSleeper));
+        }
+
         renderCompartmentTabs(activeCoach);
 
         if (activeCoach.isSleeper && activeCoach.compartments && activeCoach.compartments.length) {
@@ -588,19 +605,18 @@ function setupSeatSelection() {
             showSeatsByCoachOnly(activeCoach);
 
             if (currentCoachMeta) {
-                currentCoachMeta.textContent =
-                    activeCoach.type +
-                    ' • Price: ' +
-                    getCoachPriceShortText(activeCoach) +
-                    ' • ' +
-                    activeCoach.availableSeats +
-                    ' available of ' +
-                    activeCoach.totalSeats +
-                    ' seats';
+                currentCoachMeta.textContent = rjT(
+                    'js.coachMeta',
+                    '{0} • Price: {1} • {2} available of {3} seats',
+                    activeCoach.type,
+                    getCoachPriceShortText(activeCoach),
+                    activeCoach.availableSeats,
+                    activeCoach.totalSeats
+                );
             }
 
             if (currentCoachSeatCount) {
-                currentCoachSeatCount.textContent = activeCoach.availableSeats + ' seats available';
+                currentCoachSeatCount.textContent = rjT('js.seatsAvailable', '{0} seats available', activeCoach.availableSeats);
             }
         }
 
@@ -609,7 +625,7 @@ function setupSeatSelection() {
         });
 
         if (currentCoachName) {
-            currentCoachName.textContent = 'Coach ' + activeCoach.number;
+            currentCoachName.textContent = rjT('js.coachN', 'Coach {0}', activeCoach.number);
         }
 
         if (previousCoachBtn) {
@@ -623,6 +639,36 @@ function setupSeatSelection() {
         if (seatMap) {
             seatMap.scrollTop = 0;
         }
+    }
+
+    /** Số ghế cần chọn = số hành khách (1..maxPassengers). */
+    function getRequiredSeats() {
+        if (!passengerCountInput) {
+            return Math.max(1, getSelectedCheckboxes().length);
+        }
+        const value = parseInt(passengerCountInput.value, 10);
+        return Math.min(maxPassengers, Math.max(1, isNaN(value) ? 1 : value));
+    }
+
+    function showSeatHint(message) {
+        if (seatLimitHint) {
+            seatLimitHint.textContent = message || '';
+        }
+    }
+
+    /** Ghế khôi phục từ lần trước có thể nhiều hơn số hành khách đã chọn khi tìm chuyến -> bỏ bớt. */
+    function trimSelectionToPassengerCount() {
+        const required = getRequiredSeats();
+        const selected = getSelectedCheckboxes();
+
+        if (selected.length <= required) {
+            return;
+        }
+
+        selected.slice(required).forEach(function (checkbox) {
+            checkbox.checked = false;
+        });
+        saveSelectedSeats();
     }
 
     function updateSeatClasses() {
@@ -650,12 +696,8 @@ function setupSeatSelection() {
 
         updateSeatClasses();
 
-        if (passengerCountInput) {
-            passengerCountInput.value = selected.length;
-        }
-
         if (selectedCountText) {
-            selectedCountText.textContent = selected.length;
+            selectedCountText.textContent = rjT('js.seatsOfPassengers', '{0} / {1}', selected.length, getRequiredSeats());
         }
 
         const total = selected.reduce(function (sum, checkbox) {
@@ -675,15 +717,15 @@ function setupSeatSelection() {
         if (!selected.length) {
             const empty = document.createElement('div');
             empty.className = 'rail-selected-empty';
-            empty.textContent = 'No seats selected yet.';
+            empty.textContent = rjT('js.noSeatsSelected', 'No seats selected yet.');
             selectedList.appendChild(empty);
             return;
         }
 
         selected.forEach(function (checkbox) {
-            const seatLabel = checkbox.dataset.seatLabel || 'Seat';
-            const seatType = checkbox.dataset.seatType || 'Standard';
-            const coachNumber = checkbox.dataset.coachNumber || 'Unknown';
+            const seatLabel = checkbox.dataset.seatLabel || rjT('js.seat', 'Seat');
+            const seatType = checkbox.dataset.seatType || rjT('js.standard', 'Standard');
+            const coachNumber = checkbox.dataset.coachNumber || rjT('js.unknown', 'Unknown');
             const coachType = checkbox.dataset.coachType || seatType;
             const extraPrice = getSeatExtraPrice(checkbox);
             const hasCompartment = isTrue(checkbox.dataset.hasCompartment)
@@ -700,7 +742,7 @@ function setupSeatSelection() {
                 '<div class="rail-selected-seat-info">' +
                 '<div class="rail-selected-seat-code">' + seatLabel + '</div>' +
                 '<div class="rail-selected-seat-type">' +
-                '<strong>Coach ' + coachNumber + '</strong>' +
+                '<strong>' + rjT('js.coachN', 'Coach {0}', coachNumber) + '</strong>' +
                 '<small>' +
                 coachType +
                 (hasCompartment ? ' • ' + compartmentNumber : '') +
@@ -709,10 +751,10 @@ function setupSeatSelection() {
                 '</div>' +
                 '</div>' +
                 '<div class="rail-selected-price">' +
-                '<span class="rail-selected-extra-label">Coach price</span>' +
+                '<span class="rail-selected-extra-label">' + rjT('js.coachPrice', 'Coach price') + '</span>' +
                 '<strong>' + formatCoachPrice(extraPrice) + '</strong>' +
                 '</div>' +
-                '<button type="button" class="rail-remove-seat-btn" data-remove-seat-id="' + checkbox.value + '" title="Remove seat">' +
+                '<button type="button" class="rail-remove-seat-btn" data-remove-seat-id="' + checkbox.value + '" title="' + rjT('js.removeSeat', 'Remove seat') + '">' +
                 '<i class="bi bi-x-lg"></i>' +
                 '</button>';
 
@@ -734,10 +776,39 @@ function setupSeatSelection() {
 
     checkboxes.forEach(function (checkbox) {
         checkbox.addEventListener('change', function () {
+            // Mỗi hành khách một ghế: không cho chọn quá số hành khách.
+            if (checkbox.checked && getSelectedCheckboxes().length > getRequiredSeats()) {
+                checkbox.checked = false;
+                showSeatHint(rjT(
+                    'js.seatLimitReached',
+                    'You have selected enough seats for {0} passengers. Increase the passenger count to add more.',
+                    getRequiredSeats()
+                ));
+                return;
+            }
+
+            showSeatHint('');
             updateSummary();
             saveSelectedSeats();
         });
     });
+
+    if (passengerCountInput) {
+        passengerCountInput.addEventListener('change', function () {
+            const selectedCount = getSelectedCheckboxes().length;
+
+            // Không cho giảm số hành khách xuống dưới số ghế đang chọn.
+            if (getRequiredSeats() < selectedCount) {
+                passengerCountInput.value = selectedCount;
+                passengerCountInput.dispatchEvent(new Event('rj:refresh'));
+                showSeatHint(rjT('js.removeSeatsFirst', 'Remove a selected seat before lowering the passenger count.'));
+            } else {
+                showSeatHint('');
+            }
+
+            updateSummary();
+        });
+    }
     if (selectedList) {
         selectedList.addEventListener('click', function (event) {
             const removeButton = event.target.closest('.rail-remove-seat-btn');
@@ -765,9 +836,12 @@ function setupSeatSelection() {
     form.addEventListener('submit', function (event) {
         const selected = getSelectedCheckboxes();
 
-        if (!selected.length) {
+        if (!selected.length || selected.length !== getRequiredSeats()) {
             event.preventDefault();
-            alert('Please select at least one seat.');
+            showSeatHint(rjT('js.selectExactSeats', 'Please select {0} seats, one for each passenger.', getRequiredSeats()));
+            if (seatLimitHint) {
+                seatLimitHint.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+            }
             return false;
         }
 
@@ -784,6 +858,7 @@ function setupSeatSelection() {
     renderCoachTabs();
 
     const restoredCoachId = restoreSelectedSeats();
+    trimSelectionToPassengerCount();
     showCoach(getCoachIndexById(restoredCoachId));
 
     updateSummary();

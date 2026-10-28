@@ -1,23 +1,28 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layouts/admin-layout :: layout('Trip Stations', ~{::section}, 'trips')}">
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/admin-layout :: layout(#{tripStation.tripStations}, ~{::section}, 'trips')}">
 <section>
     <div class="admin-page-hero">
         <div>
-            <span class="admin-page-kicker"><i class="fas fa-map-signs mr-1"></i> Stop Sequence</span>
-            <h2>Trip Stations</h2>
+            <span class="admin-page-kicker"><i class="bi bi-signpost-2"></i> [[#{tripStation.stopSequence}]]</span>
+            <h1>[[#{tripStation.tripStations}]]</h1>
             <p>
-                <span th:text="${trip.train != null ? trip.train.trainName : 'Trip'}">Trip</span>
+                <span th:text="${trip.train != null ? trip.train.trainName : #messages.msg('common.trip')}">Trip</span>
                 <span class="mx-1 text-muted">·</span>
-                <span th:text="${trip.departureTime}">Departure</span>
+                <span th:text="${trip.departureTime != null ? #temporals.format(trip.departureTime, 'HH:mm dd/MM/yyyy') : ''}">Departure</span>
             </p>
         </div>
         <div class="admin-page-actions">
-            <a class="btn btn-outline-secondary" th:href="@{/admin/trips/{id}(id=${trip.tripId})}">
-                <i class="fas fa-arrow-left mr-1"></i> Back to Trip
+            <a class="btn rj-btn-quiet" th:href="@{/admin/trips/{id}(id=${trip.tripId})}">
+                <i class="bi bi-arrow-left"></i> [[#{tripStation.backToTrip}]]
             </a>
+            <form th:action="@{/admin/trips/{tripId}/stations/generate(tripId=${trip.tripId})}" method="post" class="d-inline">
+                <button type="submit" class="btn btn-outline-secondary" th:title="#{tripStation.generateFromRouteHint}">
+                    <i class="bi bi-signpost-split"></i> [[#{tripStation.generateFromRoute}]]
+                </button>
+            </form>
             <a class="btn btn-primary" th:href="@{/admin/trips/{tripId}/stations/create(tripId=${trip.tripId})}">
-                <i class="fas fa-plus mr-1"></i> Add Station
+                <i class="bi bi-plus-lg"></i> [[#{common.addStation}]]
             </a>
         </div>
     </div>
@@ -28,10 +33,10 @@
     <div class="card admin-table-card">
         <div class="card-header d-flex align-items-center justify-content-between">
             <div>
-                <span class="admin-card-title">Station Timeline</span>
-                <small th:text="${#lists.size(tripStations)} + ' stops scheduled'">0 stops scheduled</small>
+                <span class="admin-card-title">[[#{tripStation.stationTimeline}]]</span>
+                <small th:text="#{tripStation.stopsScheduled(${#lists.size(tripStations)})}">0 stops scheduled</small>
             </div>
-            <span class="badge badge-info" th:text="${trip.route != null ? trip.route.routeCode : 'Trip'}">Trip</span>
+            <span class="rj-badge is-info no-dot" th:text="${trip.route != null ? trip.route.routeCode : #messages.msg('common.trip')}">Trip</span>
         </div>
         <div class="card-body">
             <div class="trip-timeline">
@@ -43,28 +48,29 @@
                             <span th:text="${tripStation.station != null ? tripStation.station.stationCode : '-'}">HN</span>
                             <span class="mx-1">·</span>
                             <span th:text="${tripStation.station != null ? tripStation.station.city : '-'}">City</span>
+                            <th:block th:if="${tripStation.routeStation != null}">
+                                <span class="mx-1">·</span>
+                                <span class="rj-num" th:text="${#numbers.formatDecimal(tripStation.routeStation.distanceFromStartKm != null ? tripStation.routeStation.distanceFromStartKm : 0, 1, 0) + ' km'}">0 km</span>
+                            </th:block>
+                            <span class="rj-badge is-warning ms-1" th:if="${tripStation.routeStation == null}">[[#{tripStation.notLinkedToRoute}]]</span>
                         </small>
                     </div>
                     <div class="trip-time-block">
-                        <span><i class="fas fa-sign-in-alt mr-1 text-primary"></i><span th:text="${tripStation.arrivalTime}">Arrival</span></span>
-                        <small><i class="fas fa-sign-out-alt mr-1 text-primary"></i><span th:text="${tripStation.departureTime}">Departure</span></small>
+                        <span><i class="bi bi-box-arrow-in-right text-primary me-1"></i><span th:text="${tripStation.arrivalTime != null ? #temporals.format(tripStation.arrivalTime, 'HH:mm dd/MM') : '-'}">Arrival</span></span>
+                        <small><i class="bi bi-box-arrow-right text-primary me-1"></i><span th:text="${tripStation.departureTime != null ? #temporals.format(tripStation.departureTime, 'HH:mm dd/MM') : '-'}">Departure</span></small>
                     </div>
-                    <div class="text-right">
-                        <a class="btn btn-sm btn-outline-warning" th:href="@{/admin/trips/{tripId}/stations/{id}/edit(tripId=${trip.tripId},id=${tripStation.tripStationId})}">
-                            <i class="fas fa-edit"></i><span>Edit</span>
-                        </a>
+                    <div class="text-end">
+                        <a class="rj-icon-btn is-warning" th:href="@{/admin/trips/{tripId}/stations/{id}/edit(tripId=${trip.tripId},id=${tripStation.tripStationId})}" th:title="#{common.edit}"><i class="bi bi-pencil-square" aria-hidden="true"></i><span class="visually-hidden">[[#{common.edit}]]</span></a>
                         <form th:action="@{/admin/trips/{tripId}/stations/{id}/delete(tripId=${trip.tripId},id=${tripStation.tripStationId})}" method="post" class="d-inline">
-                            <button class="btn btn-sm btn-outline-danger" type="submit" onclick="return confirm('Delete this trip station?')">
-                                <i class="fas fa-trash"></i><span>Delete</span>
-                            </button>
+                            <button class="rj-icon-btn is-danger" type="submit" th:data-confirm="#{confirm.deleteTripStation}" onclick="return confirm(this.dataset.confirm)" th:title="#{common.delete}"><i class="bi bi-trash3" aria-hidden="true"></i><span class="visually-hidden">[[#{common.delete}]]</span></button>
                         </form>
                     </div>
                 </div>
             </div>
             <div class="admin-empty-state mt-3" th:if="${tripStations == null or #lists.isEmpty(tripStations)}">
-                <i class="fas fa-map-signs"></i>
-                <strong>No stations have been added to this trip</strong>
-                <span>Add stops to define the trip timeline.</span>
+                <i class="bi bi-signpost-2"></i>
+                <strong>[[#{tripStation.noStationsHaveBeenAddedTo}]]</strong>
+                <span>[[#{tripStation.addStopsToDefineTheTrip}]]</span>
             </div>
         </div>
     </div>

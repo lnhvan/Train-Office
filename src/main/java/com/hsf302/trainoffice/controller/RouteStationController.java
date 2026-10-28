@@ -1,5 +1,7 @@
 package com.hsf302.trainoffice.controller;
 
+
+import com.hsf302.trainoffice.config.I18n;
 import com.hsf302.trainoffice.entity.RouteStation;
 import com.hsf302.trainoffice.service.RouteService;
 import com.hsf302.trainoffice.service.RouteStationService;
@@ -35,7 +37,7 @@ public class RouteStationController {
                     return "routes/stations";
                 })
                 .orElseGet(() -> {
-                    redirectAttributes.addFlashAttribute("errorMessage", "Route not found");
+                    redirectAttributes.addFlashAttribute("errorMessage", I18n.t("msg.route.notFoundShort"));
                     return "redirect:/admin/routes";
                 });
     }
@@ -51,7 +53,7 @@ public class RouteStationController {
                     return "routes/station-form";
                 })
                 .orElseGet(() -> {
-                    redirectAttributes.addFlashAttribute("errorMessage", "Route not found");
+                    redirectAttributes.addFlashAttribute("errorMessage", I18n.t("msg.route.notFoundShort"));
                     return "redirect:/admin/routes";
                 });
     }
@@ -63,7 +65,7 @@ public class RouteStationController {
                        RedirectAttributes redirectAttributes) {
         try {
             routeStationService.saveRouteStation(routeId, routeStation);
-            redirectAttributes.addFlashAttribute("successMessage", "Route station saved successfully!");
+            redirectAttributes.addFlashAttribute("successMessage", I18n.t("msg.routeStation.saved"));
             return "redirect:/admin/routes/" + routeId + "/stations";
         } catch (IllegalArgumentException ex) {
             model.addAttribute("errorMessage", ex.getMessage());
@@ -90,7 +92,7 @@ public class RouteStationController {
                     return "routes/station-form";
                 })
                 .orElseGet(() -> {
-                    redirectAttributes.addFlashAttribute("errorMessage", "Route station not found");
+                    redirectAttributes.addFlashAttribute("errorMessage", I18n.t("msg.routeStation.notFound"));
                     return "redirect:/admin/routes/" + routeId + "/stations";
                 });
     }
@@ -103,7 +105,7 @@ public class RouteStationController {
                          RedirectAttributes redirectAttributes) {
         try {
             routeStationService.updateRouteStation(routeId, routeStationId, routeStation);
-            redirectAttributes.addFlashAttribute("successMessage", "Route station updated successfully!");
+            redirectAttributes.addFlashAttribute("successMessage", I18n.t("msg.routeStation.updated"));
             return "redirect:/admin/routes/" + routeId + "/stations";
         } catch (IllegalArgumentException ex) {
             model.addAttribute("errorMessage", ex.getMessage());
@@ -120,7 +122,7 @@ public class RouteStationController {
                           RedirectAttributes redirectAttributes) {
         try {
             routeStationService.reorderStations(routeId, stationIds);
-            redirectAttributes.addFlashAttribute("successMessage", "Station order updated successfully!");
+            redirectAttributes.addFlashAttribute("successMessage", I18n.t("msg.routeStation.orderUpdated"));
         } catch (IllegalArgumentException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         }
@@ -134,7 +136,7 @@ public class RouteStationController {
                          RedirectAttributes redirectAttributes) {
         try {
             routeStationService.deleteRouteStation(routeId, routeStationId);
-            redirectAttributes.addFlashAttribute("successMessage", "Route station deleted successfully!");
+            redirectAttributes.addFlashAttribute("successMessage", I18n.t("msg.routeStation.deleted"));
         } catch (IllegalArgumentException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         }

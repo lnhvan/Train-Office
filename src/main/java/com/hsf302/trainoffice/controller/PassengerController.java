@@ -1,5 +1,7 @@
 package com.hsf302.trainoffice.controller;
 
+
+import com.hsf302.trainoffice.config.I18n;
 import com.hsf302.trainoffice.common.enums.Gender;
 import com.hsf302.trainoffice.entity.Passenger;
 import com.hsf302.trainoffice.service.PassengerService;
@@ -46,7 +48,7 @@ public class PassengerController {
                     return "passengers/form";
                 })
                 .orElseGet(() -> {
-                    redirectAttributes.addFlashAttribute("errorMessage", "Passenger not found.");
+                    redirectAttributes.addFlashAttribute("errorMessage", I18n.t("msg.passenger.notFound"));
                     return "redirect:/admin/passengers";
                 });
     }
@@ -59,7 +61,7 @@ public class PassengerController {
                     return "passengers/detail";
                 })
                 .orElseGet(() -> {
-                    redirectAttributes.addFlashAttribute("errorMessage", "Passenger not found.");
+                    redirectAttributes.addFlashAttribute("errorMessage", I18n.t("msg.passenger.notFound"));
                     return "redirect:/admin/passengers";
                 });
     }
@@ -70,7 +72,7 @@ public class PassengerController {
                                 RedirectAttributes redirectAttributes) {
         try {
             passengerService.savePassenger(passenger);
-            redirectAttributes.addFlashAttribute("successMessage", "Passenger saved successfully.");
+            redirectAttributes.addFlashAttribute("successMessage", I18n.t("msg.passenger.saved"));
             return "redirect:/admin/passengers";
         } catch (IllegalArgumentException ex) {
             model.addAttribute("errorMessage", ex.getMessage());
@@ -84,9 +86,9 @@ public class PassengerController {
     public String deletePassenger(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         try {
             passengerService.deletePassenger(id);
-            redirectAttributes.addFlashAttribute("successMessage", "Passenger deleted successfully.");
+            redirectAttributes.addFlashAttribute("successMessage", I18n.t("msg.passenger.deleted"));
         } catch (DataIntegrityViolationException ex) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Cannot delete passenger because it is used by tickets.");
+            redirectAttributes.addFlashAttribute("errorMessage", I18n.t("msg.passenger.inUse"));
         }
         return "redirect:/admin/passengers";
     }

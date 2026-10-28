@@ -1,0 +1,55 @@
+<!--
+    Đưa các chuỗi giao diện cần dùng trong file JavaScript (static/js/*.js) ra window.RAILJET_I18N.
+    Trong JS dùng: window.railT('js.coachN', 'Coach {0}', coachNumber)
+-->
+<script xmlns:th="http://www.thymeleaf.org" th:fragment="i18nScript" th:inline="javascript">
+    window.RAILJET_LANG = /*[[${#locale.language}]]*/ 'vi';
+    window.RAILJET_I18N = {
+        'js.enterDob': /*[[#{js.enterDob}]]*/ 'Enter date of birth',
+        'js.defaultZero': /*[[#{js.defaultZero}]]*/ 'Default - 0%',
+        'js.berthLower': /*[[#{js.berthLower}]]*/ 'Level 1 / Lower berth',
+        'js.berthMiddle': /*[[#{js.berthMiddle}]]*/ 'Level 2 / Middle berth',
+        'js.berthUpper': /*[[#{js.berthUpper}]]*/ 'Level 3 / Upper berth',
+        'js.included': /*[[#{js.included}]]*/ 'Included',
+        'js.coachN': /*[[#{js.coachN}]]*/ 'Coach {0}',
+        'js.coachPriceTitle': /*[[#{js.coachPriceTitle}]]*/ 'Coach price: {0}',
+        'js.coachPrice': /*[[#{js.coachPrice}]]*/ 'Coach price',
+        'js.availableOf': /*[[#{js.availableOf}]]*/ '{0}/{1} available',
+        'js.berthsAvailableOf': /*[[#{js.berthsAvailableOf}]]*/ '{0}/{1} berths available',
+        'js.compartmentMeta': /*[[#{js.compartmentMeta}]]*/ '{0} • Compartment {1} • {2} available of {3} berths',
+        'js.compartmentSeatCount': /*[[#{js.compartmentSeatCount}]]*/ '{0} • {1} berths available',
+        'js.coachMeta': /*[[#{js.coachMeta}]]*/ '{0} • Price: {1} • {2} available of {3} seats',
+        'js.seatsAvailable': /*[[#{js.seatsAvailable}]]*/ '{0} seats available',
+        'js.noSeatsSelected': /*[[#{js.noSeatsSelected}]]*/ 'No seats selected yet.',
+        'js.removeSeat': /*[[#{js.removeSeat}]]*/ 'Remove seat',
+        'js.selectAtLeastOneSeat': /*[[#{js.selectAtLeastOneSeat}]]*/ 'Please select at least one seat.',
+        'js.seat': /*[[#{js.seat}]]*/ 'Seat',
+        'js.standard': /*[[#{js.standard}]]*/ 'Standard',
+        'js.unknown': /*[[#{js.unknown}]]*/ 'Unknown',
+        'js.revenue': /*[[#{js.revenue}]]*/ 'Revenue',
+        'js.seatLimitReached': /*[[#{js.seatLimitReached}]]*/ 'You have selected enough seats for {0} passengers. Increase the passenger count to add more.',
+        'js.removeSeatsFirst': /*[[#{js.removeSeatsFirst}]]*/ 'Remove a selected seat before lowering the passenger count.',
+        'js.selectExactSeats': /*[[#{js.selectExactSeats}]]*/ 'Please select {0} seats, one for each passenger.',
+        'js.seatsOfPassengers': /*[[#{js.seatsOfPassengers}]]*/ '{0} / {1}',
+        'js.noTripsSuffix': /*[[#{js.noTripsSuffix}]]*/ 'no trains',
+        'js.stationsWithoutTrips': /*[[#{js.stationsWithoutTrips}]]*/ 'No matching trains',
+        'js.chooseDate': /*[[#{js.chooseDate}]]*/ 'Choose a date',
+        'js.datePlaceholder': /*[[#{js.datePlaceholder}]]*/ 'dd/mm/yyyy',
+        'js.dateTimePlaceholder': /*[[#{js.dateTimePlaceholder}]]*/ 'dd/mm/yyyy --:--',
+        'js.hasTrips': /*[[#{js.hasTrips}]]*/ 'Trains available',
+        'js.noTrips': /*[[#{js.noTrips}]]*/ 'No trains',
+        'js.noTripsOnDate': /*[[#{js.noTripsOnDate}]]*/ 'No trains from {0} to {1} on {2}. Pick a date with trains below.',
+        'js.noTripsSoon': /*[[#{js.noTripsSoon}]]*/ 'No trains from {0} to {1} in the next 60 days.',
+        'js.noDeparturesOnDate': /*[[#{js.noDeparturesOnDate}]]*/ 'No trains depart on {0}.',
+        'js.noReturnOnDate': /*[[#{js.noReturnOnDate}]]*/ 'No return trains from {0} to {1} on {2}.',
+        'js.availabilityError': /*[[#{js.availabilityError}]]*/ 'Could not load train availability. You can still search.'
+    };
+    window.railT = function (key, fallback) {
+        var dict = window.RAILJET_I18N || {};
+        var text = Object.prototype.hasOwnProperty.call(dict, key) && dict[key] ? dict[key] : fallback;
+        var args = Array.prototype.slice.call(arguments, 2);
+        return String(text).replace(/\{(\d+)\}/g, function (match, index) {
+            return args[index] !== undefined ? args[index] : match;
+        });
+    };
+</script>

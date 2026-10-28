@@ -1,15 +1,15 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layouts/admin-layout :: layout('Station Form', ~{::section}, 'stations')}">
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/admin-layout :: layout(#{station.stationForm}, ~{::section}, 'stations')}">
 <section>
     <div class="admin-page-hero">
         <div>
-            <span class="admin-page-kicker"><i class="fas fa-map-pin mr-1"></i> Station Profile</span>
-            <h2 th:text="${station.stationId == null ? 'Add Station' : 'Edit Station'}">Station Form</h2>
-            <p>Create or update station information used across route planning.</p>
+            <span class="admin-page-kicker"><i class="bi bi-pin-map"></i> [[#{station.stationProfile}]]</span>
+            <h1 th:text="${station.stationId == null ? #messages.msg('common.addStation') : #messages.msg('station.editStation')}">Station Form</h1>
+            <p>[[#{station.createOrUpdateStationInformationUsed}]]</p>
         </div>
-        <a th:href="@{/admin/stations}" class="btn btn-outline-primary">
-            <i class="fas fa-arrow-left mr-1"></i> Back to stations
+        <a th:href="@{/admin/stations}" class="btn rj-btn-quiet">
+            <i class="bi bi-arrow-left"></i> [[#{station.backToStations}]]
         </a>
     </div>
 
@@ -19,42 +19,55 @@
 
     <div class="card admin-form-card">
         <div class="card-header">
-            <span class="admin-card-title">Station Information</span>
-            <small>Station code should stay short and unique.</small>
+            <span class="admin-card-title">[[#{station.stationInformation}]]</span>
+            <small>[[#{station.stationCodeShouldStayShortAnd}]]</small>
         </div>
         <form th:action="@{/admin/stations/save}" th:object="${station}" method="post">
             <input type="hidden" th:field="*{stationId}">
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-4 mb-3">
-                        <label class="form-label">Station Code</label>
+                        <label class="form-label">[[#{station.stationCode}]]</label>
                         <div class="input-group">
-                            <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-hashtag"></i></span></div>
+                            <span class="input-group-text"><i class="bi bi-hash"></i></span>
                             <input class="form-control" th:field="*{stationCode}" required>
                         </div>
                     </div>
                     <div class="col-md-4 mb-3">
-                        <label class="form-label">Station Name</label>
+                        <label class="form-label">[[#{station.stationName}]]</label>
                         <div class="input-group">
-                            <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-train"></i></span></div>
+                            <span class="input-group-text"><i class="bi bi-train-front"></i></span>
                             <input class="form-control" th:field="*{stationName}" required>
                         </div>
                     </div>
                     <div class="col-md-4 mb-3">
-                        <label class="form-label">City</label>
+                        <label class="form-label" for="provinceId">[[#{common.province}]]</label>
                         <div class="input-group">
-                            <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-city"></i></span></div>
-                            <input class="form-control" th:field="*{city}" required>
+                            <span class="input-group-text"><i class="bi bi-buildings"></i></span>
+                            <!-- Tỉnh/thành lấy từ bảng provinces, gom theo vùng; cột city tự chép theo tỉnh khi lưu -->
+                            <select class="form-select" id="provinceId" name="province.provinceId" required>
+                                <option value="">[[#{station.selectProvince}]]</option>
+                                <optgroup th:each="entry : ${provincesByRegion}"
+                                          th:label="${#messages.msgOrNull('enum.' + entry.key) ?: entry.key}">
+                                    <option th:each="p : ${entry.value}"
+                                            th:value="${p.provinceId}"
+                                            th:text="${p.provinceName}"
+                                            th:selected="${station.province != null and station.province.provinceId == p.provinceId}">Hà Nội</option>
+                                </optgroup>
+                            </select>
                         </div>
+                        <div class="form-text"
+                             th:if="${station.stationId != null and station.province == null and station.city != null}"
+                             th:text="#{station.legacyCity(${station.city})}">Thành phố cũ: …</div>
                     </div>
                 </div>
             </div>
             <div class="card-footer d-flex justify-content-end gap-2">
                 <a th:href="@{/admin/stations}" class="btn btn-outline-secondary">
-                    Cancel
+                    [[#{common.cancel}]]
                 </a>
                 <button class="btn btn-primary" type="submit">
-                    <i class="fas fa-save mr-1"></i> Save Station
+                    <i class="bi bi-check2-circle"></i> [[#{station.saveStation}]]
                 </button>
             </div>
         </form>

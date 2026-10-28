@@ -1,11 +1,16 @@
 package com.hsf302.trainoffice.service.impl;
 
+
+import com.hsf302.trainoffice.config.I18n;
 import com.hsf302.trainoffice.entity.Route;
 import com.hsf302.trainoffice.entity.RouteStation;
 import com.hsf302.trainoffice.entity.Station;
+import com.hsf302.trainoffice.entity.TripStation;
+import com.hsf302.trainoffice.repository.BookingRepository;
 import com.hsf302.trainoffice.repository.RouteRepository;
 import com.hsf302.trainoffice.repository.RouteStationRepository;
 import com.hsf302.trainoffice.repository.StationRepository;
+import com.hsf302.trainoffice.repository.TripStationRepository;
 import com.hsf302.trainoffice.service.RouteStationService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,13 +26,19 @@ public class RouteStationServiceImpl implements RouteStationService {
     private final RouteStationRepository routeStationRepository;
     private final RouteRepository routeRepository;
     private final StationRepository stationRepository;
+    private final TripStationRepository tripStationRepository;
+    private final BookingRepository bookingRepository;
 
     public RouteStationServiceImpl(RouteStationRepository routeStationRepository,
                                    RouteRepository routeRepository,
-                                   StationRepository stationRepository) {
+                                   StationRepository stationRepository,
+                                   TripStationRepository tripStationRepository,
+                                   BookingRepository bookingRepository) {
         this.routeStationRepository = routeStationRepository;
         this.routeRepository = routeRepository;
         this.stationRepository = stationRepository;
+        this.tripStationRepository = tripStationRepository;
+        this.bookingRepository = bookingRepository;
     }
 
     @Override
@@ -46,7 +57,7 @@ public class RouteStationServiceImpl implements RouteStationService {
     @Transactional
     public RouteStation saveRouteStation(Long routeId, RouteStation routeStation) {
         Route route = routeRepository.findById(routeId)
-                .orElseThrow(() -> new IllegalArgumentException("Route does not exist"));
+                .orElseThrow(() -> new IllegalArgumentException(I18n.t("err.routeDoesNotExist")));
 
         Station station = resolveStation(routeStation);
 
@@ -70,10 +81,10 @@ public class RouteStationServiceImpl implements RouteStationService {
     @Transactional
     public RouteStation updateRouteStation(Long routeId, Long routeStationId, RouteStation form) {
         RouteStation existing = routeStationRepository.findById(routeStationId)
-                .orElseThrow(() -> new IllegalArgumentException("Route station does not exist"));
+                .orElseThrow(() -> new IllegalArgumentException(I18n.t("err.routeStationDoesNotExist")));
 
         if (!existing.getRoute().getRouteId().equals(routeId)) {
-            throw new IllegalArgumentException("Route station does not belong to this route");
+            throw new IllegalArgumentException(I18n.t("err.routeStationDoesNotBelongToThis"));
         }
 
         Station station = resolveStation(form);
@@ -84,6 +95,13 @@ public class RouteStationServiceImpl implements RouteStationService {
 
         normalizeDistance(form);
         validateUnique(routeId, routeStationId, station.getStationId(), form.getStationOrder());
+
+        boolean changesStopIdentity = !existing.getStation().getStationId().equals(station.getStationId())
+                || !existing.getStationOrder().equals(form.getStationOrder());
+
+        if (changesStopIdentity) {
+            ensureNoBookedTrips(routeId);
+        }
 
         existing.setStation(station);
         existing.setStationOrder(form.getStationOrder());
@@ -99,10 +117,16 @@ public class RouteStationServiceImpl implements RouteStationService {
     @Transactional
     public void deleteRouteStation(Long routeId, Long routeStationId) {
         RouteStation existing = routeStationRepository.findById(routeStationId)
-                .orElseThrow(() -> new IllegalArgumentException("Route station does not exist"));
+                .orElseThrow(() -> new IllegalArgumentException(I18n.t("err.routeStationDoesNotExist")));
 
         if (!existing.getRoute().getRouteId().equals(routeId)) {
-            throw new IllegalArgumentException("Route station does not belong to this route");
+            throw new IllegalArgumentException(I18n.t("err.routeStationDoesNotBelongToThis"));
+        }
+
+        long usedByTrips = tripStationRepository.countByRouteStation_RouteStationId(routeStationId);
+
+        if (usedByTrips > 0) {
+            throw new IllegalArgumentException(I18n.t("err.routeStationUsedByTrips", usedByTrips));
         }
 
         routeStationRepository.delete(existing);
@@ -116,14 +140,14 @@ public class RouteStationServiceImpl implements RouteStationService {
     @Transactional
     public void reorderStations(Long routeId, List<Long> routeStationIds) {
         if (routeStationIds == null || routeStationIds.isEmpty()) {
-            throw new IllegalArgumentException("Station order list is empty");
+            throw new IllegalArgumentException(I18n.t("err.stationOrderListIsEmpty"));
         }
 
         List<RouteStation> currentStations = routeStationRepository
                 .findByRoute_RouteIdOrderByStationOrderAsc(routeId);
 
         if (currentStations.size() != routeStationIds.size()) {
-            throw new IllegalArgumentException("Station order list does not match current route stations");
+            throw new IllegalArgumentException(I18n.t("err.stationOrderListDoesNotMatchCurrent"));
         }
 
         Map<Long, RouteStation> stationMap = new HashMap<>();
@@ -134,9 +158,11 @@ public class RouteStationServiceImpl implements RouteStationService {
 
         for (Long routeStationId : routeStationIds) {
             if (!stationMap.containsKey(routeStationId)) {
-                throw new IllegalArgumentException("Invalid route station in reorder list");
+                throw new IllegalArgumentException(I18n.t("err.invalidRouteStationInReorderList"));
             }
         }
+
+        ensureNoBookedTrips(routeId);
 
         int tempOrder = -1;
 
@@ -160,11 +186,11 @@ public class RouteStationServiceImpl implements RouteStationService {
 
     private Station resolveStation(RouteStation routeStation) {
         if (routeStation.getStation() == null || routeStation.getStation().getStationId() == null) {
-            throw new IllegalArgumentException("Station is required");
+            throw new IllegalArgumentException(I18n.t("err.stationIsRequired"));
         }
 
         return stationRepository.findById(routeStation.getStation().getStationId())
-                .orElseThrow(() -> new IllegalArgumentException("Station does not exist"));
+                .orElseThrow(() -> new IllegalArgumentException(I18n.t("err.stationDoesNotExist")));
     }
 
     private void normalizeDistance(RouteStation routeStation) {
@@ -198,12 +224,30 @@ public class RouteStationServiceImpl implements RouteStationService {
             routeStations.get(index).setStationOrder(index + 1);
         }
 
-        routeStationRepository.saveAll(routeStations);
+        routeStationRepository.saveAllAndFlush(routeStations);
+    }
+
+    /**
+     * Lịch dừng của chuyến đọc ga + thứ tự trực tiếp từ route_stations, nên đổi ga / thứ tự ga
+     * của tuyến sẽ đổi luôn lịch dừng của mọi chuyến đang dùng tuyến.
+     * Nếu một trong các chuyến đó đã có người đặt vé thì chặn lại để không làm sai đoạn đi của vé.
+     */
+    private void ensureNoBookedTrips(Long routeId) {
+        boolean hasBookedTrip = tripStationRepository.findByRouteStation_Route_RouteId(routeId)
+                .stream()
+                .map(TripStation::getTrainTrip)
+                .map(trip -> trip.getTripId())
+                .distinct()
+                .anyMatch(bookingRepository::existsByTrainTrip_TripId);
+
+        if (hasBookedTrip) {
+            throw new IllegalArgumentException(I18n.t("err.routeHasBookedTrips"));
+        }
     }
 
     private void recalculateRouteDistance(Long routeId) {
         Route route = routeRepository.findById(routeId)
-                .orElseThrow(() -> new IllegalArgumentException("Route does not exist"));
+                .orElseThrow(() -> new IllegalArgumentException(I18n.t("err.routeDoesNotExist")));
 
         List<RouteStation> routeStations = routeStationRepository
                 .findByRoute_RouteIdOrderByStationOrderAsc(routeId);
@@ -238,11 +282,11 @@ public class RouteStationServiceImpl implements RouteStationService {
             }
 
             if (existing.getStation().getStationId().equals(stationId)) {
-                throw new IllegalArgumentException("Station already exists in this route");
+                throw new IllegalArgumentException(I18n.t("err.stationAlreadyExistsInThisRoute"));
             }
 
             if (stationOrder != null && existing.getStationOrder().equals(stationOrder)) {
-                throw new IllegalArgumentException("Station order already exists in this route");
+                throw new IllegalArgumentException(I18n.t("err.stationOrderAlreadyExistsInThisRoute"));
             }
         }
     }

@@ -1,5 +1,7 @@
 package com.hsf302.trainoffice.service.impl;
 
+
+import com.hsf302.trainoffice.config.I18n;
 import com.hsf302.trainoffice.common.enums.TicketStatus;
 import com.hsf302.trainoffice.entity.Seat;
 import com.hsf302.trainoffice.entity.Ticket;
@@ -62,7 +64,7 @@ public class TicketServiceImpl implements TicketService {
     @Transactional(readOnly = true)
     public List<Seat> getSeatsForTrip(Long tripId) {
         TrainTrip trip = trainTripRepository.findById(tripId)
-                .orElseThrow(() -> new IllegalArgumentException("Train trip does not exist"));
+                .orElseThrow(() -> new IllegalArgumentException(I18n.t("err.trainTripDoesNotExist")));
         return seatRepository.findActiveSeatsByTrainId(trip.getTrain().getTrainId());
     }
 
@@ -82,7 +84,7 @@ public class TicketServiceImpl implements TicketService {
     @Transactional(readOnly = true)
     public List<Ticket> getTicketsForUser(User user) {
         if (user == null || user.getUserId() == null) {
-            throw new IllegalArgumentException("User is required");
+            throw new IllegalArgumentException(I18n.t("err.userIsRequired"));
         }
         return ticketRepository.findByBooking_User_UserIdOrderByTicketIdAsc(user.getUserId());
     }
@@ -91,6 +93,6 @@ public class TicketServiceImpl implements TicketService {
     @Transactional(readOnly = true)
     public Ticket getTicketDetails(Long ticketId) {
         return ticketRepository.findWithDetailsByTicketId(ticketId)
-                .orElseThrow(() -> new IllegalArgumentException("Ticket does not exist"));
+                .orElseThrow(() -> new IllegalArgumentException(I18n.t("err.ticketDoesNotExist2")));
     }
 }

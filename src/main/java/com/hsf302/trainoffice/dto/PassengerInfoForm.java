@@ -11,17 +11,17 @@ import java.util.List;
 
 @Data
 public class PassengerInfoForm {
-    @NotBlank(message = "Contact name is required")
+    @NotBlank(message = "{validation.contactName.required}")
     private String contactName;
 
-    @NotBlank(message = "Contact phone is required")
+    @NotBlank(message = "{validation.contactPhone.required}")
     private String contactPhone;
 
-    @NotBlank(message = "Contact email is required")
-    @Email(message = "Contact email is invalid")
+    @NotBlank(message = "{validation.contactEmail.required}")
+    @Email(message = "{validation.contactEmail.invalid}")
     private String contactEmail;
 
     @Valid
-    @NotEmpty(message = "Passenger list is required")
+    @NotEmpty(message = "{validation.passengers.required}")
     private List<PassengerBookingRequest> passengers = new ArrayList<>();
 }

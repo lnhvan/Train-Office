@@ -1,5 +1,7 @@
 package com.hsf302.trainoffice.service.impl;
 
+
+import com.hsf302.trainoffice.config.I18n;
 import com.hsf302.trainoffice.entity.Coach;
 import com.hsf302.trainoffice.entity.Compartment;
 import com.hsf302.trainoffice.entity.Seat;
@@ -73,7 +75,7 @@ public class CoachServiceImpl implements CoachService {
 
         if (coach.getCoachId() == null) {
             if (coachRepository.existsByTrain_TrainIdAndCoachNumber(trainId, coachNumber)) {
-                throw new IllegalStateException("Coach number already exists in this train.");
+                throw new IllegalStateException(I18n.t("err.coachNumberAlreadyExistsInThisTrain"));
             }
         } else {
             Optional<Coach> existingOpt = coachRepository.findById(coach.getCoachId());
@@ -86,7 +88,7 @@ public class CoachServiceImpl implements CoachService {
 
                 if ((changedTrain || changedNumber)
                         && coachRepository.existsByTrain_TrainIdAndCoachNumber(trainId, coachNumber)) {
-                    throw new IllegalStateException("Coach number already exists in this train.");
+                    throw new IllegalStateException(I18n.t("err.coachNumberAlreadyExistsInThisTrain"));
                 }
             }
         }
@@ -124,18 +126,18 @@ public class CoachServiceImpl implements CoachService {
     @Transactional
     public void deleteCoach(Long id) {
         Coach coach = coachRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Coach not found with ID: " + id));
+                .orElseThrow(() -> new RuntimeException(I18n.t("err.coachNotFoundWithId", id)));
 
         long seatCount = seatRepository.countByCoach_CoachId(id);
         if (seatCount > 0) {
             throw new ResourceInUseException(
-                    "Cannot delete this coach because it still contains " + seatCount + " seats."
+                    I18n.t("err.cannotDeleteThisCoachBecauseItStill2", seatCount)
             );
         }
 
         if (compartmentRepository.existsByCoach_CoachId(id)) {
             throw new ResourceInUseException(
-                    "Cannot delete this coach because it still contains compartments."
+                    I18n.t("err.cannotDeleteThisCoachBecauseItStill")
             );
         }
 
@@ -145,7 +147,7 @@ public class CoachServiceImpl implements CoachService {
         } catch (DataIntegrityViolationException ex) {
             log.warn("Coach {} could not be deleted because a dependent record was added or still exists.", id, ex);
             throw new ResourceInUseException(
-                    "Cannot delete this coach because it is still in use.",
+                    I18n.t("err.cannotDeleteThisCoachBecauseItIs"),
                     ex
             );
         }
@@ -153,28 +155,28 @@ public class CoachServiceImpl implements CoachService {
 
     private void validateCoach(Coach coach) {
         if (coach.getTrain() == null || coach.getTrain().getTrainId() == null) {
-            throw new IllegalStateException("Train is required for coach.");
+            throw new IllegalStateException(I18n.t("err.trainIsRequiredForCoach"));
         }
 
         if (coach.getCoachNumber() == null || coach.getCoachNumber().isBlank()) {
-            throw new IllegalStateException("Coach number is required.");
+            throw new IllegalStateException(I18n.t("err.coachNumberIsRequired"));
         }
 
         if (coach.getCoachType() == null || coach.getCoachType().isBlank()) {
-            throw new IllegalStateException("Coach type is required.");
+            throw new IllegalStateException(I18n.t("err.coachTypeIsRequired"));
         }
 
         if (isSleeperCoach(coach)) {
             if (coach.getCompartmentCount() == null || coach.getCompartmentCount() <= 0) {
-                throw new IllegalStateException("Sleeper coach must have compartment count.");
+                throw new IllegalStateException(I18n.t("err.sleeperCoachMustHaveCompartmentCount"));
             }
 
             if (coach.getBerthsPerCompartment() == null) {
-                throw new IllegalStateException("Sleeper coach must have berths per compartment.");
+                throw new IllegalStateException(I18n.t("err.sleeperCoachMustHaveBerthsPerCompartment"));
             }
 
             if (!List.of(2, 4, 6).contains(coach.getBerthsPerCompartment())) {
-                throw new IllegalStateException("Berths per compartment must be 2, 4, or 6.");
+                throw new IllegalStateException(I18n.t("err.berthsPerCompartmentMustBe24"));
             }
 
             coach.setCapacity(coach.getCompartmentCount() * coach.getBerthsPerCompartment());
@@ -183,7 +185,7 @@ public class CoachServiceImpl implements CoachService {
         }
 
         if (coach.getCapacity() == null || coach.getCapacity() <= 0) {
-            throw new IllegalStateException("Coach capacity must be greater than 0.");
+            throw new IllegalStateException(I18n.t("err.coachCapacityMustBeGreaterThan0"));
         }
     }
 

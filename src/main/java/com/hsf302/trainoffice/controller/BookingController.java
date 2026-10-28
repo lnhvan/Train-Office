@@ -25,8 +25,15 @@ public class BookingController {
         this.bookingPageService = bookingPageService;
     }
 
+    /**
+     * Trang tìm chuyến. Nhận thêm tham số tùy chọn (departureStationId, arrivalStationId,
+     * departureDate, passengerCount) để nút "Sửa tìm kiếm" mở lại form đã điền sẵn.
+     * Tham số sai định dạng bị bỏ qua (BindingResult giữ lỗi, không báo lỗi trang).
+     */
     @GetMapping("/booking/search")
-    public String search(Model model) {
+    public String search(@ModelAttribute("tripSearchForm") TripSearchForm form,
+                         BindingResult bindingResult,
+                         Model model) {
         return bookingPageService.showSearchPage(model);
     }
 

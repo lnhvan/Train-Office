@@ -14,17 +14,17 @@ public class ProfileForm {
 
     private Long passengerId;
 
-    @NotBlank(message = "The full name cannot be left blank!")
-    @Size(max = 100, message = "Full name (maximum 100 characters)")
+    @NotBlank(message = "{validation.fullName.required}")
+    @Size(max = 100, message = "{validation.fullName.max}")
     @Pattern(
             regexp = "^[\\p{L}\\s]+$",
-            message = "Full names can only contain letters and spaces."
+            message = "{validation.fullName.pattern}"
     )
     private String fullName;
 
     @Pattern(
             regexp = "^$|^\\d{9,12}$",
-            message = "Citizen ID/National ID card must consist of 9-12 digits."
+            message = "{validation.identity.pattern}"
     )
     private String identityNumber;
 

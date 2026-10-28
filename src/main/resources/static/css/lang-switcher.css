@@ -1,0 +1,83 @@
+/* Nút chuyển ngôn ngữ VI / EN */
+.lang-switcher {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 3px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: .04em;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.lang-switcher__option {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 34px;
+    height: 26px;
+    padding: 0 8px;
+    border-radius: 999px;
+    text-decoration: none !important;
+    transition: background-color .15s ease, color .15s ease;
+}
+
+.lang-switcher__option:focus-visible {
+    outline: 2px solid #38bdf8;
+    outline-offset: 2px;
+}
+
+/* Nền tối: header khách hàng, trang đăng nhập */
+.lang-switcher--dark {
+    background: rgba(255, 255, 255, .08);
+    border: 1px solid rgba(255, 255, 255, .16);
+}
+
+.lang-switcher--dark .lang-switcher__option {
+    color: #c7d3df;
+}
+
+.lang-switcher--dark .lang-switcher__option:hover {
+    color: #ffffff;
+}
+
+.lang-switcher--dark .lang-switcher__option.is-active {
+    background: #38bdf8;
+    color: #041523;
+}
+
+/* Nền sáng: header admin */
+.lang-switcher--light {
+    background: #eef3f9;
+    border: 1px solid #d9e3ef;
+}
+
+.lang-switcher--light .lang-switcher__option {
+    color: #657287;
+}
+
+.lang-switcher--light .lang-switcher__option:hover {
+    color: #071a33;
+}
+
+.lang-switcher--light .lang-switcher__option.is-active {
+    background: #071a33;
+    color: #ffffff;
+}
+
+/* Vị trí trên các trang đăng nhập / đăng ký (không dùng layout) */
+.lang-switcher--floating {
+    position: fixed;
+    top: 20px;
+    right: 24px;
+    z-index: 1100;
+}
+
+/* Vị trí trên trang in (vé, hóa đơn) - ẩn khi in */
+@media print {
+    .lang-switcher {
+        display: none !important;
+    }
+}

@@ -1,0 +1,28 @@
+<!--
+    Nút chuyển ngôn ngữ VI / EN dùng chung.
+    Cách dùng:
+      <div th:replace="~{fragments/language-switcher :: languageSwitcher('dark')}"></div>
+      <div th:replace="~{fragments/language-switcher :: languageSwitcher('light')}"></div>
+    Bấm nút sẽ gọi /language/{lang} -> lưu cookie RAILJET_LANG -> quay lại trang hiện tại.
+-->
+<div xmlns:th="http://www.thymeleaf.org"
+     th:fragment="languageSwitcher(theme)"
+     class="lang-switcher"
+     th:classappend="${theme == 'light'} ? ' lang-switcher--light' : ' lang-switcher--dark'"
+     role="group"
+     th:aria-label="#{lang.switcher.label}">
+    <a class="lang-switcher__option"
+       th:href="@{/language/vi}"
+       th:classappend="${#locale.language == 'vi'} ? ' is-active'"
+       th:attr="aria-current=${#locale.language == 'vi'} ? 'true' : 'false'"
+       th:title="#{lang.vi}"
+       hreflang="vi"
+       lang="vi">VI</a>
+    <a class="lang-switcher__option"
+       th:href="@{/language/en}"
+       th:classappend="${#locale.language == 'en'} ? ' is-active'"
+       th:attr="aria-current=${#locale.language == 'en'} ? 'true' : 'false'"
+       th:title="#{lang.en}"
+       hreflang="en"
+       lang="en">EN</a>
+</div>

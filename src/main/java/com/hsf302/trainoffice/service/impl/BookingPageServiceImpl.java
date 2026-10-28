@@ -1,5 +1,8 @@
 package com.hsf302.trainoffice.service.impl;
 
+
+import com.hsf302.trainoffice.security.CurrentUser;
+import com.hsf302.trainoffice.config.I18n;
 import com.hsf302.trainoffice.common.enums.BookingStatus;
 import com.hsf302.trainoffice.common.enums.Gender;
 import com.hsf302.trainoffice.dto.BookingConfirmationView;
@@ -109,8 +112,11 @@ public class BookingPageServiceImpl implements BookingPageService {
                                     Model model,
                                     RedirectAttributes redirectAttributes) {
         if (currentUser(session) == null) {
-            redirectAttributes.addFlashAttribute("error", "Vui lòng đăng nhập để mua vé.");
-            return "redirect:/login";
+            // Đăng nhập xong sẽ quay lại đúng trang chọn ghế của chuyến này.
+            String back = "/booking/" + tripId + "/seats?departureStationId=" + departureStationId
+                    + "&arrivalStationId=" + arrivalStationId + "&passengerCount=" + passengerCount;
+            redirectAttributes.addFlashAttribute("infoMessage", I18n.t("err.pleaseLogInToBuyTickets"));
+            return "redirect:/login?redirect=" + java.net.URLEncoder.encode(back, java.nio.charset.StandardCharsets.UTF_8);
         }
 
         try {
@@ -149,7 +155,7 @@ public class BookingPageServiceImpl implements BookingPageService {
                               HttpSession session,
                               RedirectAttributes redirectAttributes) {
         if (currentUser(session) == null) {
-            redirectAttributes.addFlashAttribute("error", "Vui lòng đăng nhập để mua vé.");
+            redirectAttributes.addFlashAttribute("infoMessage", I18n.t("err.pleaseLogInToBuyTickets"));
             return "redirect:/login";
         }
 
@@ -158,7 +164,7 @@ public class BookingPageServiceImpl implements BookingPageService {
                 || form.getSeatIds().size() != form.getPassengerCount()) {
             redirectAttributes.addFlashAttribute(
                     "error",
-                    "Please select exactly " + form.getPassengerCount() + " seats"
+                    I18n.t("err.pleaseSelectExactlySeats", form.getPassengerCount())
             );
             return redirectToSeatSelection(form);
         }
@@ -190,7 +196,7 @@ public class BookingPageServiceImpl implements BookingPageService {
         User user = currentUser(session);
 
         if (user == null) {
-            redirectAttributes.addFlashAttribute("error", "Vui lòng đăng nhập để tiếp tục mua vé.");
+            redirectAttributes.addFlashAttribute("infoMessage", I18n.t("err.pleaseLogInToContinueBuyingTickets"));
             return "redirect:/login";
         }
 
@@ -199,7 +205,7 @@ public class BookingPageServiceImpl implements BookingPageService {
         if (bookingSession == null) {
             redirectAttributes.addFlashAttribute(
                     "error",
-                    "Please select seats before entering passenger information"
+                    I18n.t("err.pleaseSelectSeatsBeforeEnteringPassengerInformation")
             );
             return "redirect:/booking/search";
         }
@@ -230,7 +236,7 @@ public class BookingPageServiceImpl implements BookingPageService {
                                     Model model,
                                     RedirectAttributes redirectAttributes) {
         if (currentUser(session) == null) {
-            redirectAttributes.addFlashAttribute("error", "Vui lòng đăng nhập để tiếp tục mua vé.");
+            redirectAttributes.addFlashAttribute("infoMessage", I18n.t("err.pleaseLogInToContinueBuyingTickets"));
             return "redirect:/login";
         }
 
@@ -291,7 +297,7 @@ public class BookingPageServiceImpl implements BookingPageService {
         model.addAttribute("booker", user);
 
         model.addAttribute("trip", trainTripService.getTripById(bookingSession.getTrainTripId())
-                .orElseThrow(() -> new IllegalArgumentException("Train trip does not exist")));
+                .orElseThrow(() -> new IllegalArgumentException(I18n.t("err.trainTripDoesNotExist"))));
         model.addAttribute("segment", trainTripService.getValidSegment(
                 bookingSession.getTrainTripId(),
                 bookingSession.getDepartureStationId(),
@@ -311,14 +317,14 @@ public class BookingPageServiceImpl implements BookingPageService {
                                      HttpSession session,
                                      RedirectAttributes redirectAttributes) {
         if (currentUser(session) == null) {
-            redirectAttributes.addFlashAttribute("error", "Vui lòng đăng nhập để tiếp tục mua vé.");
+            redirectAttributes.addFlashAttribute("infoMessage", I18n.t("err.pleaseLogInToContinueBuyingTickets"));
             return "redirect:/login";
         }
 
         BookingSession bookingSession = getBookingSession(session);
 
         if (bookingSession == null || bookingSession.getPassengerInfo() == null) {
-            redirectAttributes.addFlashAttribute("error", "Please complete booking information first");
+            redirectAttributes.addFlashAttribute("error", I18n.t("err.pleaseCompleteBookingInformationFirst"));
             return "redirect:/booking/search";
         }
 
@@ -327,9 +333,9 @@ public class BookingPageServiceImpl implements BookingPageService {
             session.setAttribute(BOOKING_SESSION_KEY, bookingSession);
 
             if (groupDiscountPolicyId == null) {
-                redirectAttributes.addFlashAttribute("successMessage", "Group discount removed.");
+                redirectAttributes.addFlashAttribute("successMessage", I18n.t("err.groupDiscountRemoved"));
             } else {
-                redirectAttributes.addFlashAttribute("successMessage", "Group discount applied.");
+                redirectAttributes.addFlashAttribute("successMessage", I18n.t("err.groupDiscountApplied"));
             }
 
         } catch (IllegalArgumentException ex) {
@@ -344,14 +350,14 @@ public class BookingPageServiceImpl implements BookingPageService {
                                    Model model,
                                    RedirectAttributes redirectAttributes) {
         if (currentUser(session) == null) {
-            redirectAttributes.addFlashAttribute("error", "Vui lòng đăng nhập để xác nhận booking.");
+            redirectAttributes.addFlashAttribute("infoMessage", I18n.t("err.pleaseLogInToConfirmTheBooking"));
             return "redirect:/login";
         }
 
         BookingSession bookingSession = getBookingSession(session);
 
         if (bookingSession == null || bookingSession.getPassengerInfo() == null) {
-            redirectAttributes.addFlashAttribute("error", "Please complete booking information first");
+            redirectAttributes.addFlashAttribute("error", I18n.t("err.pleaseCompleteBookingInformationFirst"));
             return "redirect:/booking/search";
         }
 
@@ -373,14 +379,14 @@ public class BookingPageServiceImpl implements BookingPageService {
         User user = currentUser(session);
 
         if (user == null) {
-            redirectAttributes.addFlashAttribute("error", "Vui lòng đăng nhập để tạo booking.");
+            redirectAttributes.addFlashAttribute("infoMessage", I18n.t("err.pleaseLogInToCreateABooking"));
             return "redirect:/login";
         }
 
         BookingSession bookingSession = getBookingSession(session);
 
         if (bookingSession == null || bookingSession.getPassengerInfo() == null) {
-            redirectAttributes.addFlashAttribute("error", "Please complete booking information first");
+            redirectAttributes.addFlashAttribute("error", I18n.t("err.pleaseCompleteBookingInformationFirst"));
             return "redirect:/booking/search";
         }
 
@@ -405,7 +411,7 @@ public class BookingPageServiceImpl implements BookingPageService {
         User user = currentUser(session);
 
         if (user == null) {
-            redirectAttributes.addFlashAttribute("error", "Vui lòng đăng nhập để xem booking.");
+            redirectAttributes.addFlashAttribute("infoMessage", I18n.t("err.pleaseLogInToViewTheBooking"));
             return "redirect:/login";
         }
 
@@ -414,7 +420,7 @@ public class BookingPageServiceImpl implements BookingPageService {
                 Booking booking = bookingService.getBookingById(bookingId);
 
                 if (!canAccessBooking(booking, user)) {
-                    redirectAttributes.addFlashAttribute("error", "Booking does not belong to current user");
+                    redirectAttributes.addFlashAttribute("error", I18n.t("err.bookingDoesNotBelongToCurrentUser"));
                     return "redirect:/booking/history";
                 }
 
@@ -437,8 +443,8 @@ public class BookingPageServiceImpl implements BookingPageService {
         User user = currentUser(session);
 
         if (user == null) {
-            redirectAttributes.addFlashAttribute("error", "Please log in to view your bookings.");
-            return "redirect:/login";
+            redirectAttributes.addFlashAttribute("infoMessage", I18n.t("err.pleaseLogInToViewYourBookings"));
+            return "redirect:/login?redirect=" + java.net.URLEncoder.encode("/booking/history", java.nio.charset.StandardCharsets.UTF_8);
         }
 
         List<Booking> bookings = bookingService.getBookingsForUser(user);
@@ -481,15 +487,15 @@ public class BookingPageServiceImpl implements BookingPageService {
         User user = currentUser(session);
 
         if (user == null) {
-            redirectAttributes.addFlashAttribute("error", "Please log in to view booking detail");
-            return "redirect:/login";
+            redirectAttributes.addFlashAttribute("infoMessage", I18n.t("err.pleaseLogInToViewBookingDetail"));
+            return "redirect:/login?redirect=" + java.net.URLEncoder.encode("/booking/" + bookingId, java.nio.charset.StandardCharsets.UTF_8);
         }
 
         try {
             Booking booking = bookingService.getBookingById(bookingId);
 
             if (!canAccessBooking(booking, user)) {
-                redirectAttributes.addFlashAttribute("error", "Booking does not belong to current user");
+                redirectAttributes.addFlashAttribute("error", I18n.t("err.bookingDoesNotBelongToCurrentUser"));
                 return "redirect:/booking/history";
             }
 
@@ -512,13 +518,13 @@ public class BookingPageServiceImpl implements BookingPageService {
         User user = currentUser(session);
 
         if (user == null) {
-            redirectAttributes.addFlashAttribute("error", "Please log in to cancel booking");
+            redirectAttributes.addFlashAttribute("infoMessage", I18n.t("err.pleaseLogInToCancelBooking"));
             return "redirect:/login";
         }
 
         try {
             bookingService.cancelPendingBooking(bookingId, user);
-            redirectAttributes.addFlashAttribute("successMessage", "Booking cancelled successfully");
+            redirectAttributes.addFlashAttribute("successMessage", I18n.t("err.bookingCancelledSuccessfully"));
 
         } catch (IllegalArgumentException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
@@ -529,14 +535,14 @@ public class BookingPageServiceImpl implements BookingPageService {
 
     @Override
     public String loginRequired(RedirectAttributes redirectAttributes) {
-        redirectAttributes.addFlashAttribute("error", "Vui lòng đăng nhập để mua vé.");
+        redirectAttributes.addFlashAttribute("infoMessage", I18n.t("err.pleaseLogInToBuyTickets"));
         return "redirect:/login";
     }
 
     private String showRoundTripResults(TripSearchForm form,
                                         Model model) {
         if (form.getReturnDate() == null) {
-            model.addAttribute("error", "Please select a return date for round trip.");
+            model.addAttribute("error", I18n.t("err.pleaseSelectAReturnDateForRound"));
             model.addAttribute("tripSearchForm", form);
             model.addAttribute("stations", stationService.getAllStations());
 
@@ -544,7 +550,7 @@ public class BookingPageServiceImpl implements BookingPageService {
         }
 
         if (form.getReturnDate().isBefore(form.getDepartureDate())) {
-            model.addAttribute("error", "Return date must be after or equal to departure date.");
+            model.addAttribute("error", I18n.t("err.returnDateMustBeAfterOrEqual"));
             model.addAttribute("tripSearchForm", form);
             model.addAttribute("stations", stationService.getAllStations());
 
@@ -617,9 +623,9 @@ public class BookingPageServiceImpl implements BookingPageService {
         return value instanceof BookingSession bookingSession ? bookingSession : null;
     }
 
+    /** Người dùng đăng nhập (JWT) của request hiện tại; null nếu chưa đăng nhập. */
     private User currentUser(HttpSession session) {
-        Object sessionUser = session.getAttribute("currentUser");
-        return sessionUser instanceof User user ? user : null;
+        return CurrentUser.get();
     }
 
     private boolean canAccessBooking(Booking booking, User user) {

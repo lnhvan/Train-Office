@@ -1,5 +1,7 @@
 package com.hsf302.trainoffice.controller;
 
+
+import com.hsf302.trainoffice.config.I18n;
 import com.hsf302.trainoffice.common.enums.UserRole;
 import com.hsf302.trainoffice.common.enums.UserStatus;
 import com.hsf302.trainoffice.entity.User;
@@ -60,7 +62,7 @@ public class UserController {
                     return "users/form";
                 })
                 .orElseGet(() -> {
-                    redirectAttributes.addFlashAttribute("errorMessage", "User not found.");
+                    redirectAttributes.addFlashAttribute("errorMessage", I18n.t("msg.user.notFound"));
                     return "redirect:/admin/users";
                 });
     }
@@ -73,16 +75,47 @@ public class UserController {
                     return "users/detail";
                 })
                 .orElseGet(() -> {
-                    redirectAttributes.addFlashAttribute("errorMessage", "User not found.");
+                    redirectAttributes.addFlashAttribute("errorMessage", I18n.t("msg.user.notFound"));
                     return "redirect:/admin/users";
                 });
     }
 
     @PostMapping("/save")
-    public String saveUser(@Valid @ModelAttribute("user") User user,
+    public String saveUser(@ModelAttribute("user") User user,
                            BindingResult bindingResult,
                            Model model,
                            RedirectAttributes redirectAttributes) {
+
+        if (user.getUserId() != null) {
+            // Sửa tài khoản: Admin chỉ có thể thay đổi vai trò (role) và trạng thái (status)
+            if (user.getRole() == null || user.getStatus() == null) {
+                if (user.getRole() == null) bindingResult.rejectValue("role", "required", "Role is required");
+                if (user.getStatus() == null) bindingResult.rejectValue("status", "required", "Status is required");
+                addFormOptions(model);
+                return "users/form";
+            }
+
+            try {
+                userService.saveUser(user);
+                redirectAttributes.addFlashAttribute("successMessage", I18n.t("msg.user.saved"));
+                return "redirect:/admin/users";
+            } catch (Exception ex) {
+                model.addAttribute("errorMessage", ex.getMessage());
+                addFormOptions(model);
+                return "users/form";
+            }
+        }
+
+        // Tạo tài khoản mới: kiểm tra đầy đủ các trường
+        if (user.getPassword() == null || user.getPassword().isBlank()) {
+            bindingResult.rejectValue("password", "required", I18n.t("err.passwordIsRequired"));
+        }
+        if (user.getEmail() == null || user.getEmail().isBlank()) {
+            bindingResult.rejectValue("email", "required", I18n.t("err.emailIsRequired"));
+        }
+        if (user.getFullName() == null || user.getFullName().isBlank()) {
+            bindingResult.rejectValue("fullName", "required", I18n.t("validation.fullName.required"));
+        }
 
         if (bindingResult.hasErrors()) {
             addFormOptions(model);
@@ -91,31 +124,26 @@ public class UserController {
 
         try {
             userService.saveUser(user);
-            redirectAttributes.addFlashAttribute("successMessage", "User saved successfully.");
+            redirectAttributes.addFlashAttribute("successMessage", I18n.t("msg.user.saved"));
             return "redirect:/admin/users";
         } catch (IllegalArgumentException ex) {
-            // Nếu lỗi là email trùng
             if (ex.getMessage().toLowerCase().contains("email")) {
-                bindingResult.rejectValue(
-                        "email",
-                        "duplicate",
-                        ex.getMessage());
+                bindingResult.rejectValue("email", "duplicate", ex.getMessage());
             } else {
                 model.addAttribute("errorMessage", ex.getMessage());
             }
             addFormOptions(model);
             return "users/form";
         }
-
     }
 
     @GetMapping("/delete/{id}")
     public String deleteUser(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         try {
             userService.deleteUser(id);
-            redirectAttributes.addFlashAttribute("successMessage", "User deleted successfully.");
+            redirectAttributes.addFlashAttribute("successMessage", I18n.t("msg.user.deleted"));
         } catch (DataIntegrityViolationException ex) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Cannot delete user because it has related bookings.");
+            redirectAttributes.addFlashAttribute("errorMessage", I18n.t("msg.user.inUse"));
         }
         return "redirect:/admin/users";
     }

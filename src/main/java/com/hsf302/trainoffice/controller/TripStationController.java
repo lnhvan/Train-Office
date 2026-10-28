@@ -1,7 +1,10 @@
 package com.hsf302.trainoffice.controller;
 
+
+import com.hsf302.trainoffice.config.I18n;
+import com.hsf302.trainoffice.entity.TrainTrip;
 import com.hsf302.trainoffice.entity.TripStation;
-import com.hsf302.trainoffice.service.StationService;
+import com.hsf302.trainoffice.service.RouteStationService;
 import com.hsf302.trainoffice.service.TrainTripService;
 import com.hsf302.trainoffice.service.TripStationService;
 import org.springframework.stereotype.Controller;
@@ -16,14 +19,14 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class TripStationController {
     private final TripStationService tripStationService;
     private final TrainTripService trainTripService;
-    private final StationService stationService;
+    private final RouteStationService routeStationService;
 
     public TripStationController(TripStationService tripStationService,
                                  TrainTripService trainTripService,
-                                 StationService stationService) {
+                                 RouteStationService routeStationService) {
         this.tripStationService = tripStationService;
         this.trainTripService = trainTripService;
-        this.stationService = stationService;
+        this.routeStationService = routeStationService;
     }
 
     @GetMapping("/admin/trips/{tripId}/stations")
@@ -35,7 +38,7 @@ public class TripStationController {
                     return "trip-stations/list";
                 })
                 .orElseGet(() -> {
-                    redirectAttributes.addFlashAttribute("error", "Train trip not found");
+                    redirectAttributes.addFlashAttribute("error", I18n.t("msg.trip.notFound"));
                     return "redirect:/admin/trips";
                 });
     }
@@ -46,11 +49,11 @@ public class TripStationController {
                 .map(trip -> {
                     model.addAttribute("trip", trip);
                     model.addAttribute("tripStation", new TripStation());
-                    addFormOptions(model);
+                    addFormOptions(model, trip);
                     return "trip-stations/create";
                 })
                 .orElseGet(() -> {
-                    redirectAttributes.addFlashAttribute("error", "Train trip not found");
+                    redirectAttributes.addFlashAttribute("error", I18n.t("msg.trip.notFound"));
                     return "redirect:/admin/trips";
                 });
     }
@@ -62,12 +65,14 @@ public class TripStationController {
                        RedirectAttributes redirectAttributes) {
         try {
             tripStationService.saveTripStation(tripId, tripStation);
-            redirectAttributes.addFlashAttribute("success", "Trip station saved");
+            redirectAttributes.addFlashAttribute("success", I18n.t("msg.tripStation.saved"));
             return "redirect:/admin/trips/" + tripId + "/stations";
         } catch (IllegalArgumentException ex) {
             model.addAttribute("error", ex.getMessage());
-            trainTripService.getTripById(tripId).ifPresent(trip -> model.addAttribute("trip", trip));
-            addFormOptions(model);
+            trainTripService.getTripById(tripId).ifPresent(trip -> {
+                model.addAttribute("trip", trip);
+                addFormOptions(model, trip);
+            });
             return "trip-stations/create";
         }
     }
@@ -81,11 +86,11 @@ public class TripStationController {
                 .map(tripStation -> {
                     model.addAttribute("tripStation", tripStation);
                     model.addAttribute("trip", tripStation.getTrainTrip());
-                    addFormOptions(model);
+                    addFormOptions(model, tripStation.getTrainTrip());
                     return "trip-stations/edit";
                 })
                 .orElseGet(() -> {
-                    redirectAttributes.addFlashAttribute("error", "Trip station not found");
+                    redirectAttributes.addFlashAttribute("error", I18n.t("msg.tripStation.notFound"));
                     return "redirect:/admin/trips/" + tripId + "/stations";
                 });
     }
@@ -98,12 +103,15 @@ public class TripStationController {
                          RedirectAttributes redirectAttributes) {
         try {
             tripStationService.updateTripStation(tripId, tripStationId, tripStation);
-            redirectAttributes.addFlashAttribute("success", "Trip station updated");
+            redirectAttributes.addFlashAttribute("success", I18n.t("msg.tripStation.updated"));
             return "redirect:/admin/trips/" + tripId + "/stations";
         } catch (IllegalArgumentException ex) {
             model.addAttribute("error", ex.getMessage());
-            trainTripService.getTripById(tripId).ifPresent(trip -> model.addAttribute("trip", trip));
-            addFormOptions(model);
+            tripStation.setTripStationId(tripStationId);
+            trainTripService.getTripById(tripId).ifPresent(trip -> {
+                model.addAttribute("trip", trip);
+                addFormOptions(model, trip);
+            });
             return "trip-stations/edit";
         }
     }
@@ -125,14 +133,34 @@ public class TripStationController {
     private String deleteTripStation(Long tripId, Long tripStationId, RedirectAttributes redirectAttributes) {
         try {
             tripStationService.deleteTripStation(tripId, tripStationId);
-            redirectAttributes.addFlashAttribute("success", "Trip station deleted");
+            redirectAttributes.addFlashAttribute("success", I18n.t("msg.tripStation.deleted"));
         } catch (IllegalArgumentException ex) {
             redirectAttributes.addFlashAttribute("error", ex.getMessage());
         }
         return "redirect:/admin/trips/" + tripId + "/stations";
     }
 
-    private void addFormOptions(Model model) {
-        model.addAttribute("stations", stationService.getAllStations());
+    @PostMapping("/admin/trips/{tripId}/stations/generate")
+    public String generateFromRoute(@PathVariable Long tripId, RedirectAttributes redirectAttributes) {
+        try {
+            int added = tripStationService.generateFromRoute(tripId);
+
+            if (added > 0) {
+                redirectAttributes.addFlashAttribute("success", I18n.t("msg.tripStation.generated", added));
+            } else {
+                redirectAttributes.addFlashAttribute("success", I18n.t("msg.tripStation.nothingToGenerate"));
+            }
+        } catch (IllegalArgumentException ex) {
+            redirectAttributes.addFlashAttribute("error", ex.getMessage());
+        }
+        return "redirect:/admin/trips/" + tripId + "/stations";
+    }
+
+    /** Chỉ cho chọn các ga thuộc tuyến của chuyến. */
+    private void addFormOptions(Model model, TrainTrip trip) {
+        model.addAttribute("routeStations",
+                trip != null && trip.getRoute() != null
+                        ? routeStationService.getStationsForRoute(trip.getRoute().getRouteId())
+                        : java.util.List.of());
     }
 }

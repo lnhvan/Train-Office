@@ -481,8 +481,8 @@ IF NOT EXISTS (SELECT 1 FROM tickets WHERE ticket_code='RTTK0002')
     INSERT INTO tickets (ticket_code, booking_id, passenger_id, trip_id, seat_id, ticket_price, ticket_status)
     VALUES ('RTTK0002', @rt_booking_id, @rt_passenger_id, @rt_demo_trip, @rt_demo_seat2, 910000, 'CONFIRMED');
 IF NOT EXISTS (SELECT 1 FROM payments WHERE transaction_code='RTPAY0001')
-    INSERT INTO payments (booking_id, payment_method, amount, transaction_code, otp_code, payment_status, paid_at)
-    VALUES (@rt_booking_id, 'VNPAY', 1825000, 'RTPAY0001', '654321', 'SUCCESS', GETDATE());
+    INSERT INTO payments (booking_id, payment_method, amount, transaction_code, payment_status, paid_at)
+    VALUES (@rt_booking_id, 'VNPAY', 1825000, 'RTPAY0001', 'SUCCESS', GETDATE());
 IF NOT EXISTS (SELECT 1 FROM invoices WHERE invoice_code='RTINV0001')
     INSERT INTO invoices (invoice_code, payment_id, total_amount, issued_at)
     VALUES ('RTINV0001', (SELECT payment_id FROM payments WHERE transaction_code='RTPAY0001'), 1825000, GETDATE());
@@ -501,8 +501,8 @@ IF NOT EXISTS (SELECT 1 FROM tickets WHERE ticket_code='RTTK0003')
     INSERT INTO tickets (ticket_code, booking_id, passenger_id, trip_id, seat_id, ticket_price, ticket_status)
     VALUES ('RTTK0003', @rt_booking_id, @rt_passenger_id, @rt_demo_trip, @rt_demo_seat1, 927000, 'BOOKED');
 IF NOT EXISTS (SELECT 1 FROM payments WHERE transaction_code='RTPAY0002')
-    INSERT INTO payments (booking_id, payment_method, amount, transaction_code, otp_code, payment_status, paid_at)
-    VALUES (@rt_booking_id, 'BANK_TRANSFER', 927000, 'RTPAY0002', NULL, 'PENDING', NULL);
+    INSERT INTO payments (booking_id, payment_method, amount, transaction_code, payment_status, paid_at)
+    VALUES (@rt_booking_id, 'BANK_TRANSFER', 927000, 'RTPAY0002', 'PENDING', NULL);
 
 SET @rt_demo_trip = (SELECT trip_id FROM train_trips WHERE train_id=@rt_se20_id AND route_id=@rt_route4_id AND departure_time=@rt_depReturnDadHan);
 SET @rt_demo_seat1 = (SELECT seat_id FROM seats WHERE coach_id=(SELECT coach_id FROM coaches WHERE train_id=@rt_se20_id AND coach_number='C01') AND seat_number='A1');
@@ -518,8 +518,8 @@ IF NOT EXISTS (SELECT 1 FROM tickets WHERE ticket_code='RTTK0004')
     INSERT INTO tickets (ticket_code, booking_id, passenger_id, trip_id, seat_id, ticket_price, ticket_status)
     VALUES ('RTTK0004', @rt_booking_id, @rt_passenger_id, @rt_demo_trip, @rt_demo_seat1, 483000, 'REFUNDED');
 IF NOT EXISTS (SELECT 1 FROM payments WHERE transaction_code='RTPAY0003')
-    INSERT INTO payments (booking_id, payment_method, amount, transaction_code, otp_code, payment_status, paid_at)
-    VALUES (@rt_booking_id, 'CASH', 483000, 'RTPAY0003', NULL, 'SUCCESS', DATEADD(DAY,-2,GETDATE()));
+    INSERT INTO payments (booking_id, payment_method, amount, transaction_code, payment_status, paid_at)
+    VALUES (@rt_booking_id, 'CASH', 483000, 'RTPAY0003', 'SUCCESS', DATEADD(DAY,-2,GETDATE()));
 IF NOT EXISTS (SELECT 1 FROM invoices WHERE invoice_code='RTINV0003')
     INSERT INTO invoices (invoice_code, payment_id, total_amount, issued_at)
     VALUES ('RTINV0003', (SELECT payment_id FROM payments WHERE transaction_code='RTPAY0003'), 483000, DATEADD(DAY,-2,GETDATE()));
@@ -541,8 +541,8 @@ IF NOT EXISTS (SELECT 1 FROM tickets WHERE ticket_code='RTTK0005')
     INSERT INTO tickets (ticket_code, booking_id, passenger_id, trip_id, seat_id, ticket_price, ticket_status)
     VALUES ('RTTK0005', @rt_booking_id, @rt_passenger_id, @rt_demo_trip, @rt_demo_seat1, 486000, 'CANCELLED');
 IF NOT EXISTS (SELECT 1 FROM payments WHERE transaction_code='RTPAY0004')
-    INSERT INTO payments (booking_id, payment_method, amount, transaction_code, otp_code, payment_status, paid_at)
-    VALUES (@rt_booking_id, 'BANK_TRANSFER', 486000, 'RTPAY0004', NULL, 'FAILED', NULL);
+    INSERT INTO payments (booking_id, payment_method, amount, transaction_code, payment_status, paid_at)
+    VALUES (@rt_booking_id, 'BANK_TRANSFER', 486000, 'RTPAY0004', 'FAILED', NULL);
 
 SET @rt_demo_trip = (SELECT trip_id FROM train_trips WHERE train_id=@rt_se1_id AND route_id=@rt_route1_id AND departure_time=@rt_depHanSgnD2);
 SET @rt_demo_seat1 = (SELECT seat_id FROM seats WHERE coach_id=(SELECT coach_id FROM coaches WHERE train_id=@rt_se1_id AND coach_number='C01') AND seat_number='B1');
@@ -558,8 +558,8 @@ IF NOT EXISTS (SELECT 1 FROM tickets WHERE ticket_code='RTTK0006')
     INSERT INTO tickets (ticket_code, booking_id, passenger_id, trip_id, seat_id, ticket_price, ticket_status)
     VALUES ('RTTK0006', @rt_booking_id, @rt_passenger_id, @rt_demo_trip, @rt_demo_seat1, 925000, 'CONFIRMED');
 IF NOT EXISTS (SELECT 1 FROM payments WHERE transaction_code='RTPAY0005')
-    INSERT INTO payments (booking_id, payment_method, amount, transaction_code, otp_code, payment_status, paid_at)
-    VALUES (@rt_booking_id, 'VNPAY', 925000, 'RTPAY0005', '123456', 'SUCCESS', GETDATE());
+    INSERT INTO payments (booking_id, payment_method, amount, transaction_code, payment_status, paid_at)
+    VALUES (@rt_booking_id, 'VNPAY', 925000, 'RTPAY0005', 'SUCCESS', GETDATE());
 IF NOT EXISTS (SELECT 1 FROM invoices WHERE invoice_code='RTINV0005')
     INSERT INTO invoices (invoice_code, payment_id, total_amount, issued_at)
     VALUES ('RTINV0005', (SELECT payment_id FROM payments WHERE transaction_code='RTPAY0005'), 925000, GETDATE());

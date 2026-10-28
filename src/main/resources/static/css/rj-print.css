@@ -1,0 +1,44 @@
+/* RailJet — printable documents (ticket, invoice). Light theme. Requires rj-base.css. */
+.rj-print-body { background: var(--rj-paper); min-height: 100vh; }
+.rj-print-shell { max-width: 880px; margin: 0 auto; padding: 72px 20px 48px; }
+.rj-print-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+.rj-print-toolbar .rj-back-link { margin: 0; }
+.rj-print-toolbar-actions { display: flex; gap: 8px; }
+
+.rj-doc { background: #fff; border: 1px solid var(--rj-line-light); border-radius: var(--rj-radius-lg); overflow: hidden; box-shadow: 0 18px 48px rgba(7, 26, 51, .08); }
+.rj-doc-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; padding: 26px 32px; background: var(--rj-navy-900); color: #fff; }
+.rj-doc-brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 800; font-size: 1.15rem; letter-spacing: -.02em; }
+.rj-doc-brand i { width: 32px; height: 32px; border-radius: 9px; display: grid; place-items: center; background: var(--rj-sky-400); color: #041523; font-size: 1rem; }
+.rj-doc-head h1 { margin: 12px 0 0; font-size: 1.7rem; color: #fff; }
+.rj-doc-head small { display: block; font-size: .78rem; color: #a9bacd; }
+.rj-doc-head strong { font-size: 1.25rem; font-variant-numeric: tabular-nums; }
+.rj-doc-body { padding: 28px 32px 32px; }
+.rj-doc .rj-route-meta { background: #fff; }
+.rj-doc .rj-route-dot { background: #fff; }
+.rj-doc .rj-route-dot.is-end { background: var(--rj-blue-600); }
+.rj-doc-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; margin-top: 26px; border: 1px solid var(--rj-line-light); border-radius: var(--rj-radius); overflow: hidden; }
+.rj-doc-grid > div { padding: 14px 16px; border-left: 1px solid var(--rj-line-light); }
+.rj-doc-grid > div:first-child { border-left: 0; }
+.rj-doc-grid small { display: block; font-size: .76rem; color: var(--rj-muted-light); }
+.rj-doc-grid strong { display: block; font-size: 1.1rem; font-weight: 700; color: var(--rj-navy-900); font-variant-numeric: tabular-nums; }
+.rj-doc-grid .is-highlight { background: var(--rj-sky-100); }
+.rj-doc-grid .is-highlight strong { color: var(--rj-blue-600); font-size: 1.35rem; }
+.rj-doc-parties { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; padding-bottom: 22px; margin-bottom: 22px; border-bottom: 1px dashed var(--rj-line-light); }
+.rj-doc-parties small { display: block; font-size: .76rem; color: var(--rj-muted-light); }
+.rj-doc-parties strong { display: block; font-size: 1rem; color: var(--rj-navy-900); }
+.rj-doc-foot { padding: 14px 32px; border-top: 1px solid var(--rj-line-light); background: var(--rj-surface-2); font-size: .84rem; color: var(--rj-muted-light); }
+.rj-doc .table th { background: var(--rj-surface-2); }
+.rj-doc .table tfoot th { font-size: 1rem; color: var(--rj-navy-900); background: transparent; border-top: 2px solid var(--rj-navy-900); }
+@media (max-width: 640px) {
+    .rj-doc-grid { grid-template-columns: 1fr 1fr; }
+    .rj-doc-grid > div:nth-child(3) { border-left: 0; }
+    .rj-doc-grid > div:nth-child(n+3) { border-top: 1px solid var(--rj-line-light); }
+    .rj-doc-parties { grid-template-columns: 1fr; }
+}
+@media print {
+    .rj-print-body { background: #fff; }
+    .rj-print-shell { max-width: none; padding: 0; }
+    .rj-print-toolbar { display: none !important; }
+    .rj-doc { box-shadow: none; border: 1px solid #999; border-radius: 0; }
+    .rj-doc-head { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}

@@ -3,6 +3,7 @@ package com.hsf302.trainoffice.entity;
 import com.hsf302.trainoffice.common.enums.TripStatus;
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -42,9 +43,11 @@ public class TrainTrip {
     @ToString.Exclude
     private Route route;
 
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)   // nhận "2026-10-26T06:00" từ <input type="datetime-local">
     @Column(name = "departure_time", nullable = false)
     private LocalDateTime departureTime;
 
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)   // nhận "2026-10-26T06:00" từ <input type="datetime-local">
     @Column(name = "arrival_time", nullable = false)
     private LocalDateTime arrivalTime;
 

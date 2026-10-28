@@ -1,5 +1,8 @@
 package com.hsf302.trainoffice.controller;
 
+
+import com.hsf302.trainoffice.security.CurrentUser;
+import com.hsf302.trainoffice.config.I18n;
 import com.hsf302.trainoffice.common.enums.PaymentMethod;
 import com.hsf302.trainoffice.common.enums.PaymentStatus;
 import com.hsf302.trainoffice.entity.Booking;
@@ -20,6 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 @Controller
 public class PaymentController {
@@ -63,33 +67,16 @@ public class PaymentController {
         return "payments/list";
     }
 
-    @GetMapping("/admin/payments/new")
-    public String showCreateForm(
-            Model model,
-            @RequestParam(value = "bookingId", required = false) Long bookingId
-    ) {
-        Payment payment = new Payment();
-
-        if (bookingId != null) {
-            bookingRepository.findById(bookingId).ifPresent(payment::setBooking);
-        }
-
-        model.addAttribute("payment", payment);
-        addCommonAttributes(model);
-
-        return "payments/create";
-    }
-
     @GetMapping("/admin/payments/edit/{id}")
     public String showEditForm(
-            @PathVariable("id") Long id,
+            @PathVariable("id") UUID id,
             Model model,
             RedirectAttributes redirectAttributes
     ) {
         Optional<Payment> paymentOpt = paymentService.getPaymentById(id);
 
         if (paymentOpt.isEmpty()) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Không tìm thấy payment ID: " + id);
+            redirectAttributes.addFlashAttribute("errorMessage", I18n.t("msg.payment.notFound", id));
             return "redirect:/admin/payments";
         }
 
@@ -107,9 +94,13 @@ public class PaymentController {
             RedirectAttributes redirectAttributes,
             @RequestParam(value = "bookingId", required = false) Long bookingId
     ) {
+        if (payment.getPaymentId() == null) {
+            redirectAttributes.addFlashAttribute("errorMessage", I18n.t("msg.payment.manualCreateDisabled"));
+            return "redirect:/admin/payments";
+        }
         if (bookingId != null) {
             Booking booking = bookingRepository.findById(bookingId)
-                    .orElseThrow(() -> new RuntimeException("Booking not found with ID: " + bookingId));
+                    .orElseThrow(() -> new RuntimeException(I18n.t("msg.booking.notFoundId", bookingId)));
 
             payment.setBooking(booking);
         }
@@ -125,33 +116,33 @@ public class PaymentController {
 
         if (result.hasErrors()) {
             addCommonAttributes(model);
-            return payment.getPaymentId() == null ? "payments/create" : "payments/edit";
+            return "payments/edit";
         }
 
         try {
             paymentService.savePayment(payment);
-            redirectAttributes.addFlashAttribute("successMessage", "Payment đã được lưu thành công!");
+            redirectAttributes.addFlashAttribute("successMessage", I18n.t("msg.payment.saved"));
 
             return "redirect:/admin/payments";
 
         } catch (Exception e) {
-            model.addAttribute("errorMessage", "Lỗi khi lưu payment: " + e.getMessage());
+            model.addAttribute("errorMessage", I18n.t("msg.payment.saveError", e.getMessage()));
             addCommonAttributes(model);
 
-            return payment.getPaymentId() == null ? "payments/create" : "payments/edit";
+            return "payments/edit";
         }
     }
 
     @GetMapping("/admin/payments/detail/{id}")
     public String showPaymentDetail(
-            @PathVariable("id") Long id,
+            @PathVariable("id") UUID id,
             Model model,
             RedirectAttributes redirectAttributes
     ) {
         Optional<Payment> paymentOpt = paymentService.getPaymentById(id);
 
         if (paymentOpt.isEmpty()) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Không tìm thấy payment ID: " + id);
+            redirectAttributes.addFlashAttribute("errorMessage", I18n.t("msg.payment.notFound", id));
             return "redirect:/admin/payments";
         }
 
@@ -162,14 +153,14 @@ public class PaymentController {
 
     @GetMapping("/admin/payments/success/{id}")
     public String markPaymentSuccess(
-            @PathVariable("id") Long id,
+            @PathVariable("id") UUID id,
             RedirectAttributes redirectAttributes
     ) {
         try {
             paymentService.markPaymentSuccess(id);
-            redirectAttributes.addFlashAttribute("successMessage", "Payment đã chuyển sang SUCCESS.");
+            redirectAttributes.addFlashAttribute("successMessage", I18n.t("msg.payment.markedSuccess"));
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi cập nhật payment: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", I18n.t("msg.payment.updateError", e.getMessage()));
         }
 
         return "redirect:/admin/payments";
@@ -177,14 +168,14 @@ public class PaymentController {
 
     @GetMapping("/admin/payments/failed/{id}")
     public String markPaymentFailed(
-            @PathVariable("id") Long id,
+            @PathVariable("id") UUID id,
             RedirectAttributes redirectAttributes
     ) {
         try {
             paymentService.markPaymentFailed(id);
-            redirectAttributes.addFlashAttribute("successMessage", "Payment đã chuyển sang FAILED.");
+            redirectAttributes.addFlashAttribute("successMessage", I18n.t("msg.payment.markedFailed"));
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi cập nhật payment: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", I18n.t("msg.payment.updateError", e.getMessage()));
         }
 
         return "redirect:/admin/payments";
@@ -192,14 +183,14 @@ public class PaymentController {
 
     @GetMapping("/admin/payments/delete/{id}")
     public String deletePayment(
-            @PathVariable("id") Long id,
+            @PathVariable("id") UUID id,
             RedirectAttributes redirectAttributes
     ) {
         try {
             paymentService.deletePayment(id);
-            redirectAttributes.addFlashAttribute("successMessage", "Payment ID " + id + " đã được xoá.");
+            redirectAttributes.addFlashAttribute("successMessage", I18n.t("msg.payment.deleted", id));
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi khi xoá payment: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", I18n.t("msg.payment.deleteError", e.getMessage()));
         }
 
         return "redirect:/admin/payments";
@@ -226,14 +217,14 @@ public class PaymentController {
             User user = currentUser(session);
 
             if (user == null) {
-                redirectAttributes.addFlashAttribute("error", "Please log in before payment.");
+                redirectAttributes.addFlashAttribute("error", I18n.t("msg.payment.loginRequired"));
                 return "redirect:/login";
             }
 
             Booking booking = paymentService.getBookingForPayment(bookingId);
 
             if (!canAccessBooking(booking, user)) {
-                redirectAttributes.addFlashAttribute("errorMessage", "You cannot pay this booking.");
+                redirectAttributes.addFlashAttribute("errorMessage", I18n.t("msg.payment.notAllowed"));
                 return "redirect:/booking/history";
             }
 
@@ -256,14 +247,14 @@ public class PaymentController {
             User user = currentUser(session);
 
             if (user == null) {
-                redirectAttributes.addFlashAttribute("error", "Please log in before payment.");
+                redirectAttributes.addFlashAttribute("error", I18n.t("msg.payment.loginRequired"));
                 return "redirect:/login";
             }
 
             Booking booking = paymentService.getBookingForPayment(bookingId);
 
             if (!canAccessBooking(booking, user)) {
-                redirectAttributes.addFlashAttribute("errorMessage", "You cannot pay this booking.");
+                redirectAttributes.addFlashAttribute("errorMessage", I18n.t("msg.payment.notAllowed"));
                 return "redirect:/booking/history";
             }
 
@@ -299,8 +290,8 @@ public class PaymentController {
             model.addAttribute("booking", payment.getBooking());
             model.addAttribute("success", success);
             model.addAttribute("message", success
-                    ? "Thanh toán thành công."
-                    : "Thanh toán thất bại.");
+                    ? I18n.t("msg.payment.success")
+                    : I18n.t("msg.payment.failed"));
 
             return "payments/result";
 
@@ -312,9 +303,9 @@ public class PaymentController {
         }
     }
 
+    /** Người dùng đăng nhập (JWT) của request hiện tại; null nếu chưa đăng nhập. */
     private User currentUser(HttpSession session) {
-        Object sessionUser = session.getAttribute("currentUser");
-        return sessionUser instanceof User user ? user : null;
+        return CurrentUser.get();
     }
 
     private boolean canAccessBooking(Booking booking, User user) {

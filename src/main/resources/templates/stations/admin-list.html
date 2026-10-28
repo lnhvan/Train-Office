@@ -1,40 +1,70 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layouts/admin-layout :: layout('Station Management', ~{::section}, 'stations')}">
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/admin-layout :: layout(#{station.stationManagement}, ~{::section}, 'stations')}">
 <section>
     <div class="admin-page-hero">
         <div>
-            <span class="admin-page-kicker"><i class="fas fa-map-marker-alt mr-1"></i> Railway Infrastructure</span>
-            <h2>Station Management</h2>
-            <p>Maintain station codes, names, and cities used by routes and train trips.</p>
+            <span class="admin-page-kicker"><i class="bi bi-geo-alt"></i> [[#{station.railwayInfrastructure}]]</span>
+            <h1>[[#{station.stationManagement}]]</h1>
+            <p>[[#{station.maintainStationCodesNamesAndCities}]]</p>
         </div>
         <a th:href="@{/admin/stations/new}" class="btn btn-primary">
-            <i class="fas fa-plus mr-1"></i> Add Station
+            <i class="bi bi-plus-lg"></i> [[#{common.addStation}]]
         </a>
     </div>
 
     <div class="alert alert-success alert-dismissible fade show" th:if="${successMessage}">
         <span th:text="${successMessage}"></span>
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span>&times;</span></button>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" th:aria-label="#{common.close}"></button>
     </div>
     <div class="alert alert-danger alert-dismissible fade show" th:if="${errorMessage}">
         <span th:text="${errorMessage}"></span>
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span>&times;</span></button>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" th:aria-label="#{common.close}"></button>
     </div>
 
-    <div class="card admin-filter-card">
+    <div class="card admin-filter-card mb-3">
         <div class="card-header">
-            <form th:action="@{/admin/stations}" method="get" class="row g-2">
-                <div class="col-lg-10 col-md-12">
-                    <label class="form-label">Search station</label>
+            <form th:action="@{/admin/stations}" method="get" class="row g-2 align-items-end" id="stationFilterForm">
+                <div class="col-lg-4 col-md-12">
+                    <label class="form-label">[[#{station.searchStation}]]</label>
                     <input class="form-control" type="text" name="keyword"
-                           placeholder="Search by station code, name, or city"
+                           th:placeholder="#{station.searchByStationCodeNameOr}"
                            th:value="${keyword}">
                 </div>
+                <div class="col-lg-3 col-md-6">
+                    <label class="form-label" for="filterRegion">[[#{common.region}]]</label>
+                    <select class="form-select" id="filterRegion" name="region">
+                        <option value="">[[#{station.allRegions}]]</option>
+                        <option th:each="r : ${regions}"
+                                th:value="${r}"
+                                th:text="${#messages.msgOrNull('enum.' + r) ?: r}"
+                                th:selected="${r == selectedRegion}"></option>
+                    </select>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <label class="form-label" for="filterProvince">[[#{common.province}]]</label>
+                    <select class="form-select" id="filterProvince" name="provinceId">
+                        <option value="">[[#{station.allProvinces}]]</option>
+                        <optgroup th:each="entry : ${provincesByRegion}"
+                                  th:label="${#messages.msgOrNull('enum.' + entry.key) ?: entry.key}"
+                                  th:attr="data-region=${entry.key}">
+                            <option th:each="p : ${entry.value}"
+                                    th:value="${p.provinceId}"
+                                    th:text="${p.provinceName}"
+                                    th:attr="data-region=${entry.key}"
+                                    th:selected="${selectedProvinceId != null and selectedProvinceId == p.provinceId}">Hà Nội</option>
+                        </optgroup>
+                    </select>
+                </div>
                 <div class="col-lg-2 col-md-12 d-flex align-items-end">
-                    <button class="btn btn-outline-primary w-100" type="submit">
-                        <i class="fas fa-search mr-1"></i> Search
-                    </button>
+                    <div class="w-100 d-flex gap-2">
+                        <button class="btn btn-primary flex-fill" type="submit">
+                            <i class="bi bi-search"></i> [[#{common.search}]]
+                        </button>
+                        <a class="btn btn-outline-secondary" th:href="@{/admin/stations}" th:title="#{common.clear}">
+                            [[#{common.clear}]]
+                        </a>
+                    </div>
                 </div>
             </form>
         </div>
@@ -43,20 +73,20 @@
     <div class="card admin-table-card">
         <div class="card-header d-flex align-items-center justify-content-between">
             <div>
-                <span class="admin-card-title">Station Directory</span>
-                <small th:text="${totalItems} + ' total stations'">0 total stations</small>
+                <span class="admin-card-title">[[#{station.stationDirectory}]]</span>
+                <small th:text="#{station.totalStations(${totalItems})}">0 total stations</small>
             </div>
-            <span class="badge badge-info">Stations</span>
+            <span class="rj-badge is-info no-dot">[[#{common.stations}]]</span>
         </div>
         <div class="card-body table-responsive p-0">
             <table class="table table-hover mb-0">
                 <thead>
                 <tr>
                     <th>ID</th>
-                    <th>Station</th>
-                    <th>Code</th>
-                    <th>City</th>
-                    <th class="text-right">Actions</th>
+                    <th>[[#{common.station}]]</th>
+                    <th>[[#{common.code}]]</th>
+                    <th>[[#{common.province}]]</th>
+                    <th class="text-end">[[#{common.actions}]]</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -64,33 +94,36 @@
                     <td><span class="text-muted" th:text="'#' + ${station.stationId}">#1</span></td>
                     <td>
                         <div class="admin-identity">
-                            <span class="admin-avatar"><i class="fas fa-building"></i></span>
+                            <span class="admin-avatar"><i class="bi bi-building"></i></span>
                             <span>
                                 <strong th:text="${station.stationName}">Station</strong>
                                 <small th:text="${station.city}">City</small>
                             </span>
                         </div>
                     </td>
-                    <td><span class="badge badge-primary admin-badge-soft" th:text="${station.stationCode}">HN</span></td>
-                    <td th:text="${station.city}">City</td>
-                    <td class="text-right">
-                        <a class="btn btn-sm btn-outline-warning"
-                           th:href="@{'/admin/stations/edit/' + ${station.stationId}}">
-                            <i class="fas fa-edit"></i><span>Edit</span>
-                        </a>
-                        <a class="btn btn-sm btn-outline-danger"
-                           onclick="return confirm('Delete this station?')"
-                           th:href="@{'/admin/stations/delete/' + ${station.stationId}}">
-                            <i class="fas fa-trash"></i><span>Delete</span>
-                        </a>
+                    <td><span class="rj-badge is-info admin-badge-soft no-dot" th:text="${station.stationCode}">HN</span></td>
+                    <td>
+                        <span th:text="${station.province != null ? station.province.provinceName : station.city}">Hà Nội</span>
+                        <span class="rj-badge no-dot ms-1"
+                              th:if="${station.province != null}"
+                              th:text="${#messages.msgOrNull('enum.' + station.province.region) ?: station.province.region}">Miền Bắc</span>
+                        <span class="rj-badge is-warning no-dot ms-1"
+                              th:if="${station.province == null}">[[#{station.noProvince}]]</span>
+                    </td>
+                    <td class="text-end">
+                        <a class="rj-icon-btn is-warning"
+                           th:href="@{'/admin/stations/edit/' + ${station.stationId}}" th:title="#{common.edit}"><i class="bi bi-pencil-square" aria-hidden="true"></i><span class="visually-hidden">[[#{common.edit}]]</span></a>
+                        <a class="rj-icon-btn is-danger"
+                           th:data-confirm="#{confirm.deleteStation}" onclick="return confirm(this.dataset.confirm)"
+                           th:href="@{'/admin/stations/delete/' + ${station.stationId}}" th:title="#{common.delete}"><i class="bi bi-trash3" aria-hidden="true"></i><span class="visually-hidden">[[#{common.delete}]]</span></a>
                     </td>
                 </tr>
                 <tr th:if="${#lists.isEmpty(stations)}">
                     <td colspan="5">
                         <div class="admin-empty-state">
-                            <i class="fas fa-map-marker-alt"></i>
-                            <strong>No stations found</strong>
-                            <span>Try another keyword or create the first station.</span>
+                            <i class="bi bi-geo-alt"></i>
+                            <strong>[[#{station.noStationsFound}]]</strong>
+                            <span>[[#{station.tryAnotherKeywordOrCreateThe}]]</span>
                         </div>
                     </td>
                 </tr>
@@ -102,8 +135,8 @@
     <nav class="mt-4" th:if="${totalPages > 1}">
         <ul class="pagination justify-content-center">
             <li class="page-item" th:classappend="${currentPage == 1} ? 'disabled'">
-                <a class="page-link" th:href="@{/admin/stations(page=${currentPage - 1}, keyword=${keyword})}">
-                    Previous
+                <a class="page-link" th:href="@{/admin/stations(page=${currentPage - 1}, keyword=${keyword}, region=${selectedRegion}, provinceId=${selectedProvinceId})}">
+                    [[#{common.previous}]]
                 </a>
             </li>
             <li class="page-item"
@@ -111,14 +144,61 @@
                 th:classappend="${currentPage == i} ? 'active'">
                 <a class="page-link"
                    th:text="${i}"
-                   th:href="@{/admin/stations(page=${i}, keyword=${keyword})}">1</a>
+                   th:href="@{/admin/stations(page=${i}, keyword=${keyword}, region=${selectedRegion}, provinceId=${selectedProvinceId})}">1</a>
             </li>
             <li class="page-item" th:classappend="${currentPage == totalPages} ? 'disabled'">
-                <a class="page-link" th:href="@{/admin/stations(page=${currentPage + 1}, keyword=${keyword})}">
-                    Next
+                <a class="page-link" th:href="@{/admin/stations(page=${currentPage + 1}, keyword=${keyword}, region=${selectedRegion}, provinceId=${selectedProvinceId})}">
+                    [[#{common.next}]]
                 </a>
             </li>
         </ul>
     </nav>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const regionSelect = document.getElementById('filterRegion');
+            const provinceSelect = document.getElementById('filterProvince');
+            if (!regionSelect || !provinceSelect) return;
+
+            function syncProvinceOptions() {
+                const selectedRegion = regionSelect.value;
+                const optgroups = provinceSelect.querySelectorAll('optgroup');
+
+                optgroups.forEach(function (group) {
+                    const groupRegion = group.getAttribute('data-region');
+                    if (!selectedRegion || groupRegion === selectedRegion) {
+                        group.style.display = '';
+                        group.disabled = false;
+                    } else {
+                        group.style.display = 'none';
+                        group.disabled = true;
+                    }
+                });
+
+                // If currently selected province belongs to hidden optgroup, reset to empty
+                const currentOption = provinceSelect.selectedOptions[0];
+                if (currentOption && currentOption.parentElement && currentOption.parentElement.disabled) {
+                    provinceSelect.value = '';
+                }
+            }
+
+            regionSelect.addEventListener('change', syncProvinceOptions);
+
+            provinceSelect.addEventListener('change', function () {
+                const opt = provinceSelect.selectedOptions[0];
+                if (opt && opt.value) {
+                    const optRegion = opt.getAttribute('data-region');
+                    if (optRegion && !regionSelect.value) {
+                        regionSelect.value = optRegion;
+                        syncProvinceOptions();
+                    }
+                }
+            });
+
+            if (regionSelect.value) {
+                syncProvinceOptions();
+            }
+        });
+    </script>
 </section>
 </html>

@@ -1,5 +1,7 @@
 package com.hsf302.trainoffice.service.impl;
 
+
+import com.hsf302.trainoffice.config.I18n;
 import com.hsf302.trainoffice.entity.Train;
 import com.hsf302.trainoffice.repository.TrainRepository;
 import com.hsf302.trainoffice.service.TrainService;
@@ -56,7 +58,7 @@ public class TrainServiceImpl implements TrainService {
         normalizeTrain(train);
 
         if (train.getTrainType() == null || train.getTrainType().isBlank()) {
-            throw new IllegalStateException("Train type is required.");
+            throw new IllegalStateException(I18n.t("err.trainTypeIsRequired"));
         }
 
         getAvailableTrainTypes().stream()
@@ -67,7 +69,7 @@ public class TrainServiceImpl implements TrainService {
         if (train.getTrainId() == null) {
             if (trainRepository.existsByTrainCode(train.getTrainCode())) {
                 throw new IllegalStateException(
-                        "Train code '" + train.getTrainCode() + "' already exists!"
+                        I18n.t("err.trainCodeAlreadyExists", train.getTrainCode())
                 );
             }
         } else {
@@ -77,7 +79,7 @@ public class TrainServiceImpl implements TrainService {
                     && !oldTrain.get().getTrainCode().equals(train.getTrainCode())
                     && trainRepository.existsByTrainCode(train.getTrainCode())) {
                 throw new IllegalStateException(
-                        "Train code '" + train.getTrainCode() + "' already exists!"
+                        I18n.t("err.trainCodeAlreadyExists", train.getTrainCode())
                 );
             }
         }
@@ -106,7 +108,7 @@ public class TrainServiceImpl implements TrainService {
     @Override
     public void deleteTrain(Long id) {
         if (!trainRepository.existsById(id)) {
-            throw new RuntimeException("Train not found with ID: " + id);
+            throw new RuntimeException(I18n.t("err.trainNotFoundWithId", id));
         }
 
         trainRepository.deleteById(id);

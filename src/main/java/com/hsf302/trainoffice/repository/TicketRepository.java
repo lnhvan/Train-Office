@@ -21,11 +21,11 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
               and t.trainTrip.tripId = :tripId
               and t.ticketStatus in :activeStatuses
               and bookedDeparture.trainTrip.tripId = t.booking.trainTrip.tripId
-              and bookedDeparture.station.stationId = t.booking.departureStation.stationId
+              and bookedDeparture.routeStation.station.stationId = t.booking.departureStation.stationId
               and bookedArrival.trainTrip.tripId = t.booking.trainTrip.tripId
-              and bookedArrival.station.stationId = t.booking.arrivalStation.stationId
-              and bookedDeparture.stationOrder < :arrivalOrder
-              and bookedArrival.stationOrder > :departureOrder
+              and bookedArrival.routeStation.station.stationId = t.booking.arrivalStation.stationId
+              and bookedDeparture.routeStation.stationOrder < :arrivalOrder
+              and bookedArrival.routeStation.stationOrder > :departureOrder
             """)
     boolean existsActiveOverlappingSeatBooking(@Param("seatId") Long seatId,
                                                @Param("tripId") Long tripId,
@@ -41,11 +41,11 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
             where t.trainTrip.tripId = :tripId
               and t.ticketStatus in :activeStatuses
               and bookedDeparture.trainTrip.tripId = t.booking.trainTrip.tripId
-              and bookedDeparture.station.stationId = t.booking.departureStation.stationId
+              and bookedDeparture.routeStation.station.stationId = t.booking.departureStation.stationId
               and bookedArrival.trainTrip.tripId = t.booking.trainTrip.tripId
-              and bookedArrival.station.stationId = t.booking.arrivalStation.stationId
-              and bookedDeparture.stationOrder < :arrivalOrder
-              and bookedArrival.stationOrder > :departureOrder
+              and bookedArrival.routeStation.station.stationId = t.booking.arrivalStation.stationId
+              and bookedDeparture.routeStation.stationOrder < :arrivalOrder
+              and bookedArrival.routeStation.stationOrder > :departureOrder
             """)
     List<Long> findBlockedSeatIds(@Param("tripId") Long tripId,
                                   @Param("departureOrder") Integer departureOrder,

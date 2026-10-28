@@ -1,46 +1,29 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layouts/customer-layout :: layout('Passenger Details', ~{::section}, 'booking')}">
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/customer-layout :: layout(#{booking.passengerDetails}, ~{::section}, 'booking')}">
+<section class="rj-page rj-flow">
+    <div class="rj-container">
+        <ol class="rj-steps" th:aria-label="#{booking.bookingSteps}">
+            <li class="rj-step is-done"><span class="rj-step-dot"><i class="bi bi-check-lg"></i></span><span>[[#{booking.journey}]]</span></li>
+            <li class="rj-step is-done"><span class="rj-step-dot"><i class="bi bi-check-lg"></i></span><span>[[#{common.seats}]]</span></li>
+            <li class="rj-step is-current" aria-current="step"><span class="rj-step-dot">3</span><span>[[#{common.passengers}]]</span></li>
+            <li class="rj-step"><span class="rj-step-dot">4</span><span>[[#{common.payment}]]</span></li>
+        </ol>
 
-<section class="rail-flow-page">
-    <link rel="stylesheet" th:href="@{/css/rail-booking-flow.css}">
-
-    <div class="rail-flow-container">
-        <div class="rail-flow-progress passenger">
-            <div class="rail-flow-step done">
-                <span><i class="bi bi-check-lg"></i></span>
-                Journey
-            </div>
-
-            <div class="rail-flow-step done">
-                <span><i class="bi bi-check-lg"></i></span>
-                Seats
-            </div>
-
-            <div class="rail-flow-step active">
-                <span>3</span>
-                Passengers
-            </div>
-
-            <div class="rail-flow-step">
-                <span>4</span>
-                Payment
+        <div class="rj-page-head">
+            <div>
+                <h1>[[#{booking.passengerDetails}]]</h1>
+                <p>[[#{booking.pleaseProvideTheDetailsForAll}]]</p>
             </div>
         </div>
 
-        <div class="rail-flow-grid">
-            <main class="rail-flow-main">
-                <div class="rail-flow-title">
-                    <h1>Passenger Details</h1>
-                    <p>Please provide the details for all passengers travelling.</p>
-                </div>
-
-                <div class="rail-alert"
+        <div class="rj-flow-grid">
+            <div>
+                <div class="alert alert-danger"
                      th:if="${error}"
                      th:text="${error}">
                 </div>
-
-                <div class="rail-alert"
+                <div class="alert alert-danger"
                      th:if="${errorMessage}"
                      th:text="${errorMessage}">
                 </div>
@@ -52,85 +35,72 @@
                     <input type="hidden"
                            name="contactName"
                            th:value="${passengerInfoForm != null ? passengerInfoForm.contactName : ''}">
-
                     <input type="hidden"
                            name="contactPhone"
                            th:value="${passengerInfoForm != null ? passengerInfoForm.contactPhone : 'N/A'}">
-
                     <input type="hidden"
                            name="contactEmail"
                            th:value="${passengerInfoForm != null ? passengerInfoForm.contactEmail : ''}">
 
-                    <div class="rail-passenger-list">
-                        <article class="rail-glass-card rail-passenger-card"
-                                 th:each="passenger, stat : ${passengerInfoForm.passengers}">
+                    <div class="rj-passenger-list">
+                        <fieldset class="rj-card rail-passenger-card"
+                                  th:each="passenger, stat : ${passengerInfoForm.passengers}">
+                            <legend class="rj-passenger-head">
+                                <span class="rj-passenger-no rj-num" th:text="${stat.count}">1</span>
+                                <span th:text="#{booking.passengerN(${stat.count})}">Passenger 1</span>
+                                <span class="rj-passenger-seat"
+                                      th:if="${selectedSeats != null and stat.index < #lists.size(selectedSeats)}"
+                                      th:with="seat=${selectedSeats[stat.index]}">
+                                    <i class="bi bi-grid-3x2-gap"></i>
+                                    <span th:text="#{booking.coachSeat(${seat.coach != null ? seat.coach.coachNumber : '-'}, ${seat.seatNumber})}">Toa C01 · K01-L1A</span>
+                                </span>
+                            </legend>
 
-                            <div class="rail-passenger-heading">
-                                <i class="bi bi-person"></i>
-
-                                <h2 th:text="|Passenger ${stat.count}|">
-                                    Passenger 1
-                                </h2>
-                            </div>
-
-                            <div class="rail-form-grid">
-                                <div class="rail-form-field full">
-                                    <label class="rail-form-label">
-                                        Full Name
-                                    </label>
-
-                                    <input class="rail-input"
+                            <div class="rj-form-grid">
+                                <div class="rj-field rj-span-2">
+                                    <label class="form-label" th:for="|fullName${stat.index}|">[[#{common.fullName}]]</label>
+                                    <input class="form-control"
                                            type="text"
+                                           th:id="|fullName${stat.index}|"
                                            th:name="|passengers[${stat.index}].fullName|"
                                            th:value="${passenger.fullName}"
-                                           placeholder="e.g. Eleanor Vance"
+                                           th:placeholder="#{booking.eGEleanorVance}"
+                                           autocomplete="name"
                                            required>
                                 </div>
 
-                                <div class="rail-form-field">
-                                    <label class="rail-form-label">
-                                        Date of Birth
-                                    </label>
-
-                                    <div class="rail-input-wrap">
-                                        <i class="bi bi-calendar3 rail-input-icon"></i>
-
-                                        <input class="rail-input has-icon dob-input"
-                                               type="date"
-                                               th:name="|passengers[${stat.index}].dateOfBirth|"
-                                               th:value="${passenger.dateOfBirth}"
-                                               required>
-                                    </div>
+                                <div class="rj-field">
+                                    <label class="form-label" th:for="|dob${stat.index}|">[[#{common.dateOfBirth}]]</label>
+                                    <input class="form-control dob-input"
+                                           type="date"
+                                           th:id="|dob${stat.index}|"
+                                           th:name="|passengers[${stat.index}].dateOfBirth|"
+                                           th:value="${passenger.dateOfBirth}"
+                                           required>
+                                    <div class="rj-field-error age-validation-msg">[[#{booking.dateOfBirthCannotBeIn}]]</div>
                                 </div>
 
-                                <div class="rail-form-field">
-                                    <label class="rail-form-label">
-                                        Gender
-                                    </label>
-
-                                    <select class="rail-select"
+                                <div class="rj-field">
+                                    <label class="form-label" th:for="|gender${stat.index}|">[[#{common.gender}]]</label>
+                                    <select class="form-select"
+                                            th:id="|gender${stat.index}|"
                                             th:name="|passengers[${stat.index}].gender|">
-                                        <option value="">Select Gender</option>
-
+                                        <option value="">[[#{common.selectGender}]]</option>
                                         <option th:each="gender : ${genders}"
                                                 th:value="${gender}"
-                                                th:text="${gender}"
+                                                th:text="${#messages.msgOrNull('enum.' + (gender)) ?: (gender)}"
                                                 th:selected="${passenger.gender != null and passenger.gender == gender}">
                                             MALE
                                         </option>
                                     </select>
                                 </div>
 
-                                <div class="rail-form-field">
-                                    <label class="rail-form-label">
-                                        Passenger Type
-                                    </label>
-
-                                    <select class="rail-select passenger-type-display" disabled>
+                                <div class="rj-field">
+                                    <label class="form-label">[[#{booking.passengerType}]]</label>
+                                    <select class="form-select passenger-type-display" disabled>
                                         <option value="DEFAULT"
                                                 th:selected="${passenger.passengerType == null or passenger.passengerType == 'DEFAULT'}"
-                                                th:text="${passenger.dateOfBirth == null ? 'Enter date of birth' : 'Default - 0%'}">Enter date of birth</option>
-
+                                                th:text="${passenger.dateOfBirth == null ? #messages.msg('booking.typeFromDob') : #messages.msg('booking.default0')}">Theo ngày sinh</option>
                                         <option th:each="policy : ${discountPolicies}"
                                                 th:value="${policy.policyCode}"
                                                 th:selected="${passenger.passengerType != null and passenger.passengerType == policy.policyCode}"
@@ -141,63 +111,40 @@
                                             Child - 25%
                                         </option>
                                     </select>
-
                                     <input type="hidden"
                                            class="passenger-type-hidden"
                                            th:name="|passengers[${stat.index}].passengerType|"
                                            th:value="${passenger.passengerType != null ? passenger.passengerType : 'DEFAULT'}">
-
-                                    <div class="rail-field-error age-validation-msg">
-                                        Date of birth cannot be in the future.
-                                    </div>
+                                    <div class="form-text">[[#{booking.passengerTypeHint}]]</div>
                                 </div>
 
-                                <div class="rail-form-field identity-wrapper">
-                                    <label class="rail-form-label">
-                                        Identity Document Number
-                                    </label>
-
-                                    <div class="rail-input-wrap">
-                                        <i class="bi bi-card-text rail-input-icon"></i>
-
-                                        <input class="rail-input has-icon identity-input"
-                                               type="text"
-                                               th:name="|passengers[${stat.index}].identityNumber|"
-                                               th:value="${passenger.identityNumber}"
-                                               placeholder="Passport or National ID">
-                                    </div>
-
-                                    <small class="rail-field-hint">
-                                        Required for adult and senior passengers.
-                                    </small>
-                                </div>
-
-                                <div class="rail-form-field relationship-wrapper" style="display:none;">
-                                    <label class="rail-form-label">
-                                        Relationship to Booker
-                                    </label>
-
-                                    <input class="rail-input relationship-input"
+                                <div class="rj-field identity-wrapper">
+                                    <label class="form-label" th:for="|identity${stat.index}|">[[#{booking.identityDocumentNumber}]]</label>
+                                    <input class="form-control identity-input"
                                            type="text"
+                                           th:id="|identity${stat.index}|"
+                                           th:name="|passengers[${stat.index}].identityNumber|"
+                                           th:value="${passenger.identityNumber}"
+                                           th:placeholder="#{common.passportOrNationalId}">
+                                    <div class="form-text">[[#{booking.requiredForAdultAndSeniorPassengers}]]</div>
+                                </div>
+
+                                <div class="rj-field relationship-wrapper" style="display:none;">
+                                    <label class="form-label" th:for="|relationship${stat.index}|">[[#{booking.relationshipToBooker}]]</label>
+                                    <input class="form-control relationship-input"
+                                           type="text"
+                                           th:id="|relationship${stat.index}|"
                                            th:name="|passengers[${stat.index}].relationshipToBooker|"
                                            th:value="${passenger.relationshipToBooker}"
-                                           placeholder="Example: Child, sibling, nephew">
-
-                                    <small class="rail-field-hint">
-                                        Required for passengers under 16 years old.
-                                    </small>
+                                           th:placeholder="#{booking.exampleChildSiblingNephew}">
+                                    <div class="form-text">[[#{booking.requiredForPassengersUnder16Years}]]</div>
                                 </div>
                             </div>
-                        </article>
+                        </fieldset>
                     </div>
 
-                    <button type="button" class="rail-dashed-btn">
-                        <i class="bi bi-plus-circle"></i>
-                        Passenger quantity is based on selected seats
-                    </button>
-
-                    <div class="rail-form-actions">
-                        <a class="rail-back-link"
+                    <div class="rj-form-actions">
+                        <a class="btn rj-btn-quiet"
                            th:href="@{/booking/{tripId}/seats(
         tripId=${bookingSession.trainTripId},
         departureStationId=${bookingSession.departureStationId},
@@ -205,67 +152,64 @@
         passengerCount=${bookingSession.passengerCount}
    )}">
                             <i class="bi bi-arrow-left"></i>
-                            Back to Seat Selection
+                            [[#{booking.backToSeatSelection}]]
                         </a>
-
-                        <button class="rail-primary-btn" type="submit">
-                            Continue to Confirmation
+                        <button class="btn btn-primary btn-lg" type="submit">
+                            [[#{booking.continueToConfirmation}]]
                             <i class="bi bi-arrow-right"></i>
                         </button>
                     </div>
                 </form>
-            </main>
+            </div>
 
-            <aside class="rail-glass-card rail-summary-card">
-                <h2 class="rail-summary-title">
-                    <i class="bi bi-receipt"></i>
-                    Journey Summary
-                </h2>
+            <aside class="rj-summary" th:aria-label="#{booking.journeySummary}">
+                <div class="rj-card">
+                    <h2 class="rj-summary-title">[[#{booking.journeySummary}]]</h2>
 
-                <div class="rail-summary-route">
-                    <div class="rail-route-stop">
-                        <p class="rail-summary-label">Current Step</p>
-                        <p class="rail-summary-value">Passenger Information</p>
-                        <p class="rail-summary-sub">Fill in all passenger details before confirmation.</p>
+                    <div class="rj-route is-compact">
+                        <div class="rj-route-stop">
+                            <span class="rj-route-time"
+                                  th:text="${segment.departureTime != null ? #temporals.format(segment.departureTime, 'HH:mm') : '--:--'}">08:30</span>
+                            <span class="rj-route-station">
+                                <strong th:text="${segment.departureStop.station.stationCode}">DEP</strong>
+                                <span th:text="${segment.departureStop.station.stationName}">Departure</span>
+                            </span>
+                        </div>
+                        <div class="rj-route-track" aria-hidden="true">
+                            <span class="rj-route-dot is-start"></span>
+                            <span class="rj-route-dot is-end"></span>
+                        </div>
+                        <div class="rj-route-stop is-end">
+                            <span class="rj-route-time"
+                                  th:text="${segment.arrivalTime != null ? #temporals.format(segment.arrivalTime, 'HH:mm') : '--:--'}">11:45</span>
+                            <span class="rj-day-offset" th:if="${segment.dayOffset > 0}" th:text="#{booking.plusDays(${segment.dayOffset})}">+1 ngày</span>
+                            <span class="rj-route-station">
+                                <strong th:text="${segment.arrivalStop.station.stationCode}">ARR</strong>
+                                <span th:text="${segment.arrivalStop.station.stationName}">Arrival</span>
+                            </span>
+                        </div>
                     </div>
-
-                    <div class="rail-route-stop end">
-                        <p class="rail-summary-label">Next Step</p>
-                        <p class="rail-summary-value">Booking Confirmation</p>
-                        <p class="rail-summary-sub">Review selected seats and final ticket amount.</p>
-                    </div>
-                </div>
-
-                <div class="rail-summary-pill">
-                    <i class="bi bi-speedometer2"></i>
-                    <span>Passenger verification and fare rules are enabled</span>
-                    <span>ACTIVE</span>
-                </div>
-
-                <div class="rail-summary-lines">
-                    <div class="rail-summary-line">
-                        <span>Passengers</span>
-                        <strong th:text="${bookingSession != null ? bookingSession.passengerCount : 0}">
-                            1
-                        </strong>
-                    </div>
-
-                    <div class="rail-summary-line">
-                        <span>Selected seats</span>
-                        <strong th:text="${bookingSession != null and bookingSession.seatIds != null ? #lists.size(bookingSession.seatIds) : 0}">
-                            1
-                        </strong>
-                    </div>
-
-                    <div class="rail-summary-line">
-                        <span>Fare policy</span>
-                        <strong>Age-based</strong>
-                    </div>
-                </div>
-
-                <div class="rail-summary-total">
-                    <small>Ticket rules</small>
-                    <strong>Ready</strong>
+                    <p class="rj-summary-date">
+                        <i class="bi bi-calendar3"></i>
+                        <span class="rj-num" th:text="${segment.departureTime != null ? #temporals.format(segment.departureTime, 'EEEE, dd/MM/yyyy') : '-'}">Thứ Bảy, 24/10/2026</span>
+                    </p>
+                    <dl class="rj-rows">
+                        <div>
+                            <dt>[[#{common.train}]]</dt>
+                            <dd th:text="${trip.train != null ? trip.train.trainCode + ' · ' + trip.train.trainName : '-'}">SE1</dd>
+                        </div>
+                        <div>
+                            <dt>[[#{common.passengers}]]</dt>
+                            <dd class="rj-num" th:text="${bookingSession != null ? bookingSession.passengerCount : 0}">1</dd>
+                        </div>
+                    </dl>
+                    <p class="rj-summary-label">[[#{booking.seatsInBooking}]]</p>
+                    <ul class="rj-seat-chips">
+                        <li th:each="seat : ${selectedSeats}">
+                            <span class="rj-seat-tag" th:text="${seat.seatNumber}">01A</span>
+                            <small th:text="${seat.coach != null ? #messages.msg('booking.coachOnly', seat.coach.coachNumber) + ' · ' + seat.seatType : seat.seatType}">Toa C01 · Ghế mềm</small>
+                        </li>
+                    </ul>
                 </div>
             </aside>
         </div>

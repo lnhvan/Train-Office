@@ -7,6 +7,7 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(
@@ -25,10 +26,10 @@ import java.time.LocalDateTime;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Payment {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "payment_id")
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "payment_id", updatable = false, nullable = false)
     @EqualsAndHashCode.Include
-    private Long paymentId;
+    private UUID paymentId;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "booking_id", nullable = false)
@@ -45,9 +46,6 @@ public class Payment {
     @Column(name = "transaction_code", length = 100)
     private String transactionCode;
 
-    @Column(name = "otp_code", length = 20)
-    private String otpCode;
-
     @Enumerated(EnumType.STRING)
     @Column(name = "payment_status", nullable = false, length = 20)
     private PaymentStatus paymentStatus;
@@ -61,8 +59,12 @@ public class Payment {
 
     @PrePersist
     void onCreate() {
+        if (paymentId == null) {
+            paymentId = UUID.randomUUID();
+        }
         if (paymentStatus == null) {
             paymentStatus = PaymentStatus.PENDING;
         }
+
     }
 }

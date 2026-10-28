@@ -1,5 +1,7 @@
 package com.hsf302.trainoffice.service.impl;
 
+
+import com.hsf302.trainoffice.config.I18n;
 import com.hsf302.trainoffice.entity.Route;
 import com.hsf302.trainoffice.repository.RouteRepository;
 import com.hsf302.trainoffice.service.RouteService;
@@ -52,7 +54,7 @@ public class RouteServiceImpl implements RouteService {
 
         if (route.getRouteId() == null) {
             if (routeRepository.existsByRouteCode(route.getRouteCode())) {
-                throw new IllegalStateException("Route code already exists!");
+                throw new IllegalStateException(I18n.t("err.routeCodeAlreadyExists"));
             }
 
         } else {
@@ -61,7 +63,7 @@ public class RouteServiceImpl implements RouteService {
             if (oldRoute.isPresent()) {
                 if (!oldRoute.get().getRouteCode().equals(route.getRouteCode())
                         && routeRepository.existsByRouteCode(route.getRouteCode())) {
-                    throw new IllegalStateException("Route code already exists!");
+                    throw new IllegalStateException(I18n.t("err.routeCodeAlreadyExists"));
                 }
             }
         }
@@ -72,7 +74,7 @@ public class RouteServiceImpl implements RouteService {
     @Override
     public void deleteRoute(Long id) {
         if (!routeRepository.existsById(id)) {
-            throw new RuntimeException("Route not found");
+            throw new RuntimeException(I18n.t("err.routeNotFound"));
         }
 
         routeRepository.deleteById(id);

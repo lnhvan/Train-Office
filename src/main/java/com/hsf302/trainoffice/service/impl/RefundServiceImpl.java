@@ -1,5 +1,7 @@
 package com.hsf302.trainoffice.service.impl;
 
+
+import com.hsf302.trainoffice.config.I18n;
 import com.hsf302.trainoffice.common.enums.BookingStatus;
 import com.hsf302.trainoffice.common.enums.RefundStatus;
 import com.hsf302.trainoffice.common.enums.TicketStatus;
@@ -43,45 +45,45 @@ public class RefundServiceImpl implements RefundService {
     @Transactional
     public Refund createRefundRequest(Long ticketId, User user, RefundRequestForm form) {
         if (user == null || user.getUserId() == null) {
-            throw new IllegalArgumentException("Please log in to request refund.");
+            throw new IllegalArgumentException(I18n.t("err.pleaseLogInToRequestRefund"));
         }
 
         if (form == null) {
-            throw new IllegalArgumentException("Refund information is required.");
+            throw new IllegalArgumentException(I18n.t("err.refundInformationIsRequired"));
         }
 
         Ticket ticket = ticketRepository.findWithDetailsByTicketId(ticketId)
-                .orElseThrow(() -> new IllegalArgumentException("Ticket does not exist."));
+                .orElseThrow(() -> new IllegalArgumentException(I18n.t("err.ticketDoesNotExist")));
 
         Booking booking = ticket.getBooking();
 
         if (booking == null || booking.getUser() == null) {
-            throw new IllegalStateException("Guest refund is not supported.");
+            throw new IllegalStateException(I18n.t("err.guestRefundIsNotSupported"));
         }
 
         if (!Objects.equals(booking.getUser().getUserId(), user.getUserId())) {
-            throw new IllegalStateException("Ticket does not belong to current user.");
+            throw new IllegalStateException(I18n.t("err.ticketDoesNotBelongToCurrentUser"));
         }
 
         if (booking.getBookingStatus() != BookingStatus.PAID) {
-            throw new IllegalStateException("Only paid bookings can be refunded.");
+            throw new IllegalStateException(I18n.t("err.onlyPaidBookingsCanBeRefunded"));
         }
 
         if (ticket.getTicketStatus() != TicketStatus.CONFIRMED) {
-            throw new IllegalStateException("Only confirmed tickets can be refunded.");
+            throw new IllegalStateException(I18n.t("err.onlyConfirmedTicketsCanBeRefunded"));
         }
 
         if (ticket.getTrainTrip() == null) {
-            throw new IllegalStateException("Ticket does not have train trip.");
+            throw new IllegalStateException(I18n.t("err.ticketDoesNotHaveTrainTrip"));
         }
 
         if (ticket.getTrainTrip().getStatus() != TripStatus.SCHEDULED) {
-            throw new IllegalStateException("Only scheduled trips can be refunded.");
+            throw new IllegalStateException(I18n.t("err.onlyScheduledTripsCanBeRefunded"));
         }
 
         if (ticket.getTrainTrip().getDepartureTime() != null
                 && !ticket.getTrainTrip().getDepartureTime().isAfter(LocalDateTime.now())) {
-            throw new IllegalStateException("Cannot refund after train departure time.");
+            throw new IllegalStateException(I18n.t("err.cannotRefundAfterTrainDepartureTime"));
         }
 
         boolean duplicated = refundRepository.existsByTicket_TicketIdAndRefundStatusIn(
@@ -90,7 +92,7 @@ public class RefundServiceImpl implements RefundService {
         );
 
         if (duplicated) {
-            throw new IllegalStateException("Refund request already exists for this ticket.");
+            throw new IllegalStateException(I18n.t("err.refundRequestAlreadyExistsForThisTicket"));
         }
 
         Refund refund = new Refund();
@@ -129,20 +131,20 @@ public class RefundServiceImpl implements RefundService {
     @Transactional
     public void approveRefund(Long refundId, User adminUser) {
         if (adminUser == null || adminUser.getUserId() == null) {
-            throw new IllegalArgumentException("Admin is required.");
+            throw new IllegalArgumentException(I18n.t("err.adminIsRequired"));
         }
 
         Refund refund = refundRepository.findById(refundId)
-                .orElseThrow(() -> new IllegalArgumentException("Refund request does not exist."));
+                .orElseThrow(() -> new IllegalArgumentException(I18n.t("err.refundRequestDoesNotExist")));
 
         if (refund.getRefundStatus() != RefundStatus.PENDING) {
-            throw new IllegalStateException("Refund request has already been processed.");
+            throw new IllegalStateException(I18n.t("err.refundRequestHasAlreadyBeenProcessed"));
         }
 
         Ticket ticket = refund.getTicket();
 
         if (ticket.getTicketStatus() != TicketStatus.CONFIRMED) {
-            throw new IllegalStateException("Only confirmed tickets can be refunded.");
+            throw new IllegalStateException(I18n.t("err.onlyConfirmedTicketsCanBeRefunded"));
         }
 
         refund.setRefundStatus(RefundStatus.APPROVED);
@@ -161,14 +163,14 @@ public class RefundServiceImpl implements RefundService {
     @Transactional
     public void rejectRefund(Long refundId, User adminUser) {
         if (adminUser == null || adminUser.getUserId() == null) {
-            throw new IllegalArgumentException("Admin is required.");
+            throw new IllegalArgumentException(I18n.t("err.adminIsRequired"));
         }
 
         Refund refund = refundRepository.findById(refundId)
-                .orElseThrow(() -> new IllegalArgumentException("Refund request does not exist."));
+                .orElseThrow(() -> new IllegalArgumentException(I18n.t("err.refundRequestDoesNotExist")));
 
         if (refund.getRefundStatus() != RefundStatus.PENDING) {
-            throw new IllegalStateException("Refund request has already been processed.");
+            throw new IllegalStateException(I18n.t("err.refundRequestHasAlreadyBeenProcessed"));
         }
 
         refund.setRefundStatus(RefundStatus.REJECTED);

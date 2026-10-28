@@ -1,4 +1,8 @@
 HELP.md
+
+# Environment variables (chứa secret key, không commit)
+.env
+
 target/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/

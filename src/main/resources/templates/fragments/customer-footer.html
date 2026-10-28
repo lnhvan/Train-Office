@@ -1,19 +1,21 @@
-<footer class="customer-footer" xmlns:th="http://www.thymeleaf.org" th:fragment="customerFooter">
-    <div class="container">
-        <div class="customer-footer-inner">
-            <div>
-                <h5>RailJet Velocity</h5>
-                <p>Book faster and manage your journeys with clarity.</p>
-            </div>
-
-            <div class="footer-links">
-                <a th:href="@{/booking/search}">Search Trip</a>
-                <a th:href="@{/booking/history}">My Bookings</a>
-                <a th:href="@{/profile}" th:if="${session.currentUser != null}">Profile</a>
-                <a th:href="@{/logout}" th:if="${session.currentUser != null}">Logout</a>
-            </div>
-
-            <span class="footer-copy">© 2026 RailJet.</span>
+<footer class="rj-footer" xmlns:th="http://www.thymeleaf.org" th:fragment="customerFooter">
+    <div class="rj-container rj-footer-inner">
+        <div class="rj-footer-brand">
+            <a class="rj-brand" th:href="@{/booking/search}">
+                <span class="rj-brand-mark"><i class="bi bi-train-front-fill"></i></span>
+                <span>RailJet</span>
+            </a>
+            <p>[[#{common.bookFasterAndManageYourJourneys}]]</p>
         </div>
+
+        <nav class="rj-footer-links" th:aria-label="#{common.footerNavigation}">
+            <a th:href="@{/booking/search}">[[#{common.searchTrip}]]</a>
+            <a th:href="@{/booking/all-trips}">[[#{common.allTrips}]]</a>
+            <a th:href="@{/booking/history}">[[#{common.myBookings}]]</a>
+            <a th:href="@{/profile}" th:if="${currentUser != null}">[[#{common.profile}]]</a>
+            <a th:href="@{/logout}" th:if="${currentUser != null}">[[#{common.logout}]]</a>
+        </nav>
+
+        <span class="rj-footer-copy">© 2026 RailJet</span>
     </div>
 </footer>

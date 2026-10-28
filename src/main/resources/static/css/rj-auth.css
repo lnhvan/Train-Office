@@ -1,0 +1,261 @@
+/* =====================================================================
+   RailJet — auth pages (login / register / forgot / reset)
+   Bố cục chia đôi: panel thương hiệu (đường ray) + form.
+   Dùng chung token từ rj-base.css (theme dark).
+   ===================================================================== */
+
+body.rj-auth { min-height: 100vh; background: var(--rj-bg); }
+
+.rj-auth-layout {
+    display: grid;
+    grid-template-columns: minmax(360px, 5fr) 7fr;
+    min-height: 100vh;
+}
+
+/* ---------- brand panel ---------- */
+.rj-auth-aside {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 36px 44px 0;
+    background:
+        radial-gradient(120% 70% at 0% 0%, rgba(56, 189, 248, .16), transparent 60%),
+        linear-gradient(180deg, var(--rj-navy-900) 0%, var(--rj-navy-950) 100%);
+    border-right: 1px solid var(--rj-line);
+}
+
+.rj-auth-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: .55rem;
+    font-size: 1.3rem;
+    font-weight: 800;
+    letter-spacing: -.01em;
+    color: #fff;
+    text-decoration: none;
+}
+.rj-auth-brand i { color: var(--rj-accent); font-size: 1.5rem; }
+.rj-auth-brand:hover { color: #fff; }
+
+.rj-auth-aside-copy { max-width: 420px; margin: auto 0 48px; }
+.rj-auth-aside-title {
+    font-size: clamp(2rem, 3.2vw, 2.9rem);
+    line-height: 1.12;
+    font-weight: 800;
+    letter-spacing: -.02em;
+    color: #fff;
+    margin-bottom: 16px;
+}
+.rj-auth-aside-copy p:last-child { color: var(--rj-text-2); font-size: 1rem; line-height: 1.6; margin: 0; }
+
+/* Đường ray: 2 thanh ray + tà vẹt, một đoàn tàu sáng chạy qua */
+.rj-auth-track {
+    position: relative;
+    height: 74px;
+    margin: 0 -44px;
+    background:
+        linear-gradient(var(--rj-line-strong), var(--rj-line-strong)) 0 24px / 100% 2px no-repeat,
+        linear-gradient(var(--rj-line-strong), var(--rj-line-strong)) 0 48px / 100% 2px no-repeat,
+        repeating-linear-gradient(90deg, rgba(125, 211, 252, .18) 0 6px, transparent 6px 30px) 0 18px / 100% 38px no-repeat;
+}
+.rj-auth-track span:first-child {
+    position: absolute;
+    top: 22px;
+    left: 0;
+    width: 34%;
+    height: 6px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, transparent, var(--rj-accent));
+    box-shadow: 0 0 18px rgba(56, 189, 248, .55);
+    animation: rj-auth-train 7s cubic-bezier(.55, .05, .35, 1) infinite;
+}
+.rj-auth-track span:last-child {
+    position: absolute;
+    top: 46px;
+    left: 0;
+    width: 18%;
+    height: 6px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, transparent, rgba(125, 211, 252, .6));
+    animation: rj-auth-train 7s cubic-bezier(.55, .05, .35, 1) 1.2s infinite;
+}
+@keyframes rj-auth-train {
+    0% { transform: translateX(-110%); }
+    60%, 100% { transform: translateX(330%); }
+}
+
+/* ---------- form panel ---------- */
+.rj-auth-panel {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 72px 24px 48px;
+}
+.rj-auth-panel > .rj-back-link,
+.rj-auth-card { width: 100%; max-width: 440px; }
+.rj-auth-panel > .rj-back-link { margin-bottom: 18px; }
+
+.rj-auth-card {
+    padding: 36px;
+    border-radius: var(--rj-radius-lg);
+    background: var(--rj-surface);
+    border: 1px solid var(--rj-line);
+    box-shadow: var(--rj-shadow);
+}
+.rj-auth-card h1 { font-size: 1.75rem; font-weight: 800; letter-spacing: -.015em; margin-bottom: 6px; }
+.rj-auth-sub { color: var(--rj-text-2); margin-bottom: 26px; }
+
+.rj-auth-icon {
+    display: inline-grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    margin-bottom: 18px;
+    font-size: 1.35rem;
+    color: var(--rj-accent);
+    background: var(--rj-accent-soft);
+    border: 1px solid rgba(56, 189, 248, .25);
+}
+
+.rj-auth-card .form-control {
+    min-height: 48px;
+    background-color: var(--rj-bg);
+    border-color: var(--rj-line-strong);
+}
+.rj-auth-card .form-control:focus {
+    border-color: var(--rj-accent);
+    box-shadow: 0 0 0 .2rem var(--rj-focus);
+}
+.rj-auth-card .alert { font-size: .92rem; }
+.rj-auth-card .btn-lg { min-height: 50px; margin-top: 6px; font-weight: 700; }
+
+.rj-label-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.rj-link-sm { font-size: .84rem; font-weight: 600; text-decoration: none; margin-bottom: .5rem; }
+.rj-link-sm:hover { text-decoration: underline; }
+
+/* ô mật khẩu: nút hiện/ẩn bên phải */
+.auth-input-wrap > .form-control { padding-right: 3rem; }
+.rj-reveal {
+    position: absolute;
+    top: 50%;
+    right: 6px;
+    transform: translateY(-50%);
+    display: inline-grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    border: 0;
+    border-radius: var(--rj-radius-sm);
+    background: transparent;
+    color: var(--rj-text-3);
+    z-index: 2;
+}
+.rj-reveal:hover { color: var(--rj-text); background: var(--rj-surface-2); }
+.rj-reveal:focus-visible { outline: 2px solid var(--rj-accent); outline-offset: 1px; }
+
+.rj-check {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin: 4px 0 18px;
+    font-size: .9rem;
+    color: var(--rj-text-2);
+    cursor: pointer;
+}
+.rj-check .form-check-input { flex: none; margin-top: .2rem; }
+
+.rj-auth-foot {
+    margin: 22px 0 0;
+    padding-top: 20px;
+    border-top: 1px solid var(--rj-line);
+    text-align: center;
+    color: var(--rj-text-2);
+    font-size: .92rem;
+}
+.rj-auth-foot a { font-weight: 700; text-decoration: none; }
+.rj-auth-foot a:hover { text-decoration: underline; }
+
+/* form đăng ký rộng hơn để 2 ô mật khẩu đứng cạnh nhau */
+.rj-auth-card:has(.rj-form-grid) { max-width: 520px; }
+.rj-auth-panel:has(.rj-form-grid) > .rj-back-link { max-width: 520px; }
+
+/* ---------- responsive ---------- */
+@media (max-width: 960px) {
+    .rj-auth-layout { grid-template-columns: 1fr; }
+    .rj-auth-aside { padding: 18px 20px 0; border-right: 0; border-bottom: 1px solid var(--rj-line); }
+    .rj-auth-aside-copy { display: none; }
+    .rj-auth-track { height: 30px; margin: 10px -20px 0; background-position: 0 6px, 0 20px, 0 2px; background-size: 100% 2px, 100% 2px, 100% 24px; }
+    .rj-auth-track span:first-child { top: 4px; height: 4px; }
+    .rj-auth-track span:last-child { top: 18px; height: 4px; }
+    .rj-auth-panel { justify-content: flex-start; padding: 28px 16px 40px; }
+    .lang-switcher--floating { top: 14px; right: 16px; }
+}
+@media (max-width: 520px) {
+    .rj-auth-card { padding: 26px 20px; }
+    .rj-auth-card .rj-form-grid { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .rj-auth-track span { animation: none; transform: translateX(120%); }
+}
+
+/* ô mã 6 số (đặt lại mật khẩu) */
+.rj-otp-input {
+    text-align: center;
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: .5em;
+    padding-left: .5em;
+    font-variant-numeric: tabular-nums;
+}
+.rj-otp-input::placeholder { letter-spacing: .5em; color: var(--rj-text-3); }
+.rj-resend { display: flex; flex-wrap: wrap; justify-content: center; align-items: baseline; gap: 6px; }
+.rj-resend .btn-link { font-weight: 700; text-decoration: none; font-size: inherit; }
+.rj-resend .btn-link:hover { text-decoration: underline; }
+
+/* ---------- OAuth2 Social Login (Google) ---------- */
+.rj-auth-divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 20px 0 16px;
+    color: var(--rj-text-3);
+    font-size: .8rem;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+.rj-auth-divider::before,
+.rj-auth-divider::after {
+    content: "";
+    flex: 1;
+    border-bottom: 1px solid var(--rj-line);
+}
+.rj-auth-divider span {
+    padding: 0 12px;
+}
+
+.rj-google-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    background: rgba(255, 255, 255, .04);
+    border: 1px solid var(--rj-line-strong);
+    color: #fff;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all .2s ease;
+}
+.rj-google-btn:hover {
+    background: rgba(255, 255, 255, .1);
+    border-color: rgba(255, 255, 255, .3);
+    color: #fff;
+    transform: translateY(-1px);
+}
+.rj-google-btn svg {
+    flex-shrink: 0;
+}

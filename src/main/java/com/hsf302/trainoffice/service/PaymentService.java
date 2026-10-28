@@ -7,6 +7,7 @@ import com.hsf302.trainoffice.entity.Payment;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 public interface PaymentService {
 
@@ -20,15 +21,15 @@ public interface PaymentService {
 
     List<Payment> getPaymentsByBookingId(Long bookingId);
 
-    Optional<Payment> getPaymentById(Long id);
+    Optional<Payment> getPaymentById(UUID id);
 
     Payment savePayment(Payment payment);
 
-    Payment markPaymentSuccess(Long id);
+    Payment markPaymentSuccess(UUID id);
 
-    Payment markPaymentFailed(Long id);
+    Payment markPaymentFailed(UUID id);
 
-    void deletePayment(Long id);
+    void deletePayment(UUID id);
 
     // =========================================================
     // CUSTOMER VNPAY CHECKOUT

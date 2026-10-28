@@ -12,14 +12,14 @@ import java.time.LocalDate;
 @Data
 public class PassengerBookingRequest {
 
-    @NotBlank(message = "Passenger full name is required")
+    @NotBlank(message = "{validation.passengerName.required}")
     @Size(max = 100)
     private String fullName;
 
     @Size(max = 30)
     private String identityNumber;
 
-    @NotNull(message = "Date of birth is required")
+    @NotNull(message = "{validation.dob.required}")
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate dateOfBirth;
 

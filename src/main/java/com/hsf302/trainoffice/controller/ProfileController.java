@@ -1,9 +1,14 @@
 package com.hsf302.trainoffice.controller;
 
+
+import com.hsf302.trainoffice.config.I18n;
 import com.hsf302.trainoffice.dto.ChangePasswordRequest;
 import com.hsf302.trainoffice.dto.ProfileForm;
 import com.hsf302.trainoffice.entity.User;
+import com.hsf302.trainoffice.security.AuthCookie;
+import com.hsf302.trainoffice.security.CurrentUser;
 import com.hsf302.trainoffice.service.UserService;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.springframework.stereotype.Controller;
@@ -18,9 +23,11 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class ProfileController {
 
     private final UserService userService;
+    private final AuthCookie authCookie;
 
-    public ProfileController(UserService userService) {
+    public ProfileController(UserService userService, AuthCookie authCookie) {
         this.userService = userService;
+        this.authCookie = authCookie;
     }
 
     @GetMapping("/profile")
@@ -54,14 +61,13 @@ public class ProfileController {
 
         if (bindingResult.hasErrors()) {
             model.addAttribute("currentUser", user);
-            model.addAttribute("errorMessage", "Please check your profile information.");
+            model.addAttribute("errorMessage", I18n.t("msg.profile.checkInfo"));
             return "customer/profile";
         }
 
-        user = userService.updateProfile(user.getUserId(), profileForm);
+        userService.updateProfile(user.getUserId(), profileForm);
 
-        session.setAttribute("currentUser", user);
-        redirectAttributes.addFlashAttribute("successMessage", "Profile updated successfully.");
+        redirectAttributes.addFlashAttribute("successMessage", I18n.t("msg.profile.updated"));
 
         return "redirect:/profile";
     }
@@ -87,6 +93,7 @@ public class ProfileController {
     public String changePassword(@Valid @ModelAttribute("changePasswordForm") ChangePasswordRequest request,
                                  BindingResult bindingResult,
                                  HttpSession session,
+                                 HttpServletResponse response,
                                  Model model,
                                  RedirectAttributes redirectAttributes) {
         User user = currentUser(session);
@@ -98,17 +105,17 @@ public class ProfileController {
         model.addAttribute("currentUser", user);
 
         if (bindingResult.hasErrors()) {
-            model.addAttribute("errorMessage", "Please fill in all password fields. Password must be at least 6 characters.");
+            model.addAttribute("errorMessage", I18n.t("msg.password.fillAll"));
             return "customer/change-password";
         }
 
         if (!request.getNewPassword().equals(request.getConfirmNewPassword())) {
-            model.addAttribute("errorMessage", "Confirm password does not match.");
+            model.addAttribute("errorMessage", I18n.t("msg.password.confirmMismatch"));
             return "customer/change-password";
         }
 
         if (request.getCurrentPassword().equals(request.getNewPassword())) {
-            model.addAttribute("errorMessage", "New password must be different from current password.");
+            model.addAttribute("errorMessage", I18n.t("msg.password.mustDiffer"));
             return "customer/change-password";
         }
 
@@ -119,26 +126,21 @@ public class ProfileController {
         );
 
         if (!success) {
-            model.addAttribute("errorMessage", "Current password is incorrect.");
+            model.addAttribute("errorMessage", I18n.t("msg.password.currentIncorrect"));
             return "customer/change-password";
         }
 
-        User updatedUser = userService.findById(user.getUserId());
-        session.setAttribute("currentUser", updatedUser);
+        // Đổi mật khẩu làm mọi JWT cũ hết hiệu lực (đăng xuất các thiết bị khác);
+        // cấp JWT mới để thiết bị đang dùng vẫn đăng nhập.
+        authCookie.signIn(response, userService.findById(user.getUserId()));
 
-        redirectAttributes.addFlashAttribute("successMessage", "Password changed successfully.");
+        redirectAttributes.addFlashAttribute("successMessage", I18n.t("msg.password.changed"));
 
         return "redirect:/change-password";
     }
 
     private User currentUser(HttpSession session) {
-        Object sessionUser = session.getAttribute("currentUser");
-
-        if (!(sessionUser instanceof User user) || user.getUserId() == null) {
-            return null;
-        }
-
-        return userService.getUserById(user.getUserId()).orElse(null);
+        return CurrentUser.get();
     }
 
     private ProfileForm toForm(User user) {

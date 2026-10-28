@@ -1,5 +1,7 @@
 package com.hsf302.trainoffice.controller;
 
+
+import com.hsf302.trainoffice.config.I18n;
 import com.hsf302.trainoffice.entity.SeatType;
 import com.hsf302.trainoffice.service.PaymentService;
 import com.hsf302.trainoffice.service.SeatTypeService;
@@ -60,10 +62,10 @@ public class SeatTypeController {
 
         try {
             seatTypeService.saveSeatType(seatType);
-            redirectAttributes.addFlashAttribute("successMessage", "Đã lưu Loại Ghế thành công!");
+            redirectAttributes.addFlashAttribute("successMessage", I18n.t("msg.seatType.saved"));
             return "redirect:/seat-types";
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi khi lưu: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", I18n.t("msg.common.saveError", e.getMessage()));
             return "redirect:/seat-types";
         }
     }
@@ -72,11 +74,11 @@ public class SeatTypeController {
     public String deleteSeatType(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
         try {
             seatTypeService.deleteSeatType(id);
-            redirectAttributes.addFlashAttribute("successMessage", "Đã xóa Loại Ghế thành công.");
+            redirectAttributes.addFlashAttribute("successMessage", I18n.t("msg.seatType.deleted"));
         } catch (DataIntegrityViolationException e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Không thể xóa Loại Ghế này. Đã có Toa (Carriage) đang sử dụng nó.");
+            redirectAttributes.addFlashAttribute("errorMessage", I18n.t("msg.seatType.inUse"));
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi khi xóa: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", I18n.t("msg.common.deleteError", e.getMessage()));
         }
         return "redirect:/seat-types";
     }

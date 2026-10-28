@@ -1,15 +1,15 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layouts/admin-layout :: layout('Train Form', ~{::section}, 'trains')}">
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/admin-layout :: layout(#{train.trainForm}, ~{::section}, 'trains')}">
 <section>
     <div class="admin-page-hero">
         <div>
-            <span class="admin-page-kicker"><i class="fas fa-train mr-1"></i> Train Profile</span>
-            <h2 th:text="${train.trainId == null ? 'Add Train' : 'Update Train'}">Train Form</h2>
-            <p>Maintain train identity and operating status for trip scheduling.</p>
+            <span class="admin-page-kicker"><i class="bi bi-train-front"></i> [[#{train.trainProfile}]]</span>
+            <h1 th:text="${train.trainId == null ? #messages.msg('train.addTrain') : #messages.msg('train.updateTrain')}">Train Form</h1>
+            <p>[[#{train.maintainTrainIdentityAndOperatingStatus}]]</p>
         </div>
-        <a th:href="@{/admin/trains}" class="btn btn-outline-primary">
-            <i class="fas fa-arrow-left mr-1"></i> Back to trains
+        <a th:href="@{/admin/trains}" class="btn rj-btn-quiet">
+            <i class="bi bi-arrow-left"></i> [[#{train.backToTrains}]]
         </a>
     </div>
 
@@ -17,67 +17,67 @@
 
     <div class="card admin-form-card">
         <div class="card-header">
-            <span class="admin-card-title">Train Information</span>
-            <small>Train code must remain unique across the fleet.</small>
+            <span class="admin-card-title">[[#{train.trainInformation}]]</span>
+            <small>[[#{train.trainCodeMustRemainUniqueAcross}]]</small>
         </div>
         <form th:action="@{/admin/trains/save}" th:object="${train}" method="POST">
             <input type="hidden" th:field="*{trainId}">
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-4 mb-3">
-                        <label class="form-label" for="trainCode">Train Code</label>
+                        <label class="form-label" for="trainCode">[[#{train.trainCode}]]</label>
                         <div class="input-group">
-                            <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-hashtag"></i></span></div>
+                            <span class="input-group-text"><i class="bi bi-hash"></i></span>
                             <input class="form-control" type="text" th:field="*{trainCode}" id="trainCode" required>
                         </div>
                         <div class="text-danger small" th:if="${#fields.hasErrors('trainCode')}" th:errors="*{trainCode}"></div>
                     </div>
                     <div class="col-md-4 mb-3">
-                        <label class="form-label" for="trainName">Train Name</label>
+                        <label class="form-label" for="trainName">[[#{train.trainName}]]</label>
                         <div class="input-group">
-                            <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-train"></i></span></div>
+                            <span class="input-group-text"><i class="bi bi-train-front"></i></span>
                             <input class="form-control" type="text" th:field="*{trainName}" id="trainName" required>
                         </div>
                         <div class="text-danger small" th:if="${#fields.hasErrors('trainName')}" th:errors="*{trainName}"></div>
                     </div>
                     <div class="col-md-4 mb-3">
-                        <label class="form-label" for="selectedTrainType">Train Type</label>
+                        <label class="form-label" for="selectedTrainType">[[#{train.trainType}]]</label>
                         <div class="input-group">
-                            <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-tags"></i></span></div>
-                            <select class="form-control" id="selectedTrainType" name="selectedTrainType" required
+                            <span class="input-group-text"><i class="bi bi-tags"></i></span>
+                            <select class="form-select" id="selectedTrainType" name="selectedTrainType" required
                                     th:attr="data-other-value=${otherTrainTypeValue}">
-                                <option value="">Select train type</option>
+                                <option value="">[[#{train.selectTrainType}]]</option>
                                 <option th:each="type : ${availableTrainTypes}"
                                         th:value="${type}"
                                         th:text="${type}"
                                         th:selected="${selectedTrainType == type}">Express</option>
                                 <option th:value="${otherTrainTypeValue}"
-                                        th:selected="${selectedTrainType == otherTrainTypeValue}">Other...</option>
+                                        th:selected="${selectedTrainType == otherTrainTypeValue}">[[#{common.other}]]</option>
                             </select>
                         </div>
                         <div class="text-danger small" th:if="${#fields.hasErrors('trainType')}" th:errors="*{trainType}"></div>
                     </div>
                     <div class="col-md-4 mb-3" id="newTrainTypeGroup"
                          th:style="${selectedTrainType == otherTrainTypeValue ? '' : 'display:none;'}">
-                        <label class="form-label" for="newTrainType">New Train Type</label>
+                        <label class="form-label" for="newTrainType">[[#{train.newTrainType}]]</label>
                         <div class="input-group">
-                            <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-plus"></i></span></div>
+                            <span class="input-group-text"><i class="bi bi-plus-lg"></i></span>
                             <input class="form-control" type="text" id="newTrainType" name="newTrainType"
                                    th:value="${newTrainType}">
                         </div>
                     </div>
                     <div class="col-md-4 mb-3">
-                        <label class="form-label" for="status">Status</label>
-                        <select class="form-control" th:field="*{status}" id="status">
-                            <option th:each="s : ${allTrainStatus}" th:value="${s}" th:text="${s.description}"></option>
+                        <label class="form-label" for="status">[[#{common.status}]]</label>
+                        <select class="form-select" th:field="*{status}" id="status">
+                            <option th:each="s : ${allTrainStatus}" th:value="${s}" th:text="${#messages.msgOrNull('enum.' + s) ?: s.description}"></option>
                         </select>
                     </div>
                 </div>
             </div>
             <div class="card-footer d-flex justify-content-end gap-2">
-                <a th:href="@{/admin/trains}" class="btn btn-outline-secondary">Cancel</a>
+                <a th:href="@{/admin/trains}" class="btn btn-outline-secondary">[[#{common.cancel}]]</a>
                 <button class="btn btn-primary" type="submit">
-                    <i class="fas fa-save mr-1"></i> Save Train
+                    <i class="bi bi-check2-circle"></i> [[#{train.saveTrain}]]
                 </button>
             </div>
         </form>

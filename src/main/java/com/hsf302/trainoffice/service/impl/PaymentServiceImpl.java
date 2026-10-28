@@ -1,5 +1,7 @@
 package com.hsf302.trainoffice.service.impl;
 
+
+import com.hsf302.trainoffice.config.I18n;
 import com.hsf302.trainoffice.common.enums.BookingStatus;
 import com.hsf302.trainoffice.common.enums.PaymentMethod;
 import com.hsf302.trainoffice.common.enums.PaymentStatus;
@@ -88,7 +90,7 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<Payment> getPaymentById(Long id) {
+    public Optional<Payment> getPaymentById(UUID id) {
         return paymentRepository.findById(id);
     }
 
@@ -112,9 +114,9 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     @Transactional
-    public Payment markPaymentSuccess(Long id) {
+    public Payment markPaymentSuccess(UUID id) {
         Payment payment = paymentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Payment not found with ID: " + id));
+                .orElseThrow(() -> new RuntimeException(I18n.t("err.paymentNotFoundWithId", id)));
 
         if (payment.getPaymentStatus() == PaymentStatus.SUCCESS) {
             return payment;
@@ -139,9 +141,9 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     @Transactional
-    public Payment markPaymentFailed(Long id) {
+    public Payment markPaymentFailed(UUID id) {
         Payment payment = paymentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Payment not found with ID: " + id));
+                .orElseThrow(() -> new RuntimeException(I18n.t("err.paymentNotFoundWithId", id)));
 
         payment.setPaymentStatus(PaymentStatus.FAILED);
 
@@ -150,9 +152,9 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     @Transactional
-    public void deletePayment(Long id) {
+    public void deletePayment(UUID id) {
         if (!paymentRepository.existsById(id)) {
-            throw new RuntimeException("Payment not found with ID: " + id);
+            throw new RuntimeException(I18n.t("err.paymentNotFoundWithId", id));
         }
 
         paymentRepository.deleteById(id);
@@ -166,42 +168,41 @@ public class PaymentServiceImpl implements PaymentService {
     @Transactional(readOnly = true)
     public Booking getBookingForPayment(Long bookingId) {
         return bookingRepository.findBasicDetailsByBookingId(bookingId)
-                .orElseThrow(() -> new IllegalArgumentException("Booking does not exist."));
+                .orElseThrow(() -> new IllegalArgumentException(I18n.t("err.bookingDoesNotExist2")));
     }
 
     @Override
     @Transactional
     public String createVnpayPaymentUrl(Long bookingId, String clientIp) {
         Booking booking = bookingRepository.findBasicDetailsByBookingId(bookingId)
-                .orElseThrow(() -> new IllegalArgumentException("Booking does not exist."));
+                .orElseThrow(() -> new IllegalArgumentException(I18n.t("err.bookingDoesNotExist2")));
 
         if (booking.getBookingStatus() == BookingStatus.PAID) {
-            throw new IllegalStateException("Booking has already been paid.");
+            throw new IllegalStateException(I18n.t("err.bookingHasAlreadyBeenPaid"));
         }
 
         if (booking.getBookingStatus() != BookingStatus.PENDING_PAYMENT) {
-            throw new IllegalStateException("Only pending payment booking can be paid.");
+            throw new IllegalStateException(I18n.t("err.onlyPendingPaymentBookingCanBePaid"));
         }
 
         if (booking.getUser() == null) {
-            throw new IllegalStateException("Guest booking payment is disabled. Please log in before booking.");
+            throw new IllegalStateException(I18n.t("err.guestBookingPaymentIsDisabledPleaseLog"));
         }
 
         if (booking.getTotalAmount() == null
                 || booking.getTotalAmount().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalStateException("Invalid booking amount.");
+            throw new IllegalStateException(I18n.t("err.invalidBookingAmount"));
         }
-
-        String txnRef = VnpayUtils.generateTxnRef();
 
         Payment payment = new Payment();
         payment.setBooking(booking);
         payment.setPaymentMethod(PaymentMethod.VNPAY);
         payment.setAmount(booking.getTotalAmount());
-        payment.setTransactionCode(txnRef);
         payment.setPaymentStatus(PaymentStatus.PENDING);
 
-        paymentRepository.save(payment);
+        payment = paymentRepository.save(payment);
+
+        String txnRef = payment.getPaymentId().toString();
 
         long vnpayAmount = booking.getTotalAmount()
                 .setScale(0, RoundingMode.HALF_UP)
@@ -237,11 +238,19 @@ public class PaymentServiceImpl implements PaymentService {
         String txnRef = vnpayParams.get("vnp_TxnRef");
 
         if (txnRef == null || txnRef.isBlank()) {
-            throw new IllegalArgumentException("Missing VNPay transaction reference.");
+            throw new IllegalArgumentException(I18n.t("err.missingVnpayTransactionReference"));
         }
 
-        Payment payment = paymentRepository.findByTransactionCode(txnRef)
-                .orElseThrow(() -> new IllegalArgumentException("Payment transaction does not exist."));
+        Payment payment = null;
+        try {
+            payment = paymentRepository.findById(UUID.fromString(txnRef)).orElse(null);
+        } catch (IllegalArgumentException ignored) {
+        }
+
+        if (payment == null) {
+            payment = paymentRepository.findByTransactionCode(txnRef)
+                    .orElseThrow(() -> new IllegalArgumentException(I18n.t("err.paymentTransactionDoesNotExist")));
+        }
 
         if (payment.getPaymentStatus() == PaymentStatus.SUCCESS) {
             return payment;
@@ -266,13 +275,18 @@ public class PaymentServiceImpl implements PaymentService {
         if ("00".equals(responseCode)) {
             validatePaidAmount(payment, vnpayParams);
 
+            String vnpayTransactionNo = vnpayParams.get("vnp_TransactionNo");
+            if (vnpayTransactionNo != null && !vnpayTransactionNo.isBlank()) {
+                payment.setTransactionCode(vnpayTransactionNo);
+            }
+
             payment.setPaymentStatus(PaymentStatus.SUCCESS);
             payment.setPaidAt(VnpayUtils.parsePayDate(vnpayParams.get("vnp_PayDate")));
 
             Booking booking = payment.getBooking();
 
             if (booking == null) {
-                throw new IllegalStateException("Payment does not have booking.");
+                throw new IllegalStateException(I18n.t("err.paymentDoesNotHaveBooking"));
             }
 
             booking.setBookingStatus(BookingStatus.PAID);
@@ -304,14 +318,14 @@ public class PaymentServiceImpl implements PaymentService {
         String amountParam = vnpayParams.get("vnp_Amount");
 
         if (amountParam == null || amountParam.isBlank()) {
-            throw new IllegalArgumentException("Missing VNPay amount.");
+            throw new IllegalArgumentException(I18n.t("err.missingVnpayAmount"));
         }
 
         BigDecimal paidAmount = new BigDecimal(amountParam)
                 .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
 
         if (paidAmount.compareTo(payment.getAmount()) != 0) {
-            throw new IllegalArgumentException("Paid amount does not match booking amount.");
+            throw new IllegalArgumentException(I18n.t("err.paidAmountDoesNotMatchBookingAmount"));
         }
     }
 

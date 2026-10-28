@@ -1,154 +1,76 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org" th:replace="~{layouts/admin-layout :: layout('Seat Type Management', ~{::section}, 'seat-types')}">
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org" th:replace="~{layouts/admin-layout :: layout(#{seatType.seatTypeManagement}, ~{::section}, 'seat-types')}">
 <section>
-
-    <div class="container-fluid">
-
-        <!-- Header -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-
-            <div>
-                <h2 class="fw-bold text-primary">
-                    Seat Type Management
-                </h2>
-
-                <p class="text-muted mb-0">
-                    Manage all seat types in the system.
-                </p>
-            </div>
-
-            <a th:href="@{/seat-types/new}" class="btn btn-primary">
-                <i class="fas fa-plus-circle"></i>
-                Add Seat Type
-            </a>
-
+    <div class="admin-page-hero">
+        <div>
+            <span class="admin-page-kicker"><i class="bi bi-tags"></i> [[#{common.masterData}]]</span>
+            <h1>[[#{seatType.seatTypeManagement}]]</h1>
+            <p>[[#{seatType.manageAllSeatTypesInThe}]]</p>
         </div>
-
-
-        <!-- Success -->
-        <div class="alert alert-success alert-dismissible fade show"
-             th:if="${successMessage}">
-
-            <span th:text="${successMessage}"></span>
-
-            <button class="btn-close"
-                    data-bs-dismiss="alert"></button>
-
-        </div>
-
-
-        <!-- Error -->
-        <div class="alert alert-danger alert-dismissible fade show"
-             th:if="${errorMessage}">
-
-            <span th:text="${errorMessage}"></span>
-
-            <button class="btn-close"
-                    data-bs-dismiss="alert"></button>
-
-        </div>
-
-
-        <!-- Card -->
-
-        <div class="card shadow-sm border-0">
-
-            <div class="card-header bg-primary text-white">
-
-                <h5 class="mb-0">
-                    Seat Type List
-                </h5>
-
-            </div>
-
-            <div class="card-body p-0">
-
-                <div class="table-responsive">
-
-                    <table class="table table-hover table-striped align-middle mb-0">
-
-                        <thead class="table-light">
-
-                        <tr>
-
-                            <th width="10%">ID</th>
-
-                            <th>Name</th>
-
-                            <th>Price / Km</th>
-
-                            <th width="18%" class="text-center">
-                                Actions
-                            </th>
-
-                        </tr>
-
-                        </thead>
-
-                        <tbody>
-
-                        <tr th:each="seatType : ${seatTypes}">
-
-                            <td th:text="${seatType.id}"></td>
-
-                            <td th:text="${seatType.name}"></td>
-
-                            <td>
-
-                                <span class="badge bg-success"
-                                      th:text="${seatType.pricePerKm}">
-                                </span>
-
-                            </td>
-
-                            <td class="text-center">
-
-                                <a class="btn btn-warning btn-sm"
-                                   th:href="@{'/seat-types/edit/' + ${seatType.id}}">
-
-                                    <i class="fas fa-edit"></i>
-
-                                    Edit
-
-                                </a>
-
-                                <a class="btn btn-danger btn-sm"
-                                   onclick="return confirm('Delete this seat type?')"
-                                   th:href="@{'/seat-types/delete/' + ${seatType.id}}">
-
-                                    <i class="fas fa-trash"></i>
-
-                                    Delete
-
-                                </a>
-
-                            </td>
-
-                        </tr>
-
-                        <tr th:if="${#lists.isEmpty(seatTypes)}">
-
-                            <td colspan="4"
-                                class="text-center text-muted py-5">
-
-                                No seat types found.
-
-                            </td>
-
-                        </tr>
-
-                        </tbody>
-
-                    </table>
-
-                </div>
-
-            </div>
-
-        </div>
-
+        <a th:href="@{/seat-types/new}" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i>
+            [[#{seatType.addSeatType}]]
+        </a>
     </div>
 
-</section>
+    <div class="alert alert-success alert-dismissible fade show"
+         th:if="${successMessage}">
+        <span th:text="${successMessage}"></span>
+        <button class="btn-close"
+                data-bs-dismiss="alert"></button>
+    </div>
 
+    <div class="alert alert-danger alert-dismissible fade show"
+         th:if="${errorMessage}">
+        <span th:text="${errorMessage}"></span>
+        <button class="btn-close"
+                data-bs-dismiss="alert"></button>
+    </div>
+
+    <div class="card admin-table-card">
+        <div class="card-header">
+            <span class="admin-card-title">[[#{seatType.seatTypeList}]]</span>
+        </div>
+        <div class="card-body table-responsive p-0">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>[[#{common.name}]]</th>
+                    <th class="text-end">[[#{seatType.priceKm}]]</th>
+                    <th class="text-end">[[#{common.actions}]]</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="seatType : ${seatTypes}">
+                    <td class="text-muted" th:text="${seatType.id}"></td>
+                    <td><strong th:text="${seatType.name}"></strong></td>
+                    <td class="text-end">
+                        <span class="capacity-pill"
+                              th:text="${seatType.pricePerKm}">
+                        </span>
+                    </td>
+                    <td class="text-end">
+                        <a class="rj-icon-btn is-warning"
+                           th:href="@{'/seat-types/edit/' + ${seatType.id}}"
+                           th:title="#{common.edit}"><i class="bi bi-pencil-square" aria-hidden="true"></i><span class="visually-hidden">[[#{common.edit}]]</span></a>
+                        <a class="rj-icon-btn is-danger"
+                           th:data-confirm="#{confirm.deleteSeatType}" onclick="return confirm(this.dataset.confirm)"
+                           th:href="@{'/seat-types/delete/' + ${seatType.id}}"
+                           th:title="#{common.delete}"><i class="bi bi-trash3" aria-hidden="true"></i><span class="visually-hidden">[[#{common.delete}]]</span></a>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(seatTypes)}">
+                    <td colspan="4">
+                        <div class="admin-empty-state">
+                            <i class="bi bi-tags"></i>
+                            <strong>[[#{seatType.noSeatTypesFound}]]</strong>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
 </html>

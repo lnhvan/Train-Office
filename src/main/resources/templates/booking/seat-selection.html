@@ -1,76 +1,50 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layouts/customer-layout :: layout('Select Your Seats', ~{::section}, 'booking')}">
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/customer-layout :: layout(#{booking.selectYourSeats}, ~{::section}, 'booking')}">
+<section class="rj-page rj-flow">
+    <div class="rj-container">
+        <ol class="rj-steps" th:aria-label="#{booking.bookingSteps}">
+            <li class="rj-step is-done"><span class="rj-step-dot"><i class="bi bi-check-lg"></i></span><span>[[#{booking.itinerary}]]</span></li>
+            <li class="rj-step is-current" aria-current="step"><span class="rj-step-dot">2</span><span>[[#{common.seats}]]</span></li>
+            <li class="rj-step"><span class="rj-step-dot">3</span><span>[[#{common.passengers}]]</span></li>
+            <li class="rj-step"><span class="rj-step-dot">4</span><span>[[#{common.payment}]]</span></li>
+        </ol>
 
-<section class="rail-flow-page">
-    <link rel="stylesheet" th:href="@{/css/rail-booking-flow.css}">
-    <link rel="stylesheet" th:href="@{/css/rail-seat-selection.css}">
-
-    <div class="rail-flow-container">
-        <div class="rail-flow-progress seat">
-            <div class="rail-flow-step done">
-                <span><i class="bi bi-check-lg"></i></span>
-                Itinerary
-            </div>
-
-            <div class="rail-flow-step active">
-                <span>2</span>
-                Seats
-            </div>
-
-            <div class="rail-flow-step">
-                <span>3</span>
-                Passengers
-            </div>
-
-            <div class="rail-flow-step">
-                <span>4</span>
-                Payment
+        <div class="rj-page-head">
+            <div>
+                <h1>[[#{booking.selectYourSeats}]]</h1>
+                <p>
+                    [[#{booking.chooseYourPreferredCoachAndSeats}]]
+                    <strong th:text="${trip.train != null ? trip.train.trainName : 'RailJet'}">RailJet</strong>.
+                </p>
             </div>
         </div>
 
-        <div class="rail-flow-title">
-            <h1>Select your seats</h1>
-
-            <p>
-                Choose your preferred coach and seats for
-                <strong th:text="${trip.train != null ? trip.train.trainName : 'RailJet'}">RailJet</strong>.
-            </p>
-        </div>
-
-        <div class="rail-alert" th:if="${error}" th:text="${error}"></div>
-        <div class="rail-alert" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+        <div class="alert alert-danger" th:if="${error}" th:text="${error}"></div>
+        <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
 
         <form id="railSeatSelectionForm"
               th:action="@{/booking/seat-selection}"
               method="post"
-              th:data-base-price="${trip.basePrice != null ? trip.basePrice : 0}">
-
+              th:data-base-price="${trip.basePrice != null ? trip.basePrice : 0}"
+              data-max-passengers="10">
             <input type="hidden" name="trainTripId" th:value="${seatSelectionForm.trainTripId}">
             <input type="hidden" name="departureStationId" th:value="${seatSelectionForm.departureStationId}">
             <input type="hidden" name="arrivalStationId" th:value="${seatSelectionForm.arrivalStationId}">
 
-            <input id="passengerCountInput"
-                   type="hidden"
-                   name="passengerCount"
-                   th:value="${seatSelectionForm.passengerCount != null ? seatSelectionForm.passengerCount : 1}">
-
-            <div class="rail-seat-layout rj-seat-layout">
-                <main class="rail-glass-card rj-seat-main">
-                    <div class="rj-seat-main-header">
+            <div class="rj-flow-grid">
+                <div class="rj-card rj-seat-main">
+                    <div class="rj-card-head">
                         <div>
-                            <span class="rj-kicker">Coach selection</span>
-                            <h2>Choose a coach</h2>
-                            <p>Select a coach first, then choose seats inside that coach.</p>
+                            <h2>[[#{booking.chooseACoach}]]</h2>
+                            <p>[[#{booking.selectACoachFirstThenChoose}]]</p>
                         </div>
-
                         <div class="rj-coach-nav">
-                            <button id="previousCoachBtn" type="button" class="rj-coach-nav-btn">
-                                <i class="bi bi-chevron-up"></i>
+                            <button id="previousCoachBtn" type="button" class="rj-icon-btn" th:aria-label="#{booking.previousCoach}" th:title="#{booking.previousCoach}">
+                                <i class="bi bi-chevron-left"></i>
                             </button>
-
-                            <button id="nextCoachBtn" type="button" class="rj-coach-nav-btn">
-                                <i class="bi bi-chevron-down"></i>
+                            <button id="nextCoachBtn" type="button" class="rj-icon-btn" th:aria-label="#{booking.nextCoach}" th:title="#{booking.nextCoach}">
+                                <i class="bi bi-chevron-right"></i>
                             </button>
                         </div>
                     </div>
@@ -79,43 +53,37 @@
                         <!-- JS will generate coach tabs here -->
                     </div>
 
-                    <div class="rj-seat-toolbar">
-                        <div class="rj-seat-legend">
-                            <span><i class="rj-legend-box"></i> Available</span>
-                            <span><i class="rj-legend-box selected"></i> Selected</span>
-                            <span><i class="rj-legend-box booked"></i> Unavailable</span>
-                        </div>
-
-                        <div class="rj-current-coach-pill">
-                            <i class="bi bi-train-front"></i>
-                            <span id="currentCoachSeatCount">0 seats</span>
-                        </div>
-                    </div>
-
                     <div class="rj-current-coach">
                         <div>
-                            <span class="rj-kicker">Current coach</span>
-                            <h3 id="currentCoachName">Coach</h3>
-                            <p id="currentCoachMeta">Choose a coach to view available seats.</p>
+                            <h3 id="currentCoachName">[[#{common.coach}]]</h3>
+                            <p id="currentCoachMeta">[[#{booking.chooseACoachToViewAvailable}]]</p>
                         </div>
+                        <span class="rj-chip rj-num">
+                            <i class="bi bi-grid-3x3-gap"></i>
+                            <span id="currentCoachSeatCount">[[#{booking.n0Seats}]]</span>
+                        </span>
                     </div>
 
                     <div id="railCompartmentTabs" class="rj-compartment-tabs">
                         <!-- JS will generate compartment tabs here -->
                     </div>
 
-                    <div class="rj-coach-shell">
-                        <div class="rj-coach-front">
-                            <i class="bi bi-arrow-up"></i>
-                            Front of Train
-                        </div>
+                    <ul class="rj-seat-legend">
+                        <li><i class="rj-legend-box"></i>[[#{booking.available}]]</li>
+                        <li><i class="rj-legend-box is-selected"></i>[[#{booking.selected}]]</li>
+                        <li><i class="rj-legend-box is-booked"></i>[[#{booking.unavailable}]]</li>
+                    </ul>
 
+                    <div class="rj-coach-shell">
+                        <div class="rj-coach-end is-front">
+                            <i class="bi bi-arrow-up"></i>[[#{booking.frontOfTrain}]]
+                        </div>
                         <div class="rj-seat-map">
-                            <label class="rail-seat-option rj-seat-option"
+                            <label class="rj-seat-option"
                                    th:each="item : ${seats}"
                                    th:classappend="${item.available} ? '' : ' booked'"
                                    th:data-coach-id="${item.seat.coach != null ? item.seat.coach.coachId : 0}"
-                                   th:data-coach-number="${item.seat.coach != null ? item.seat.coach.coachNumber : 'Unknown'}"
+                                   th:data-coach-number="${item.seat.coach != null ? item.seat.coach.coachNumber : #messages.msg('common.unknown')}"
                                    th:data-coach-type="${item.seat.coach != null ? item.seat.coach.coachType : item.seat.seatType}"
                                    th:data-coach-capacity="${item.seat.coach != null and item.seat.coach.capacity != null ? item.seat.coach.capacity : 0}"
                                    th:data-is-sleeper="${item.seat.coach != null and item.seat.coach.sleeperCoach == true}"
@@ -123,9 +91,9 @@
                                    th:data-compartment-id="${item.seat.compartment != null ? item.seat.compartment.compartmentId : ''}"
                                    th:data-compartment-number="${item.seat.compartment != null ? item.seat.compartment.compartmentNumber : ''}"
                                    th:data-berth-label="${item.seat.berthLevel == null ? '' :
-    (item.seat.berthLevel == 'LOWER' ? 'Level 1 / Lower berth' :
-    (item.seat.berthLevel == 'MIDDLE' ? 'Level 2 / Middle berth' :
-    (item.seat.berthLevel == 'UPPER' ? 'Level 3 / Upper berth' : item.seat.berthLevel)))}"
+    (item.seat.berthLevel == 'LOWER' ? #messages.msg('booking.level1LowerBerth') :
+    (item.seat.berthLevel == 'MIDDLE' ? #messages.msg('booking.level2MiddleBerth') :
+    (item.seat.berthLevel == 'UPPER' ? #messages.msg('booking.level3UpperBerth') : item.seat.berthLevel)))}"
                                    th:data-berth-level="${item.seat.berthLevel != null ? item.seat.berthLevel : ''}">
 
                                 <input class="rail-seat-checkbox"
@@ -137,23 +105,24 @@
                                        th:data-seat-type="${item.seat.seatType}"
                                        th:data-seat-extra-price="${item.seat.extraPrice != null ? item.seat.extraPrice : 0}"
                                        th:data-coach-id="${item.seat.coach != null ? item.seat.coach.coachId : 0}"
-                                       th:data-coach-number="${item.seat.coach != null ? item.seat.coach.coachNumber : 'Unknown'}"
+                                       th:data-coach-number="${item.seat.coach != null ? item.seat.coach.coachNumber : #messages.msg('common.unknown')}"
                                        th:data-coach-type="${item.seat.coach != null ? item.seat.coach.coachType : item.seat.seatType}"
                                        th:data-is-sleeper="${item.seat.coach != null and item.seat.coach.sleeperCoach == true}"
                                        th:data-has-compartment="${item.seat.compartment != null}"
                                        th:data-compartment-id="${item.seat.compartment != null ? item.seat.compartment.compartmentId : ''}"
                                        th:data-compartment-number="${item.seat.compartment != null ? item.seat.compartment.compartmentNumber : ''}"
                                        th:data-berth-label="${item.seat.berthLevel == null ? '' :
-    (item.seat.berthLevel == 'LOWER' ? 'Level 1 / Lower berth' :
-    (item.seat.berthLevel == 'MIDDLE' ? 'Level 2 / Middle berth' :
-    (item.seat.berthLevel == 'UPPER' ? 'Level 3 / Upper berth' : item.seat.berthLevel)))}"
+    (item.seat.berthLevel == 'LOWER' ? #messages.msg('booking.level1LowerBerth') :
+    (item.seat.berthLevel == 'MIDDLE' ? #messages.msg('booking.level2MiddleBerth') :
+    (item.seat.berthLevel == 'UPPER' ? #messages.msg('booking.level3UpperBerth') : item.seat.berthLevel)))}"
                                        th:data-berth-level="${item.seat.berthLevel != null ? item.seat.berthLevel : ''}">
 
                                 <span class="rj-seat-box">
                                     <span class="rj-seat-cap"></span>
 
                                     <span class="rj-seat-number"
-                                          th:text="${item.seat.seatNumber}">
+                                          th:title="${item.seat.seatNumber}"
+                                          th:text="${item.seat.compartment != null and #strings.contains(item.seat.seatNumber, '-') ? #strings.replace(#strings.substringAfter(item.seat.seatNumber, '-'), 'L', '') : item.seat.seatNumber}">
                                         01A
                                     </span>
 
@@ -162,12 +131,12 @@
                          th:classappend="${item.seat.berthLevel == 'LOWER'} ? ' lower' :
           (${item.seat.berthLevel == 'MIDDLE'} ? ' middle' :
           (${item.seat.berthLevel == 'UPPER'} ? ' upper' : ''))"
-                         th:title="${item.seat.berthLevel == 'LOWER' ? 'Level 1 / Lower berth' :
-          (item.seat.berthLevel == 'MIDDLE' ? 'Level 2 / Middle berth' :
-          (item.seat.berthLevel == 'UPPER' ? 'Level 3 / Upper berth' : item.seat.berthLevel))}"
-                         th:text="${item.seat.berthLevel == 'LOWER' ? 'Level 1' :
-          (item.seat.berthLevel == 'MIDDLE' ? 'Level 2' :
-          (item.seat.berthLevel == 'UPPER' ? 'Level 3' : item.seat.berthLevel))}">
+                         th:title="${item.seat.berthLevel == 'LOWER' ? #messages.msg('booking.level1LowerBerth') :
+          (item.seat.berthLevel == 'MIDDLE' ? #messages.msg('booking.level2MiddleBerth') :
+          (item.seat.berthLevel == 'UPPER' ? #messages.msg('booking.level3UpperBerth') : item.seat.berthLevel))}"
+                         th:text="${item.seat.berthLevel == 'LOWER' ? #messages.msg('booking.level1') :
+          (item.seat.berthLevel == 'MIDDLE' ? #messages.msg('booking.level2') :
+          (item.seat.berthLevel == 'UPPER' ? #messages.msg('booking.level3') : item.seat.berthLevel))}">
     Level 1
 </span>
 
@@ -176,115 +145,111 @@
                                 </span>
                             </label>
                         </div>
-
-                        <div class="rj-luggage-rack">
-                            <i class="bi bi-luggage"></i>
-                            Oversized Luggage Rack
+                        <div class="rj-coach-rack">
+                            <i class="bi bi-luggage"></i>[[#{booking.oversizedLuggageRack}]]
                         </div>
-
-                        <div class="rj-coach-rear">
-                            Rear Exit / Connections
-                            <i class="bi bi-arrow-down"></i>
+                        <div class="rj-coach-end is-rear">
+                            [[#{booking.rearExitConnections}]]<i class="bi bi-arrow-down"></i>
                         </div>
                     </div>
-                </main>
+                </div>
 
-                <aside class="rail-glass-card rail-summary-card rj-seat-summary">
-                    <h2 class="rail-summary-title">
-                        <i class="bi bi-journal-check"></i>
-                        Selection Summary
-                    </h2>
+                <aside class="rj-summary" th:aria-label="#{booking.selectionSummary}">
+                    <div class="rj-card">
+                        <h2 class="rj-summary-title">[[#{booking.selectionSummary}]]</h2>
 
-                    <div class="rail-seat-summary-route">
-                        <div class="rail-station-code">
-                            <strong th:text="${segment.departureStop.station.stationCode != null ? segment.departureStop.station.stationCode : 'DEP'}">
-                                DEP
-                            </strong>
-
-                            <span th:text="${segment.departureStop.station.stationName}">
-                                Departure
-                            </span>
-                        </div>
-
-                        <div class="rail-summary-train-line">
-                            <i class="bi bi-train-front"></i>
-                        </div>
-
-                        <div class="rail-station-code text-end">
-                            <strong th:text="${segment.arrivalStop.station.stationCode != null ? segment.arrivalStop.station.stationCode : 'ARR'}">
-                                ARR
-                            </strong>
-
-                            <span th:text="${segment.arrivalStop.station.stationName}">
-                                Arrival
-                            </span>
-                        </div>
-                    </div>
-
-                    <div class="rail-seat-date-line">
-                        <span>
-                            <i class="bi bi-calendar3"></i>
-                            <span th:text="${trip.departureTime != null ? #temporals.format(trip.departureTime, 'dd/MM/yyyy') : '-'}">
-                                30/06/2026
-                            </span>
-                        </span>
-
-                        <span>
-                            <i class="bi bi-clock"></i>
-                            <span th:text="${trip.departureTime != null ? #temporals.format(trip.departureTime, 'HH:mm') : '--:--'}">
-                                08:30
-                            </span>
-                            <span> - </span>
-                            <span th:text="${trip.arrivalTime != null ? #temporals.format(trip.arrivalTime, 'HH:mm') : '--:--'}">
-                                11:45
-                            </span>
-                        </span>
-                    </div>
-
-                    <div class="rail-summary-lines">
-                        <div class="rail-summary-line">
-                            <span>Selected seats</span>
-                            <strong id="selectedCountText">0</strong>
-                        </div>
-
-                        <div class="rail-summary-line">
-                            <span>Base price</span>
-
-                            <strong th:text="${trip.basePrice != null ? #numbers.formatDecimal(trip.basePrice, 0, 'COMMA', 0, 'POINT') + ' VND' : '0 VND'}">
-                                870,000 VND
-                            </strong>
-                        </div>
-                    </div>
-
-                    <div class="mt-4">
-                        <p class="rail-summary-label">Selected Seats</p>
-
-                        <div id="selectedSeatList" class="rail-selected-list">
-                            <div class="rail-selected-empty">
-                                No seats selected yet.
+                        <div class="rj-route is-compact">
+                            <div class="rj-route-stop">
+                                <span class="rj-route-time"
+                                      th:text="${segment.departureTime != null ? #temporals.format(segment.departureTime, 'HH:mm') : '--:--'}">08:30</span>
+                                <span class="rj-route-station">
+                                    <strong th:text="${segment.departureStop.station.stationCode != null ? segment.departureStop.station.stationCode : 'DEP'}">DEP</strong>
+                                    <span th:text="${segment.departureStop.station.stationName}">Departure</span>
+                                </span>
+                            </div>
+                            <div class="rj-route-track" aria-hidden="true">
+                                <span class="rj-route-dot is-start"></span>
+                                <span class="rj-route-dot is-end"></span>
+                            </div>
+                            <div class="rj-route-stop is-end">
+                                <span class="rj-route-time"
+                                      th:text="${segment.arrivalTime != null ? #temporals.format(segment.arrivalTime, 'HH:mm') : '--:--'}">11:45</span>
+                                <span class="rj-day-offset" th:if="${segment.dayOffset > 0}" th:text="#{booking.plusDays(${segment.dayOffset})}">+1 ngày</span>
+                                <span class="rj-route-station">
+                                    <strong th:text="${segment.arrivalStop.station.stationCode != null ? segment.arrivalStop.station.stationCode : 'ARR'}">ARR</strong>
+                                    <span th:text="${segment.arrivalStop.station.stationName}">Arrival</span>
+                                </span>
                             </div>
                         </div>
+                        <p class="rj-summary-date">
+                            <i class="bi bi-calendar3"></i>
+                            <span class="rj-num" th:text="${segment.departureTime != null ? #temporals.format(segment.departureTime, 'EEEE, dd/MM/yyyy') : '-'}">30/06/2026</span>
+                            <span class="rj-summary-duration" th:if="${segment.durationMinutes > 0}" th:text="'· ' + #{booking.durationHm(${segment.durationHours}, ${segment.durationRestMinutes})}">· 8 giờ</span>
+                        </p>
+
+                        <div class="rj-pax-row">
+                            <label class="form-label" for="passengerCountInput">[[#{common.passengers}]]</label>
+                            <div class="rj-stepper is-sm" data-rj-stepper>
+                                <button type="button"
+                                        class="rj-stepper-btn"
+                                        data-step="-1"
+                                        th:aria-label="#{booking.fewerPassengers}"
+                                        th:title="#{booking.fewerPassengers}">
+                                    <i class="bi bi-dash-lg"></i>
+                                </button>
+                                <input id="passengerCountInput"
+                                       name="passengerCount"
+                                       class="form-control rj-num"
+                                       type="number"
+                                       inputmode="numeric"
+                                       min="1"
+                                       max="10"
+                                       value="1"
+                                       th:value="${seatSelectionForm.passengerCount != null and seatSelectionForm.passengerCount > 0 ? seatSelectionForm.passengerCount : 1}">
+                                <button type="button"
+                                        class="rj-stepper-btn"
+                                        data-step="1"
+                                        th:aria-label="#{booking.morePassengers}"
+                                        th:title="#{booking.morePassengers}">
+                                    <i class="bi bi-plus-lg"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <p id="seatLimitHint" class="rj-pax-hint" role="status" aria-live="polite"></p>
+
+                        <dl class="rj-rows">
+                            <div>
+                                <dt>[[#{booking.selectedSeats}]]</dt>
+                                <dd id="selectedCountText" class="rj-num">0</dd>
+                            </div>
+                            <div>
+                                <dt>[[#{common.basePrice}]]</dt>
+                                <dd class="rj-num" th:text="${trip.basePrice != null ? #numbers.formatDecimal(trip.basePrice, 0, 'COMMA', 0, 'POINT') + ' VND' : '0 VND'}">870,000 VND</dd>
+                            </div>
+                        </dl>
+
+                        <div id="selectedSeatList" class="rail-selected-list">
+                            <div class="rail-selected-empty">[[#{booking.noSeatsSelectedYet}]]</div>
+                        </div>
+
+                        <div class="rj-summary-total">
+                            <span>[[#{booking.totalPrice}]]</span>
+                            <strong id="selectedTotalText" class="rj-num">0 VND</strong>
+                        </div>
+
+                        <button class="btn btn-primary btn-lg rj-btn-block" type="submit">
+                            [[#{booking.continueToPassengers}]]
+                            <i class="bi bi-arrow-right"></i>
+                        </button>
                     </div>
 
-                    <div class="rail-seat-total">
-                        <span>Total Price</span>
-                        <strong id="selectedTotalText">0 VND</strong>
-                    </div>
-
-                    <button class="rail-primary-btn rail-full-btn" type="submit">
-                        Continue to Passengers
-                        <i class="bi bi-arrow-right"></i>
-                    </button>
-
-                    <a class="rail-back-link mt-4" th:href="@{/booking/search}">
-                        <i class="bi bi-arrow-left"></i>
-                        Back to Search
+                    <a class="rj-back-link rj-summary-back" th:href="@{/booking/search}">
+                        <i class="bi bi-arrow-left"></i>[[#{booking.backToSearch}]]
                     </a>
                 </aside>
             </div>
         </form>
     </div>
-
     <script th:src="@{/js/rail-booking-flow.js}"></script>
 </section>
 </html>

@@ -1,5 +1,8 @@
 package com.hsf302.trainoffice.controller;
 
+
+import com.hsf302.trainoffice.security.CurrentUser;
+import com.hsf302.trainoffice.config.I18n;
 import com.hsf302.trainoffice.common.enums.UserRole;
 import com.hsf302.trainoffice.entity.Refund;
 import com.hsf302.trainoffice.entity.User;
@@ -31,7 +34,7 @@ public class AdminRefundController {
         User admin = currentUser(session);
 
         if (!isAdmin(admin)) {
-            redirectAttributes.addFlashAttribute("error", "Admin access required.");
+            redirectAttributes.addFlashAttribute("error", I18n.t("msg.adminAccessRequired"));
             return "redirect:/login";
         }
 
@@ -48,13 +51,13 @@ public class AdminRefundController {
         User admin = currentUser(session);
 
         if (!isAdmin(admin)) {
-            redirectAttributes.addFlashAttribute("error", "Admin access required.");
+            redirectAttributes.addFlashAttribute("error", I18n.t("msg.adminAccessRequired"));
             return "redirect:/login";
         }
 
         try {
             refundService.approveRefund(refundId, admin);
-            redirectAttributes.addFlashAttribute("successMessage", "Refund approved successfully.");
+            redirectAttributes.addFlashAttribute("successMessage", I18n.t("msg.refund.approved"));
         } catch (IllegalArgumentException | IllegalStateException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         }
@@ -69,13 +72,13 @@ public class AdminRefundController {
         User admin = currentUser(session);
 
         if (!isAdmin(admin)) {
-            redirectAttributes.addFlashAttribute("error", "Admin access required.");
+            redirectAttributes.addFlashAttribute("error", I18n.t("msg.adminAccessRequired"));
             return "redirect:/login";
         }
 
         try {
             refundService.rejectRefund(refundId, admin);
-            redirectAttributes.addFlashAttribute("successMessage", "Refund rejected successfully.");
+            redirectAttributes.addFlashAttribute("successMessage", I18n.t("msg.refund.rejected"));
         } catch (IllegalArgumentException | IllegalStateException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         }
@@ -83,9 +86,9 @@ public class AdminRefundController {
         return "redirect:/admin/refunds";
     }
 
+    /** Người dùng đăng nhập (JWT) của request hiện tại; null nếu chưa đăng nhập. */
     private User currentUser(HttpSession session) {
-        Object sessionUser = session.getAttribute("currentUser");
-        return sessionUser instanceof User user ? user : null;
+        return CurrentUser.get();
     }
 
     private boolean isAdmin(User user) {
@@ -100,12 +103,12 @@ public class AdminRefundController {
         User admin = currentUser(session);
 
         if (!isAdmin(admin)) {
-            redirectAttributes.addFlashAttribute("error", "Admin access required.");
+            redirectAttributes.addFlashAttribute("error", I18n.t("msg.adminAccessRequired"));
             return "redirect:/login";
         }
 
         Refund refund = refundService.getRefundById(refundId)
-                .orElseThrow(() -> new IllegalArgumentException("Refund request does not exist."));
+                .orElseThrow(() -> new IllegalArgumentException(I18n.t("msg.refund.notFound")));
 
         model.addAttribute("refund", refund);
         model.addAttribute("walletBalance", adminWalletService.getBalance());

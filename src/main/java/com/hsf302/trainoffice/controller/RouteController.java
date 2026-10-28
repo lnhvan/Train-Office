@@ -1,5 +1,7 @@
 package com.hsf302.trainoffice.controller;
 
+
+import com.hsf302.trainoffice.config.I18n;
 import com.hsf302.trainoffice.config.AdminErrorMessageUtil;
 import com.hsf302.trainoffice.entity.Route;
 import com.hsf302.trainoffice.service.RouteService;
@@ -60,7 +62,7 @@ public class RouteController {
                 .orElseGet(() -> {
                     redirectAttributes.addFlashAttribute(
                             "errorMessage",
-                            "Route was not found."
+                            I18n.t("msg.route.notFound")
                     );
                     return "redirect:/admin/routes";
                 });
@@ -81,7 +83,7 @@ public class RouteController {
 
             redirectAttributes.addFlashAttribute(
                     "successMessage",
-                    "Route saved successfully."
+                    I18n.t("msg.route.saved")
             );
 
             return "redirect:/admin/routes";
@@ -104,7 +106,7 @@ public class RouteController {
 
             redirectAttributes.addFlashAttribute(
                     "successMessage",
-                    "Route deleted successfully."
+                    I18n.t("msg.route.deleted")
             );
 
         } catch (Exception e) {

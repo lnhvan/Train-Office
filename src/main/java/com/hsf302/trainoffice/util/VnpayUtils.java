@@ -19,17 +19,6 @@ public final class VnpayUtils {
     public static final DateTimeFormatter VNPAY_DATE_FORMAT =
             DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
-    private VnpayUtils() {
-    }
-
-    public static String generateTxnRef() {
-        return UUID.randomUUID()
-                .toString()
-                .replace("-", "")
-                .substring(0, 12)
-                .toUpperCase();
-    }
-
     public static String urlEncode(String value) {
         return URLEncoder.encode(value, StandardCharsets.UTF_8);
     }

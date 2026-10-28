@@ -1,5 +1,8 @@
 package com.hsf302.trainoffice.controller;
 
+
+import com.hsf302.trainoffice.security.CurrentUser;
+import com.hsf302.trainoffice.config.I18n;
 import com.hsf302.trainoffice.entity.Ticket;
 import com.hsf302.trainoffice.entity.User;
 import com.hsf302.trainoffice.service.TicketService;
@@ -23,7 +26,7 @@ public class TicketController {
     public String list(HttpSession session, Model model, RedirectAttributes redirectAttributes) {
         User user = currentUser(session);
         if (user == null) {
-            redirectAttributes.addFlashAttribute("error", "Please log in to view tickets");
+            redirectAttributes.addFlashAttribute("error", I18n.t("msg.ticket.loginRequired"));
             return "redirect:/login";
         }
         model.addAttribute("tickets", ticketService.getTicketsForUser(user));
@@ -53,7 +56,7 @@ public class TicketController {
                               String viewName) {
         User user = currentUser(session);
         if (user == null) {
-            redirectAttributes.addFlashAttribute("error", "Please log in to view tickets");
+            redirectAttributes.addFlashAttribute("error", I18n.t("msg.ticket.loginRequired"));
             return "redirect:/login";
         }
         try {
@@ -61,7 +64,7 @@ public class TicketController {
             if (ticket.getBooking() == null
                     || ticket.getBooking().getUser() == null
                     || !ticket.getBooking().getUser().getUserId().equals(user.getUserId())) {
-                redirectAttributes.addFlashAttribute("error", "Ticket does not belong to current user");
+                redirectAttributes.addFlashAttribute("error", I18n.t("msg.ticket.notOwner"));
                 return "redirect:/tickets";
             }
             model.addAttribute("ticket", ticket);
@@ -72,8 +75,8 @@ public class TicketController {
         }
     }
 
+    /** Người dùng đăng nhập (JWT) của request hiện tại; null nếu chưa đăng nhập. */
     private User currentUser(HttpSession session) {
-        Object sessionUser = session.getAttribute("currentUser");
-        return sessionUser instanceof User user ? user : null;
+        return CurrentUser.get();
     }
 }
