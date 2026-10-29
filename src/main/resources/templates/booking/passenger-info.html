@@ -56,6 +56,17 @@
                                 </span>
                             </legend>
 
+                            <div class="rail-ocr-scan">
+                                <input type="file" accept="image/*" capture="environment"
+                                       class="cccd-file" th:attr="data-index=${stat.index}" hidden>
+                                <button type="button" class="rail-dashed-btn cccd-scan-btn"
+                                        th:attr="data-index=${stat.index}">
+                                    <i class="bi bi-camera"></i>
+                                    Quét CCCD tự điền
+                                </button>
+                                <small class="cccd-status rail-field-hint"></small>
+                            </div>
+
                             <div class="rj-form-grid">
                                 <div class="rj-field rj-span-2">
                                     <label class="form-label" th:for="|fullName${stat.index}|">[[#{common.fullName}]]</label>
@@ -293,6 +304,168 @@
                         localStorage.removeItem(draftKey);
                     }
                 }, 0);
+            });
+        });
+    </script>
+
+    <div id="ocrOverlay" class="ocr-overlay" aria-hidden="true">
+        <div class="ocr-overlay-box">
+            <div class="ocr-spinner"></div>
+            <p class="ocr-overlay-text">Đang đọc dữ liệu từ CCCD...</p>
+            <small class="ocr-overlay-sub">Vui lòng chờ trong giây lát</small>
+        </div>
+    </div>
+
+    <style>
+        .rail-ocr-scan {
+            margin-bottom: 14px;
+        }
+        .rail-dashed-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border: 1.5px dashed #2563eb;
+            border-radius: 10px;
+            background: #eff6ff;
+            color: #2563eb;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .rail-dashed-btn:hover {
+            background: #dbeafe;
+        }
+        .rail-dashed-btn:disabled {
+            opacity: 0.6;
+            cursor: default;
+        }
+        .cccd-status.rail-field-hint {
+            display: block;
+            margin-top: 6px;
+            color: #64748b;
+        }
+        .ocr-overlay {
+            position: fixed;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(15, 23, 42, 0.55);
+            backdrop-filter: blur(3px);
+            z-index: 2000;
+        }
+        .ocr-overlay.is-open {
+            display: flex;
+        }
+        .ocr-overlay-box {
+            background: #fff;
+            border-radius: 16px;
+            padding: 28px 36px;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+            min-width: 240px;
+        }
+        .ocr-spinner {
+            width: 52px;
+            height: 52px;
+            margin: 0 auto 16px;
+            border: 5px solid #e2e8f0;
+            border-top-color: #2563eb;
+            border-radius: 50%;
+            animation: ocr-spin 0.8s linear infinite;
+        }
+        @keyframes ocr-spin {
+            to { transform: rotate(360deg); }
+        }
+        .ocr-overlay-text {
+            margin: 0;
+            font-weight: 600;
+            color: #0f172a;
+        }
+        .ocr-overlay-sub {
+            color: #64748b;
+        }
+    </style>
+
+    <script>
+        // CCCD scan -> OCR -> auto-fill the passenger fields.
+        document.addEventListener('DOMContentLoaded', function () {
+            const overlay = document.getElementById('ocrOverlay');
+
+            function showOverlay() {
+                if (overlay) {
+                    overlay.classList.add('is-open');
+                    overlay.setAttribute('aria-hidden', 'false');
+                }
+            }
+
+            function hideOverlay() {
+                if (overlay) {
+                    overlay.classList.remove('is-open');
+                    overlay.setAttribute('aria-hidden', 'true');
+                }
+            }
+
+            document.querySelectorAll('.cccd-scan-btn').forEach(function (btn) {
+                const index = btn.dataset.index;
+                const card = btn.closest('.rail-passenger-card');
+                const fileInput = card.querySelector('.cccd-file[data-index="' + index + '"]');
+                const status = card.querySelector('.cccd-status');
+
+                btn.addEventListener('click', function () {
+                    fileInput.click();
+                });
+
+                fileInput.addEventListener('change', async function () {
+                    if (!fileInput.files || !fileInput.files[0]) {
+                        return;
+                    }
+
+                    status.textContent = 'Đang nhận dạng ảnh...';
+                    btn.disabled = true;
+                    showOverlay();
+
+                    const formData = new FormData();
+                    formData.append('image', fileInput.files[0]);
+
+                    try {
+                        const response = await fetch('/booking/ocr-cccd', {
+                            method: 'POST',
+                            body: formData
+                        });
+                        const data = await response.json();
+
+                        if (!data.success) {
+                            status.textContent = data.message || 'Không nhận dạng được.';
+                            return;
+                        }
+
+                        const setField = function (name, value) {
+                            if (value === null || value === undefined || value === '') {
+                                return;
+                            }
+                            const el = card.querySelector('[name="passengers[' + index + '].' + name + '"]');
+                            if (el) {
+                                el.value = value;
+                                el.dispatchEvent(new Event('change', { bubbles: true }));
+                                el.dispatchEvent(new Event('input', { bubbles: true }));
+                            }
+                        };
+
+                        setField('fullName', data.fullName);
+                        setField('identityNumber', data.identityNumber);
+                        setField('dateOfBirth', data.dateOfBirth); // already yyyy-MM-dd
+                        setField('gender', data.gender);
+
+                        status.textContent = data.message;
+                    } catch (error) {
+                        status.textContent = 'Lỗi gọi OCR: ' + error.message;
+                    } finally {
+                        hideOverlay();
+                        btn.disabled = false;
+                        fileInput.value = '';
+                    }
+                });
             });
         });
     </script>
