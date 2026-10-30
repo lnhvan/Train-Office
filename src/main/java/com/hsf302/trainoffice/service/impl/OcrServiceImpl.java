@@ -36,6 +36,13 @@ public class OcrServiceImpl implements OcrService {
     private static final Pattern ID_12 = Pattern.compile("\\d{12}");
     private static final Pattern ID_9 = Pattern.compile("\\d{9}");
 
+    // Accent-stripped, lower-cased wording printed on a Vietnamese CCCD, used to
+    // tell a real card apart from an unrelated photo.
+    private static final String[] CCCD_KEYWORDS = {
+            "can cuoc", "cong dan", "citizen identity", "identity card",
+            "cong hoa xa hoi", "socialist republic", "chu nghia viet nam"
+    };
+
     @Value("${ocr.tessdata-path:tessdata}")
     private String tessdataPath;
 
@@ -72,17 +79,21 @@ public class OcrServiceImpl implements OcrService {
 
         String textPass;
         String digitsPass;
+        List<String> digitsVariants = new ArrayList<>();
         try {
             // Text pass: full card in grayscale -> name, gender, labelled lines.
             BufferedImage gray = toGrayUpscaled(original, 1200);
             textPass = ocr(gray, false);
 
-            // Digits pass: crop to the number column, upscale hard, binarize.
-            // Removing the portrait/emblem kills most of the noise that made the
-            // whole-card digit pass unusable.
-            BufferedImage region = toGrayUpscaled(cropRegion(original), 1600);
-            BufferedImage regionBinary = binarize(region);
-            digitsPass = ocr(regionBinary, true);
+            // Digits pass: crop to the number/DOB column, upscale hard, binarize.
+            // We read it several times with different preprocessing so a single
+            // mis-read digit (e.g. 0 vs 1 in the day) can be out-voted when the
+            // date of birth is parsed below.
+            BufferedImage regionBase = cropRegion(original);
+            digitsVariants.add(ocr(binarize(toGrayUpscaled(regionBase, 1600)), true));
+            digitsVariants.add(ocr(binarize(toGrayUpscaled(regionBase, 2000)), true));
+            digitsVariants.add(ocr(toGrayUpscaled(regionBase, 1600), true)); // grayscale, no binarize
+            digitsPass = digitsVariants.get(0);
         } catch (Throwable ex) {
             // Throwable: Tess4J may throw UnsatisfiedLinkError if native libs / tessdata are missing.
             return CccdOcrResult.failure("OCR lỗi: " + ex.getMessage()
@@ -92,10 +103,28 @@ public class OcrServiceImpl implements OcrService {
         log.info("===== CCCD OCR text pass =====\n{}\n===== CCCD OCR digits pass =====\n{}\n=====",
                 textPass, digitsPass);
 
-        String id = firstNonNull(extractId(digitsPass), extractId(textPass));
-        LocalDate dob = extractDateOfBirth(textPass, digitsPass);
+        String id = extractId(textPass);
+        for (String variant : digitsVariants) {
+            String variantId = extractId(variant);
+            if (variantId != null) {
+                id = variantId;
+                break;
+            }
+        }
+        LocalDate dob = voteDateOfBirth(textPass, digitsVariants);
         String gender = extractGender(textPass);
         String fullName = extractFullName(textPass);
+
+        // Reject non-CCCD photos: only trust the result when the image shows the
+        // card's printed wording or a readable ID number. The frontend uses this
+        // success=false to pop its "ảnh không hợp lệ" modal.
+        if (!looksLikeCccd(textPass, id, dob, fullName)) {
+            CccdOcrResult invalid = CccdOcrResult.failure(
+                    "Ảnh không phải CCCD. Vui lòng chọn ảnh mặt trước thẻ CCCD, chụp rõ nét và cắt sát viền.");
+            invalid.setRawText("[TEXT]\n" + textPass + "\n[DIGITS]\n" + digitsPass);
+            log.info("CCCD OCR rejected: not a CCCD. id='{}'", id);
+            return invalid;
+        }
 
         CccdOcrResult result = new CccdOcrResult();
         result.setRawText("[TEXT]\n" + textPass + "\n[DIGITS]\n" + digitsPass);
@@ -228,6 +257,23 @@ public class OcrServiceImpl implements OcrService {
     // Field extraction
     // ---------------------------------------------------------------------
 
+    /**
+     * Whether the scanned image is actually a Vietnamese CCCD: a readable ID
+     * number, or the card's printed wording, or both a birth date and a name.
+     */
+    private boolean looksLikeCccd(String textPass, String id, LocalDate dob, String fullName) {
+        if (id != null) {
+            return true;
+        }
+        String normalized = stripAccents(textPass).toLowerCase();
+        for (String keyword : CCCD_KEYWORDS) {
+            if (normalized.contains(keyword)) {
+                return true;
+            }
+        }
+        return dob != null && fullName != null;
+    }
+
     private String extractId(String text) {
         if (text == null) {
             return null;
@@ -274,6 +320,55 @@ public class OcrServiceImpl implements OcrService {
                 .filter(d -> !d.isAfter(today) && d.getYear() >= 1900)
                 .min(LocalDate::compareTo)
                 .orElse(null);
+    }
+
+    /**
+     * Read the date of birth from several OCR variants and keep the value the
+     * most passes agree on (majority vote), so a single mis-read digit such as
+     * 0 vs 1 in the day gets out-voted. Ties break to the earliest date, since
+     * the birth date is always earlier than the issue/expiry dates on the card.
+     */
+    private LocalDate voteDateOfBirth(String textPass, List<String> digitsVariants) {
+        List<LocalDate> votes = new ArrayList<>();
+        LocalDate fromText = extractDateOfBirth(textPass, "");
+        if (fromText != null) {
+            votes.add(fromText);
+        }
+        for (String digits : digitsVariants) {
+            LocalDate fromDigits = earliestDate(digits);
+            if (fromDigits != null) {
+                votes.add(fromDigits);
+            }
+        }
+        return majorityEarliest(votes);
+    }
+
+    private LocalDate earliestDate(String text) {
+        List<LocalDate> dates = new ArrayList<>();
+        collectDates(text, dates);
+        LocalDate today = LocalDate.now();
+        return dates.stream()
+                .filter(d -> !d.isAfter(today) && d.getYear() >= 1900)
+                .min(LocalDate::compareTo)
+                .orElse(null);
+    }
+
+    private LocalDate majorityEarliest(List<LocalDate> votes) {
+        LocalDate best = null;
+        int bestCount = -1;
+        for (LocalDate candidate : votes) {
+            int count = 0;
+            for (LocalDate other : votes) {
+                if (other.equals(candidate)) {
+                    count++;
+                }
+            }
+            if (count > bestCount || (count == bestCount && (best == null || candidate.isBefore(best)))) {
+                bestCount = count;
+                best = candidate;
+            }
+        }
+        return best;
     }
 
     private void collectDates(String text, List<LocalDate> target) {
