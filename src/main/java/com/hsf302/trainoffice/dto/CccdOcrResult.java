@@ -1,5 +1,6 @@
 package com.hsf302.trainoffice.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
 import java.time.LocalDate;
@@ -16,6 +17,9 @@ public class CccdOcrResult {
 
     private String fullName;
     private String identityNumber;
+    // Force an ISO "yyyy-MM-dd" string so the <input type="date"> can accept it
+    // directly (otherwise Jackson may emit [yyyy,M,d], which the input rejects).
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private LocalDate dateOfBirth;
     private String gender; // MALE / FEMALE / OTHER (matches Gender enum)
 
