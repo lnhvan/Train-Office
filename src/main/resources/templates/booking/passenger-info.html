@@ -17,6 +17,8 @@
             </div>
         </div>
 
+        <div th:replace="~{fragments/hold-timer :: timer(${seatHoldRemainingMs}, @{/api/booking/holds/current})}"></div>
+
         <div class="rj-flow-grid">
             <div>
                 <div class="alert alert-danger"

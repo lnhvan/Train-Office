@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/customer-layout :: layout(#{rateLimit.title}, ~{::section}, '')}">
+<section class="rj-page">
+    <div class="rj-container rj-narrow">
+        <article class="rj-card rj-result">
+            <div class="rj-result-icon"><i class="bi bi-hourglass-split"></i></div>
+            <h1>[[#{rateLimit.title}]]</h1>
+            <p>[[#{rateLimit.message}]]</p>
+            <!-- Đếm ngược; hết giờ tự quay lại trang trước. {0} trong data-template được JS thay bằng số giây. -->
+            <p id="rjRateLimitCountdown"
+               class="rj-rate-limit-countdown"
+               aria-live="polite"
+               th:data-seconds="${retryAfterSeconds}"
+               th:data-template="#{rateLimit.retryIn('{0}')}"
+               th:data-home-url="@{/}"
+               th:text="#{rateLimit.retryIn(${retryAfterSeconds})}">Going back in 60 seconds.</p>
+
+            <div class="rj-result-actions">
+                <a class="btn btn-primary btn-lg rj-btn-block" href="#" data-rate-limit-back>
+                    <i class="bi bi-arrow-left"></i>
+                    [[#{rateLimit.back}]]
+                </a>
+                <a class="btn btn-outline-secondary btn-lg rj-btn-block rj-rate-limit-home" th:href="@{/}">
+                    <i class="bi bi-house"></i>
+                    [[#{rateLimit.home}]]
+                </a>
+            </div>
+        </article>
+    </div>
+
+    <style>
+        .rj-rate-limit-countdown {
+            margin-top: 4px;
+            color: var(--rj-text-3, #7d92aa);
+            font-variant-numeric: tabular-nums;
+        }
+        .rj-rate-limit-countdown strong {
+            color: var(--rj-accent, #38bdf8);
+        }
+        .rj-rate-limit-home {
+            margin-top: 12px;
+            width: 100%;
+        }
+    </style>
+
+    <script>
+        (function () {
+            const el = document.getElementById('rjRateLimitCountdown');
+            if (!el) {
+                return;
+            }
+            const template = el.dataset.template || '{0}';
+            const homeUrl = el.dataset.homeUrl || '/';
+            let seconds = Math.max(1, parseInt(el.dataset.seconds, 10) || 1);
+
+            function goBack() {
+                // Quay lại trang khách vừa thao tác; mở thẳng trang này (không có lịch sử) thì về trang chủ.
+                if (window.history.length > 1) {
+                    window.history.back();
+                } else {
+                    window.location.href = homeUrl;
+                }
+            }
+
+            function render() {
+                el.innerHTML = template.replace('{0}', '<strong>' + seconds + '</strong>');
+            }
+
+            document.querySelectorAll('[data-rate-limit-back]').forEach(function (link) {
+                link.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    goBack();
+                });
+            });
+
+            render();
+            const timer = window.setInterval(function () {
+                seconds -= 1;
+                if (seconds <= 0) {
+                    window.clearInterval(timer);
+                    goBack();
+                    return;
+                }
+                render();
+            }, 1000);
+        })();
+    </script>
+</section>
+</html>

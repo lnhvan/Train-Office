@@ -26,6 +26,12 @@ public class TicketServiceImpl implements TicketService {
             TicketStatus.CONFIRMED
     );
 
+    /** Vé khách được xem: đã thanh toán, hoặc đã hoàn tiền (để xem lại lịch sử). */
+    private static final List<TicketStatus> CUSTOMER_VISIBLE_STATUSES = List.of(
+            TicketStatus.CONFIRMED,
+            TicketStatus.REFUNDED
+    );
+
     private final TicketRepository ticketRepository;
     private final SeatRepository seatRepository;
     private final TrainTripRepository trainTripRepository;
@@ -86,7 +92,11 @@ public class TicketServiceImpl implements TicketService {
         if (user == null || user.getUserId() == null) {
             throw new IllegalArgumentException(I18n.t("err.userIsRequired"));
         }
-        return ticketRepository.findByBooking_User_UserIdOrderByTicketIdAsc(user.getUserId());
+        // Vé chỉ thực sự có sau khi thanh toán: vé đang giữ chỗ (BOOKED) / đã hủy là bản ghi nội bộ, không hiện cho khách.
+        return ticketRepository.findByBooking_User_UserIdOrderByTicketIdAsc(user.getUserId())
+                .stream()
+                .filter(ticket -> CUSTOMER_VISIBLE_STATUSES.contains(ticket.getTicketStatus()))
+                .toList();
     }
 
     @Override

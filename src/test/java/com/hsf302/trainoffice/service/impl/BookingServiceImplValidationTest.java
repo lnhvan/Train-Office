@@ -19,7 +19,8 @@ class BookingServiceImplValidationTest {
     private final BookingServiceImpl service = new BookingServiceImpl(
             mock(BookingRepository.class), mock(PassengerRepository.class), mock(SeatRepository.class),
             mock(StationRepository.class), mock(TicketRepository.class), mock(TripStationRepository.class),
-            mock(TrainTripRepository.class), policies, mock(BookingPricingService.class));
+            mock(TrainTripRepository.class), policies, mock(BookingPricingService.class),
+            event -> { });
 
     @Test
     void underSixteenStillRequiresRelationshipAndRemapsClientPolicy() {

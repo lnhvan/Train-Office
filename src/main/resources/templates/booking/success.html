@@ -26,6 +26,8 @@
                 </div>
             </div>
 
+            <div th:replace="~{fragments/payment-deadline :: notice(${booking}, false)}"></div>
+
             <div class="rj-result-actions">
                 <a class="btn btn-primary btn-lg rj-btn-block"
                    th:if="${booking != null and booking.bookingStatus != null and booking.bookingStatus.name() == 'PENDING_PAYMENT'}"

@@ -76,6 +76,7 @@
                                 name="paymentStatus">
                             <option value="">[[#{payment.default}]]</option>
                             <option th:each="status : ${paymentStatuses}"
+                                    th:if="${status.name() != 'SUCCESS' or (payment != null and payment.paymentStatus != null and payment.paymentStatus.name() == 'SUCCESS')}"
                                     th:value="${status}"
                                     th:selected="${payment != null and payment.paymentStatus != null and payment.paymentStatus == status}"
                                     th:text="${#messages.msgOrNull('enum.' + (status)) ?: (status)}">

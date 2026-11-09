@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Controller
-@RequestMapping("/seat-types") // Đặt tên URL là /seat-types
+@RequestMapping("/admin/seat-types")
 public class SeatTypeController {
 
     private final SeatTypeService seatTypeService;
@@ -49,7 +49,7 @@ public class SeatTypeController {
             model.addAttribute("seatType", seatType.get());
             return "seattype/form";
         }
-        return "redirect:/seat-types";
+        return "redirect:/admin/seat-types";
     }
 
     @PostMapping("/save")
@@ -63,14 +63,14 @@ public class SeatTypeController {
         try {
             seatTypeService.saveSeatType(seatType);
             redirectAttributes.addFlashAttribute("successMessage", I18n.t("msg.seatType.saved"));
-            return "redirect:/seat-types";
+            return "redirect:/admin/seat-types";
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", I18n.t("msg.common.saveError", e.getMessage()));
-            return "redirect:/seat-types";
+            return "redirect:/admin/seat-types";
         }
     }
 
-    @GetMapping("/delete/{id}")
+    @PostMapping("/delete/{id}")
     public String deleteSeatType(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
         try {
             seatTypeService.deleteSeatType(id);
@@ -80,6 +80,6 @@ public class SeatTypeController {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", I18n.t("msg.common.deleteError", e.getMessage()));
         }
-        return "redirect:/seat-types";
+        return "redirect:/admin/seat-types";
     }
 }

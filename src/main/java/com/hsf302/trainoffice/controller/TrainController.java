@@ -120,6 +120,11 @@ public class TrainController {
             result.rejectValue("trainType", "trainType.required", "Train type is required.");
         }
 
+        if (!result.hasFieldErrors("averageSpeedKmh") && !TrainService.isValidSpeed(train.getAverageSpeedKmh())) {
+            result.rejectValue("averageSpeedKmh", "averageSpeedKmh.invalid",
+                    I18n.t("err.trainSpeedInvalid", TrainService.MIN_SPEED_KMH, TrainService.MAX_SPEED_KMH));
+        }
+
         if (result.hasErrors()) {
             addCommonAttributes(model);
 
@@ -153,7 +158,7 @@ public class TrainController {
         }
     }
 
-    @GetMapping("/delete/{id}")
+    @PostMapping("/delete/{id}")
     public String deleteTrain(@PathVariable("id") Long id,
                               RedirectAttributes redirectAttributes) {
         try {

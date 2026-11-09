@@ -8,9 +8,14 @@ import com.hsf302.trainoffice.entity.TrainTrip;
 import com.hsf302.trainoffice.entity.TripStation;
 import com.hsf302.trainoffice.entity.User;
 import com.hsf302.trainoffice.service.*;
+import com.hsf302.trainoffice.security.CurrentUser;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpSession;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.ui.ExtendedModelMap;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap;
@@ -43,6 +48,11 @@ class BookingPageServiceImplTest {
         httpSession = new MockHttpSession();
         httpSession.setAttribute("currentUser", user);
 
+        // Người dùng đăng nhập được đọc từ request attribute (JwtAuthenticationFilter đặt vào).
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setAttribute(CurrentUser.ATTRIBUTE, user);
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+
         bookingSession = new BookingSession();
         bookingSession.setTrainTripId(10L);
         bookingSession.setDepartureStationId(20L);
@@ -61,6 +71,15 @@ class BookingPageServiceImplTest {
                 Seat.builder().seatId(101L).build(), Seat.builder().seatId(102L).build()));
         when(discounts.getActivePolicies()).thenReturn(List.of());
         when(groupDiscounts.getActivePolicies()).thenReturn(List.of());
+
+        // Ghế của phiên đặt vé vẫn đang được giữ (còn 10 phút).
+        when(flow.requireActiveHold(any(), any())).thenReturn(new SeatHold(
+                10L, 20L, 30L, 1, 2, List.of(101L, 102L), 600_000L));
+    }
+
+    @AfterEach
+    void tearDown() {
+        RequestContextHolder.resetRequestAttributes();
     }
 
     @Test

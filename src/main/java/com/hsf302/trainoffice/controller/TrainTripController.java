@@ -1,5 +1,7 @@
 package com.hsf302.trainoffice.controller;
 
+import com.hsf302.trainoffice.dto.TripCancellationResult;
+import java.math.RoundingMode;
 
 import com.hsf302.trainoffice.config.I18n;
 import com.hsf302.trainoffice.common.enums.TripStatus;
@@ -8,13 +10,17 @@ import com.hsf302.trainoffice.service.RouteService;
 import com.hsf302.trainoffice.service.TrainService;
 import com.hsf302.trainoffice.service.TrainTripService;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 public class TrainTripController {
@@ -51,9 +57,34 @@ public class TrainTripController {
 
     @GetMapping("/admin/trips/create")
     public String create(Model model) {
-        model.addAttribute("trip", new TrainTrip());
+        TrainTrip newTrip = new TrainTrip();
+        newTrip.setStatus(TripStatus.SCHEDULED);
+        model.addAttribute("trip", newTrip);
         addFormOptions(model);
         return "trips/create";
+    }
+
+    /**
+     * Xem trước lịch dừng cho form tạo chuyến (JSON). Không lưu gì.
+     * departureTime theo định dạng của input datetime-local, ví dụ 2026-11-09T14:39.
+     */
+    @GetMapping("/admin/trips/schedule-preview")
+    @ResponseBody
+    public ResponseEntity<?> schedulePreview(@RequestParam(value = "trainId", required = false) Long trainId,
+                                             @RequestParam(value = "routeId", required = false) Long routeId,
+                                             @RequestParam(value = "departureTime", required = false) String departureTime) {
+        try {
+            LocalDateTime departure;
+            try {
+                departure = departureTime == null || departureTime.isBlank() ? null : LocalDateTime.parse(departureTime);
+            } catch (DateTimeParseException ex) {
+                departure = null;
+            }
+
+            return ResponseEntity.ok(trainTripService.previewSchedule(trainId, routeId, departure));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));
+        }
     }
 
     @PostMapping("/admin/trips/save")
@@ -126,16 +157,18 @@ public class TrainTripController {
         return cancelTrip(id, redirectAttributes);
     }
 
-    @GetMapping("/admin/trips/{id}/cancel")
-    public String cancelGet(@PathVariable Long id, RedirectAttributes redirectAttributes) {
-        return cancelTrip(id, redirectAttributes);
-    }
-
     private String cancelTrip(Long id, RedirectAttributes redirectAttributes) {
         try {
-            trainTripService.cancelTrip(id);
-            redirectAttributes.addFlashAttribute("success", I18n.t("msg.trip.cancelled"));
-        } catch (IllegalArgumentException ex) {
+            TripCancellationResult result = trainTripService.cancelTrip(id);
+            String message = result.refundedTickets() == 0 && result.cancelledHolds() == 0
+                    ? I18n.t("msg.trip.cancelled")
+                    : I18n.t("msg.trip.cancelledWithRefunds",
+                            result.refundedTickets(),
+                            String.format("%,d", result.refundedAmount().setScale(0, RoundingMode.HALF_UP).longValue()),
+                            result.cancelledHolds());
+            redirectAttributes.addFlashAttribute("success", message);
+        } catch (IllegalArgumentException | IllegalStateException ex) {
+            // Ví không đủ tiền hoàn: cả thao tác hủy được rollback.
             redirectAttributes.addFlashAttribute("error", ex.getMessage());
         }
         return "redirect:/admin/trips";

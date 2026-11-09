@@ -5,14 +5,19 @@ import com.hsf302.trainoffice.config.I18n;
 import com.hsf302.trainoffice.dto.BookingPriceSummary;
 import com.hsf302.trainoffice.dto.FareBreakdownItem;
 import com.hsf302.trainoffice.dto.PassengerBookingRequest;
+import com.hsf302.trainoffice.dto.TripSegment;
 import com.hsf302.trainoffice.entity.DiscountPolicy;
 import com.hsf302.trainoffice.entity.GroupDiscountPolicy;
+import com.hsf302.trainoffice.entity.RouteStation;
 import com.hsf302.trainoffice.entity.Seat;
 import com.hsf302.trainoffice.entity.TrainTrip;
+import com.hsf302.trainoffice.entity.TripStation;
+import com.hsf302.trainoffice.repository.RouteStationRepository;
 import com.hsf302.trainoffice.service.BookingPricingService;
 import com.hsf302.trainoffice.service.DiscountPolicyService;
 import com.hsf302.trainoffice.service.GroupDiscountPolicyService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -22,25 +27,96 @@ import java.util.List;
 @Service
 public class BookingPricingServiceImpl implements BookingPricingService {
 
+    /** Giá cơ bản tối thiểu cho một đoạn đi ngắn. */
+    static final BigDecimal MIN_SEGMENT_FARE = new BigDecimal("50000");
+
+    /** Giá cơ bản của đoạn được làm tròn tới bội số này. */
+    private static final BigDecimal FARE_ROUNDING_UNIT = new BigDecimal("1000");
+
     private final DiscountPolicyService discountPolicyService;
     private final GroupDiscountPolicyService groupDiscountPolicyService;
+    private final RouteStationRepository routeStationRepository;
 
     public BookingPricingServiceImpl(DiscountPolicyService discountPolicyService,
-                                     GroupDiscountPolicyService groupDiscountPolicyService) {
+                                     GroupDiscountPolicyService groupDiscountPolicyService,
+                                     RouteStationRepository routeStationRepository) {
         this.discountPolicyService = discountPolicyService;
         this.groupDiscountPolicyService = groupDiscountPolicyService;
+        this.routeStationRepository = routeStationRepository;
     }
 
     @Override
-    public BigDecimal ticketPrice(TrainTrip trainTrip, Seat seat) {
-        return originalTicketPrice(trainTrip, seat)
-                .setScale(0, RoundingMode.HALF_UP);
+    @Transactional(readOnly = true)
+    public BigDecimal segmentBaseFare(TrainTrip trainTrip, TripSegment segment) {
+        BigDecimal basePrice = trainTrip == null || trainTrip.getBasePrice() == null
+                ? BigDecimal.ZERO
+                : trainTrip.getBasePrice();
+
+        if (basePrice.signum() <= 0 || segment == null) {
+            return basePrice.setScale(0, RoundingMode.HALF_UP);
+        }
+
+        double routeKm = routeLengthKm(trainTrip);
+        double segmentKm = segmentLengthKm(segment);
+
+        // Thiếu dữ liệu km (tuyến chưa nhập khoảng cách) hoặc đi hết tuyến -> tính đủ giá chuyến.
+        if (routeKm <= 0 || segmentKm <= 0 || segmentKm >= routeKm) {
+            return basePrice.setScale(0, RoundingMode.HALF_UP);
+        }
+
+        BigDecimal prorated = basePrice
+                .multiply(BigDecimal.valueOf(segmentKm))
+                .divide(BigDecimal.valueOf(routeKm), 0, RoundingMode.HALF_UP);
+
+        BigDecimal rounded = prorated
+                .divide(FARE_ROUNDING_UNIT, 0, RoundingMode.HALF_UP)
+                .multiply(FARE_ROUNDING_UNIT);
+
+        BigDecimal minimum = MIN_SEGMENT_FARE.min(basePrice);
+
+        return rounded.max(minimum).min(basePrice).setScale(0, RoundingMode.HALF_UP);
+    }
+
+    private double segmentLengthKm(TripSegment segment) {
+        Double from = distanceOf(segment.getDepartureStop());
+        Double to = distanceOf(segment.getArrivalStop());
+
+        if (from == null || to == null) {
+            return 0;
+        }
+
+        return to - from;
+    }
+
+    private Double distanceOf(TripStation stop) {
+        if (stop == null || stop.getRouteStation() == null) {
+            return null;
+        }
+
+        return stop.getRouteStation().getDistanceFromStartKm();
+    }
+
+    private double routeLengthKm(TrainTrip trainTrip) {
+        if (trainTrip.getRoute() == null || trainTrip.getRoute().getRouteId() == null) {
+            return 0;
+        }
+
+        return routeStationRepository
+                .findByRoute_RouteIdOrderByStationOrderAsc(trainTrip.getRoute().getRouteId())
+                .stream()
+                .map(RouteStation::getDistanceFromStartKm)
+                .filter(km -> km != null)
+                .mapToDouble(Double::doubleValue)
+                .max()
+                .orElse(0);
     }
 
     @Override
-    public BigDecimal ticketPrice(TrainTrip trainTrip, Seat seat, String passengerType) {
-        BigDecimal originalPrice = originalTicketPrice(trainTrip, seat);
+    public BigDecimal ticketPrice(TrainTrip trainTrip, TripSegment segment, Seat seat, String passengerType) {
+        return priceForPassenger(originalTicketPrice(segmentBaseFare(trainTrip, segment), seat), passengerType);
+    }
 
+    private BigDecimal priceForPassenger(BigDecimal originalPrice, String passengerType) {
         DiscountPolicy policy = discountPolicyService
                 .getActivePolicyByCode(passengerType)
                 .orElse(null);
@@ -60,36 +136,21 @@ public class BookingPricingServiceImpl implements BookingPricingService {
     }
 
     @Override
-    public BigDecimal calculateTotal(TrainTrip trainTrip, List<Seat> seats) {
-        BigDecimal total = BigDecimal.ZERO;
-
-        for (Seat seat : seats) {
-            total = total.add(ticketPrice(trainTrip, seat));
-        }
-
-        return total;
-    }
-
-    @Override
     public BigDecimal calculateTotal(TrainTrip trainTrip,
-                                     List<Seat> seats,
-                                     List<PassengerBookingRequest> passengers) {
-        return calculateTotal(trainTrip, seats, passengers, null);
-    }
-
-    @Override
-    public BigDecimal calculateTotal(TrainTrip trainTrip,
+                                     TripSegment segment,
                                      List<Seat> seats,
                                      List<PassengerBookingRequest> passengers,
                                      Long groupDiscountPolicyId) {
-        return buildPriceSummary(trainTrip, seats, passengers, groupDiscountPolicyId).getTotalAmount();
+        return buildPriceSummary(trainTrip, segment, seats, passengers, groupDiscountPolicyId).getTotalAmount();
     }
 
     @Override
     public BookingPriceSummary buildPriceSummary(TrainTrip trainTrip,
+                                                 TripSegment segment,
                                                  List<Seat> seats,
                                                  List<PassengerBookingRequest> passengers,
                                                  Long groupDiscountPolicyId) {
+        BigDecimal baseFare = segmentBaseFare(trainTrip, segment);
         List<FareBreakdownItem> passengerItems = new ArrayList<>();
         BigDecimal passengerSubtotal = BigDecimal.ZERO;
 
@@ -108,8 +169,8 @@ public class BookingPricingServiceImpl implements BookingPricingService {
                     ? passenger.getPassengerType()
                     : null;
 
-            BigDecimal originalPrice = originalTicketPrice(trainTrip, seat);
-            BigDecimal finalPrice = ticketPrice(trainTrip, seat, passengerType);
+            BigDecimal originalPrice = originalTicketPrice(baseFare, seat);
+            BigDecimal finalPrice = priceForPassenger(originalPrice, passengerType);
             BigDecimal passengerDiscountAmount = originalPrice.subtract(finalPrice);
 
             if (passengerDiscountAmount.compareTo(BigDecimal.ZERO) < 0) {
@@ -178,6 +239,40 @@ public class BookingPricingServiceImpl implements BookingPricingService {
         );
     }
 
+    @Override
+    public List<BigDecimal> allocatePaidPrices(BookingPriceSummary summary) {
+        List<BigDecimal> finals = summary.getPassengerItems()
+                .stream()
+                .map(item -> item.getFinalPrice() == null ? BigDecimal.ZERO : item.getFinalPrice())
+                .toList();
+
+        BigDecimal subtotal = finals.stream().reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal total = summary.getTotalAmount() == null ? subtotal : summary.getTotalAmount();
+
+        // Phần giảm cần chia = chênh lệch thực tế giữa tổng giá vé và tổng tiền đơn (tránh lệch do làm tròn).
+        BigDecimal discountToShare = subtotal.subtract(total);
+
+        List<BigDecimal> result = new ArrayList<>();
+        if (discountToShare.signum() <= 0 || subtotal.signum() <= 0) {
+            result.addAll(finals);
+            return result;
+        }
+
+        BigDecimal shared = BigDecimal.ZERO;
+        int last = finals.size() - 1;
+
+        for (int i = 0; i < finals.size(); i++) {
+            BigDecimal share = i == last
+                    ? discountToShare.subtract(shared)
+                    : discountToShare.multiply(finals.get(i)).divide(subtotal, 0, RoundingMode.DOWN);
+
+            shared = shared.add(share);
+            result.add(finals.get(i).subtract(share).max(BigDecimal.ZERO));
+        }
+
+        return result;
+    }
+
     private GroupDiscountPolicy resolveSelectedGroupPolicy(Long groupDiscountPolicyId, int passengerCount) {
         if (groupDiscountPolicyId == null) {
             return null;
@@ -197,10 +292,11 @@ public class BookingPricingServiceImpl implements BookingPricingService {
         return policy;
     }
 
-    private BigDecimal originalTicketPrice(TrainTrip trainTrip, Seat seat) {
-        BigDecimal basePrice = trainTrip.getBasePrice() == null
+    /** Giá gốc 1 vé = giá cơ bản của đoạn đi + phụ thu ghế/giường. */
+    private BigDecimal originalTicketPrice(BigDecimal segmentBaseFare, Seat seat) {
+        BigDecimal basePrice = segmentBaseFare == null
                 ? BigDecimal.ZERO
-                : trainTrip.getBasePrice();
+                : segmentBaseFare;
 
         BigDecimal extraPrice = seat.getExtraPrice() == null
                 ? BigDecimal.ZERO

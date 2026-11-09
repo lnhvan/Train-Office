@@ -23,11 +23,16 @@
         <div class="alert alert-danger" th:if="${error}" th:text="${error}"></div>
         <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
 
+        <!-- Thời gian giữ ghế: bắt đầu khi chọn ghế đầu tiên, đọc từ Redis (tải lại trang vẫn đúng). -->
+        <div th:replace="~{fragments/hold-timer :: timer(${seatHoldRemainingMs}, @{/api/booking/holds/current})}"></div>
+
         <form id="railSeatSelectionForm"
               th:action="@{/booking/seat-selection}"
               method="post"
-              th:data-base-price="${trip.basePrice != null ? trip.basePrice : 0}"
-              data-max-passengers="10">
+              th:data-base-price="${segment != null and segment.baseFare != null ? segment.baseFare : (trip.basePrice != null ? trip.basePrice : 0)}"
+              data-max-passengers="10"
+              th:data-hold-url="@{/api/booking/holds/seats}"
+              th:data-login-url="@{/login}">
             <input type="hidden" name="trainTripId" th:value="${seatSelectionForm.trainTripId}">
             <input type="hidden" name="departureStationId" th:value="${seatSelectionForm.departureStationId}">
             <input type="hidden" name="arrivalStationId" th:value="${seatSelectionForm.arrivalStationId}">
@@ -100,6 +105,7 @@
                                        type="checkbox"
                                        name="seatIds"
                                        th:value="${item.seat.seatId}"
+                                       th:checked="${item.heldByMe}"
                                        th:disabled="${!item.available}"
                                        th:data-seat-label="${item.seat.seatNumber}"
                                        th:data-seat-type="${item.seat.seatType}"
@@ -224,7 +230,9 @@
                             </div>
                             <div>
                                 <dt>[[#{common.basePrice}]]</dt>
-                                <dd class="rj-num" th:text="${trip.basePrice != null ? #numbers.formatDecimal(trip.basePrice, 0, 'COMMA', 0, 'POINT') + ' VND' : '0 VND'}">870,000 VND</dd>
+                                <dd class="rj-num"
+                                    th:with="fare=${segment != null and segment.baseFare != null ? segment.baseFare : trip.basePrice}"
+                                    th:text="${fare != null ? #numbers.formatDecimal(fare, 0, 'COMMA', 0, 'POINT') + ' VND' : '0 VND'}">870,000 VND</dd>
                             </div>
                         </dl>
 

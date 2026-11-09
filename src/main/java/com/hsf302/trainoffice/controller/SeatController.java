@@ -8,12 +8,12 @@ import com.hsf302.trainoffice.entity.Train;
 import com.hsf302.trainoffice.service.CoachService;
 import com.hsf302.trainoffice.service.SeatService;
 import com.hsf302.trainoffice.service.TrainService;
-import com.hsf302.trainoffice.exception.ResourceInUseException;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.List;
 
@@ -105,38 +105,47 @@ public class SeatController {
         return "seats/admin-list";
     }
 
-    @PostMapping("/{seatId}/delete")
-    public String deleteSeat(@PathVariable Long seatId,
-                             @RequestParam(value = "trainId", required = false) Long trainId,
-                             @RequestParam(value = "coachId", required = false) Long coachId,
-                             RedirectAttributes redirectAttributes) {
+    @PostMapping("/{seatId}/maintenance")
+    public String updateMaintenance(@PathVariable Long seatId,
+                                    @RequestParam("underMaintenance") boolean underMaintenance,
+                                    @RequestParam(value = "trainId", required = false) Long trainId,
+                                    @RequestParam(value = "coachId", required = false) Long coachId,
+                                    @RequestParam(value = "keyword", required = false) String keyword,
+                                    @RequestParam(value = "page", required = false) Integer page,
+                                    RedirectAttributes redirectAttributes) {
         try {
-            seatService.deleteSeat(seatId);
+            Seat seat = seatService.setUnderMaintenance(seatId, underMaintenance);
             redirectAttributes.addFlashAttribute(
                     "successMessage",
-                    I18n.t("msg.seat.deleted", seatId)
+                    I18n.t(underMaintenance ? "msg.seat.maintenanceOn" : "msg.seat.maintenanceOff", seat.getSeatNumber())
             );
-        } catch (ResourceInUseException ex) {
+        } catch (IllegalArgumentException | IllegalStateException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         } catch (Exception ex) {
-            redirectAttributes.addFlashAttribute(
-                    "errorMessage",
-                    I18n.t("msg.seat.deleteError")
-            );
+            redirectAttributes.addFlashAttribute("errorMessage", I18n.t("msg.seat.maintenanceError"));
         }
 
-        return redirectToSeatList(trainId, coachId);
+        return redirectToSeatList(trainId, coachId, keyword, page);
     }
 
-    private String redirectToSeatList(Long trainId, Long coachId) {
-        if (coachId != null) {
-            return "redirect:/admin/seats?coachId=" + coachId
-                    + (trainId == null ? "" : "&trainId=" + trainId);
-        }
+    private String redirectToSeatList(Long trainId, Long coachId, String keyword, Integer page) {
+        UriComponentsBuilder target = UriComponentsBuilder.fromPath("/admin/seats");
+
         if (trainId != null) {
-            return "redirect:/admin/seats?trainId=" + trainId;
+            target.queryParam("trainId", trainId);
         }
-        return "redirect:/admin/seats";
+        if (coachId != null) {
+            target.queryParam("coachId", coachId);
+        }
+        String cleanKeyword = normalizeKeyword(keyword);
+        if (cleanKeyword != null) {
+            target.queryParam("keyword", cleanKeyword);
+        }
+        if (page != null && page > 1) {
+            target.queryParam("page", page);
+        }
+
+        return "redirect:" + target.encode().build().toUriString();
     }
 
     private String normalizeKeyword(String keyword) {

@@ -41,11 +41,12 @@
                     </div>
                     <div class="col-md-6 mb-3">
                         <label class="form-label">[[#{common.arrivalTime}]]</label>
-                        <input class="form-control" type="datetime-local" th:field="*{arrivalTime}" required>
+                        <div class="form-control-plaintext text-muted">[[#{trip.arrivalAutoCalculated}]]</div>
                     </div>
                     <div class="col-md-6 mb-3">
                         <label class="form-label">[[#{common.basePrice}]]</label>
                         <input class="form-control" type="number" step="1000" min="0" th:field="*{basePrice}" required>
+                        <small class="form-text text-muted">[[#{trip.basePriceHelp}]]</small>
                     </div>
                     <div class="col-md-6 mb-3">
                         <label class="form-label">[[#{common.status}]]</label>

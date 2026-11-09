@@ -2,7 +2,7 @@
 <html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org" th:replace="~{layouts/admin-layout :: layout(#{seatType.seatTypeForm}, ~{::section}, 'seat-types')}">
 <section>
     <div class="admin-page-hero">
-        <a th:href="@{/seat-types}"
+        <a th:href="@{/admin/seat-types}"
            class="btn rj-btn-quiet">
             <i class="bi bi-arrow-left"></i>
             [[#{common.back}]]
@@ -19,7 +19,7 @@
             <span class="admin-card-title">[[#{seatType.seatTypeInformation}]]</span>
         </div>
 
-        <form th:action="@{/seat-types/save}"
+        <form th:action="@{/admin/seat-types/save}"
               th:object="${seatType}"
               method="post">
             <input type="hidden" th:field="*{id}">
@@ -58,7 +58,7 @@
             </div>
 
             <div class="card-footer">
-                <a th:href="@{/seat-types}"
+                <a th:href="@{/admin/seat-types}"
                    class="btn btn-outline-secondary">
                     [[#{common.cancel}]]
                 </a>

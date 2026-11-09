@@ -123,13 +123,6 @@ public class TripStationController {
         return deleteTripStation(tripId, tripStationId, redirectAttributes);
     }
 
-    @GetMapping("/admin/trips/{tripId}/stations/{tripStationId}/delete")
-    public String deleteGet(@PathVariable Long tripId,
-                            @PathVariable Long tripStationId,
-                            RedirectAttributes redirectAttributes) {
-        return deleteTripStation(tripId, tripStationId, redirectAttributes);
-    }
-
     private String deleteTripStation(Long tripId, Long tripStationId, RedirectAttributes redirectAttributes) {
         try {
             tripStationService.deleteTripStation(tripId, tripStationId);

@@ -27,10 +27,12 @@
             </p>
         </div>
 
-        <button class="btn btn-outline-secondary" disabled>
-            <i class="bi bi-lock"></i>
-            [[#{seat.readOnlyInventory}]]
-        </button>
+        <a class="btn rj-btn-quiet"
+           th:if="${selectedCoach != null}"
+           th:href="@{/admin/coaches/edit/{id}(id=${selectedCoach.coachId})}">
+            <i class="bi bi-pencil-square"></i>
+            [[#{seat.editCoachSettings}]]
+        </a>
     </div>
 
     <div class="alert alert-info seat-note">
@@ -204,15 +206,12 @@
                     </td>
 
                     <td>
-    <span th:if="${seat.active == true}"
-          class="rj-badge is-success no-dot">
-        [[#{common.active}]]
-    </span>
-
                         <span th:if="${seat.active != true}"
-                              class="rj-badge is-neutral no-dot">
-        [[#{seat.retired}]]
-    </span>
+                              class="rj-badge is-neutral no-dot">[[#{seat.retired}]]</span>
+                        <span th:if="${seat.active == true and seat.underMaintenance == true}"
+                              class="rj-badge is-warning no-dot">[[#{seat.underMaintenance}]]</span>
+                        <span th:if="${seat.active == true and seat.underMaintenance != true}"
+                              class="rj-badge is-success no-dot">[[#{common.active}]]</span>
                     </td>
 
                     <td>
@@ -226,16 +225,37 @@
                         0 VND
                     </td>
                     <td class="text-end">
-                        <form th:action="@{/admin/seats/{seatId}/delete(seatId=${seat.seatId})}"
+                        <form th:if="${seat.active == true}"
+                              th:action="@{/admin/seats/{seatId}/maintenance(seatId=${seat.seatId})}"
                               method="post"
-                              th:data-confirm="#{seat.deleteConfirm}" onsubmit="return confirm(this.dataset.confirm.replace('{0}', this.dataset.seatNumber));"
-                              th:attr="data-seat-number=${seat.seatNumber}"
-                              class="d-inline">
+                              class="d-inline"
+                              th:data-confirm="${seat.underMaintenance == true} ? #{seat.confirmMaintenanceOff(${seat.seatNumber})} : #{seat.confirmMaintenanceOn(${seat.seatNumber})}"
+                              onsubmit="return confirm(this.dataset.confirm)">
+                            <input type="hidden" name="underMaintenance" th:value="${seat.underMaintenance != true}">
                             <input type="hidden" name="trainId" th:value="${selectedTrainId}">
                             <input type="hidden" name="coachId" th:value="${selectedCoachId}">
-                            <button type="submit" class="rj-icon-btn is-danger" th:title="#{common.delete}"><i class="bi bi-trash3" aria-hidden="true"></i>
+                            <input type="hidden" name="keyword" th:value="${keyword}">
+                            <input type="hidden" name="page" th:value="${currentPage}">
+
+                            <button th:if="${seat.underMaintenance == true}"
+                                    type="submit"
+                                    class="rj-icon-btn is-success"
+                                    th:title="#{seat.markAvailable}">
+                                <i class="bi bi-check2-circle" aria-hidden="true"></i>
+                                <span class="visually-hidden">[[#{seat.markAvailable}]]</span>
+                            </button>
+                            <button th:if="${seat.underMaintenance != true}"
+                                    type="submit"
+                                    class="rj-icon-btn is-warning"
+                                    th:title="#{seat.markMaintenance}">
+                                <i class="bi bi-tools" aria-hidden="true"></i>
+                                <span class="visually-hidden">[[#{seat.markMaintenance}]]</span>
                             </button>
                         </form>
+
+                        <span th:if="${seat.active != true}"
+                              class="text-muted small"
+                              th:title="#{seat.retiredHint}">-</span>
                     </td>
                 </tr>
 

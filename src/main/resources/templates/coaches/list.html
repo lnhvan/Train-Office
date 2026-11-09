@@ -100,6 +100,7 @@
                     <th>[[#{coach.layout}]]</th>
                     <th>[[#{coach.capacity}]]</th>
                     <th>[[#{common.compartment}]]</th>
+                    <th class="text-end">[[#{coach.seatPriceShort}]]</th>
                     <th class="text-end">[[#{common.actions}]]</th>
                 </tr>
                 </thead>
@@ -159,6 +160,11 @@
                         </span>
                     </td>
 
+                    <td class="text-end rj-num"
+                        th:text="${coach.seatPrice != null ? #numbers.formatDecimal(coach.seatPrice, 0, 'COMMA', 0, 'POINT') + ' VND' : '-'}">
+                        180,000 VND
+                    </td>
+
                     <td class="text-end">
                         <a class="rj-icon-btn is-info"
                            th:href="@{/admin/seats(coachId=${coach.coachId})}" th:title="#{common.seats}"><i class="bi bi-grid-3x2-gap" aria-hidden="true"></i><span class="visually-hidden">[[#{common.seats}]]</span></a>
@@ -177,7 +183,7 @@
                 </tr>
 
                 <tr th:if="${#lists.isEmpty(coaches)}">
-                    <td colspan="7">
+                    <td colspan="8">
                         <div class="admin-empty-state">
                             <i class="bi bi-train-lightrail-front"></i>
                             <strong>[[#{coach.noCoachesFound}]]</strong>

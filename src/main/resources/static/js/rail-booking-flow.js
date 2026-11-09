@@ -256,65 +256,97 @@ function setupSeatSelection() {
         });
     }
 
-    function getStorageKey() {
-        const tripId = form.querySelector('input[name="trainTripId"]')?.value || 'trip';
-        const departureId = form.querySelector('input[name="departureStationId"]')?.value || 'dep';
-        const arrivalId = form.querySelector('input[name="arrivalStationId"]')?.value || 'arr';
+    /*
+     * Ghế được giữ trong Redis ngay khi khách bấm chọn (POST /api/booking/holds/seats),
+     * bỏ chọn thì nhả (DELETE). Tải lại trang: server đánh dấu sẵn các ghế khách đang giữ
+     * (th:checked) và đồng hồ lấy thời gian còn lại từ Redis.
+     */
+    const holdUrl = form.dataset.holdUrl || '/api/booking/holds/seats';
+    const loginUrl = form.dataset.loginUrl || '/login';
 
-        return 'railjet:selectedSeats:' + tripId + ':' + departureId + ':' + arrivalId;
+    function formNumber(name) {
+        const input = form.querySelector('input[name="' + name + '"]');
+        return input ? Number(input.value) : null;
     }
 
-    function saveSelectedSeats() {
-        const selectedSeatIds = getSelectedCheckboxes().map(function (checkbox) {
-            return checkbox.value;
-        });
-
-        localStorage.setItem(getStorageKey(), JSON.stringify(selectedSeatIds));
+    function parseHoldResponse(response) {
+        return response.json()
+            .catch(function () {
+                return {};
+            })
+            .then(function (data) {
+                if (!response.ok) {
+                    const error = new Error(data.error || rjT('js.holdFailed', 'Could not hold this seat. Please try again.'));
+                    error.status = response.status;
+                    error.code = data.code;
+                    throw error;
+                }
+                return data;
+            });
     }
 
-    function clearSavedSeats() {
-        localStorage.removeItem(getStorageKey());
+    function requestHold(seatId) {
+        return fetch(holdUrl, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify({
+                tripId: formNumber('trainTripId'),
+                departureStationId: formNumber('departureStationId'),
+                arrivalStationId: formNumber('arrivalStationId'),
+                passengerCount: getRequiredSeats(),
+                seatId: Number(seatId)
+            })
+        }).then(parseHoldResponse);
     }
 
+    function requestRelease(seatId) {
+        return fetch(holdUrl + '/' + encodeURIComponent(seatId), {
+            method: 'DELETE',
+            credentials: 'same-origin',
+            headers: { 'Accept': 'application/json' }
+        }).then(parseHoldResponse);
+    }
+
+    function applyHoldState(data) {
+        if (!window.RailHoldTimer) {
+            return;
+        }
+        if (data && data.active && data.remainingMs > 0) {
+            window.RailHoldTimer.start(data.remainingMs);
+        } else {
+            window.RailHoldTimer.stop();
+        }
+    }
+
+    function markSeatTaken(checkbox) {
+        checkbox.checked = false;
+        checkbox.disabled = true;
+        const option = checkbox.closest('.rj-seat-option');
+        if (option) {
+            option.classList.add('booked');
+        }
+    }
+
+    function handleHoldError(error, checkbox) {
+        if (error.status === 401) {
+            window.location.href = loginUrl;
+            return;
+        }
+        if (error.status === 410 && window.RailHoldTimer) {
+            window.RailHoldTimer.expire();
+            return;
+        }
+        if (error.code === 'SEAT_TAKEN') {
+            markSeatTaken(checkbox);
+        }
+        showSeatHint(error.message);
+    }
+
+    /** Ghế đang giữ (server đánh dấu sẵn) -> mở đúng toa của ghế đầu tiên. */
     function restoreSelectedSeats() {
-        const raw = localStorage.getItem(getStorageKey());
-
-        if (!raw) {
-            return null;
-        }
-
-        let savedSeatIds = [];
-
-        try {
-            savedSeatIds = JSON.parse(raw);
-        } catch (error) {
-            clearSavedSeats();
-            return null;
-        }
-
-        if (!Array.isArray(savedSeatIds) || !savedSeatIds.length) {
-            return null;
-        }
-
-        let firstRestoredCoachId = null;
-
-        checkboxes.forEach(function (checkbox) {
-            if (checkbox.disabled) {
-                checkbox.checked = false;
-                return;
-            }
-
-            const shouldRestore = savedSeatIds.includes(String(checkbox.value));
-            checkbox.checked = shouldRestore;
-
-            if (shouldRestore && firstRestoredCoachId === null) {
-                firstRestoredCoachId = checkbox.dataset.coachId || null;
-            }
-        });
-
-        saveSelectedSeats();
-
-        return firstRestoredCoachId;
+        const first = getSelectedCheckboxes()[0];
+        return first ? (first.dataset.coachId || null) : null;
     }
 
     function formatCoachPrice(value) {
@@ -656,21 +688,6 @@ function setupSeatSelection() {
         }
     }
 
-    /** Ghế khôi phục từ lần trước có thể nhiều hơn số hành khách đã chọn khi tìm chuyến -> bỏ bớt. */
-    function trimSelectionToPassengerCount() {
-        const required = getRequiredSeats();
-        const selected = getSelectedCheckboxes();
-
-        if (selected.length <= required) {
-            return;
-        }
-
-        selected.slice(required).forEach(function (checkbox) {
-            checkbox.checked = false;
-        });
-        saveSelectedSeats();
-    }
-
     function updateSeatClasses() {
         checkboxes.forEach(function (checkbox) {
             const option = checkbox.closest('.rj-seat-option');
@@ -788,8 +805,31 @@ function setupSeatSelection() {
             }
 
             showSeatHint('');
+
+            const wantHold = checkbox.checked;
+            const option = checkbox.closest('.rj-seat-option');
+            checkbox.disabled = true;
+            if (option) {
+                option.classList.add('is-pending');
+            }
+
+            (wantHold ? requestHold(checkbox.value) : requestRelease(checkbox.value))
+                .then(applyHoldState)
+                .catch(function (error) {
+                    checkbox.checked = !wantHold;
+                    handleHoldError(error, checkbox);
+                })
+                .finally(function () {
+                    if (option) {
+                        option.classList.remove('is-pending');
+                    }
+                    if (!option || !option.classList.contains('booked')) {
+                        checkbox.disabled = false;
+                    }
+                    updateSummary();
+                });
+
             updateSummary();
-            saveSelectedSeats();
         });
     });
 
@@ -827,10 +867,9 @@ function setupSeatSelection() {
                 return;
             }
 
+            // Bỏ chọn như bấm trên sơ đồ: nhả ghế trong Redis.
             checkbox.checked = false;
-
-            updateSummary();
-            saveSelectedSeats();
+            checkbox.dispatchEvent(new Event('change'));
         });
     }
     form.addEventListener('submit', function (event) {
@@ -849,8 +888,6 @@ function setupSeatSelection() {
             passengerCountInput.value = selected.length;
         }
 
-        saveSelectedSeats();
-
         return true;
     });
 
@@ -858,7 +895,6 @@ function setupSeatSelection() {
     renderCoachTabs();
 
     const restoredCoachId = restoreSelectedSeats();
-    trimSelectionToPassengerCount();
     showCoach(getCoachIndexById(restoredCoachId));
 
     updateSummary();

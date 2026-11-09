@@ -1,102 +1,274 @@
 <!DOCTYPE html>
 <html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org" th:replace="~{layouts/admin-layout :: layout(#{payment.paymentManagement}, ~{::section}, 'payments')}">
 <section>
+    <style>
+        .admin-tab-bar {
+            border-bottom: 2px solid var(--rj-line, #e6edf5);
+            gap: 6px;
+        }
+        .admin-tab-bar .nav-link {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--rj-text-2, #64748b);
+            border: none;
+            border-bottom: 3px solid transparent;
+            padding: 10px 18px;
+            background: transparent;
+            display: inline-flex;
+            align-items: center;
+            border-radius: 0;
+            transition: all .15s ease;
+        }
+        .admin-tab-bar .nav-link:hover {
+            color: var(--rj-navy-900, #0a2540);
+            border-color: rgba(11, 111, 164, 0.3);
+        }
+        .admin-tab-bar .nav-link.active {
+            color: #0b6fa4;
+            border-color: #0b6fa4;
+            background: transparent;
+        }
+    </style>
+
     <div class="admin-page-hero">
         <div>
             <span class="admin-page-kicker"><i class="bi bi-credit-card"></i> [[#{common.operations}]]</span>
             <h1>[[#{payment.paymentManagement}]]</h1>
             <p>[[#{payment.manageBookingPaymentsAndStatuses}]]</p>
         </div>
-
     </div>
 
     <div class="alert alert-success" th:if="${successMessage}" th:text="${successMessage}"></div>
     <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
 
-    <div class="card admin-filter-card">
-        <div class="card-header">
-            <form th:action="@{/admin/payments}" method="get" class="row g-2">
-                <div class="col-lg-4 col-md-6">
-                    <label class="form-label" for="paymentStatusFilter">[[#{common.status}]]</label>
-                    <select class="form-select" id="paymentStatusFilter" name="status">
-                        <option value="">[[#{common.allStatuses}]]</option>
-                        <option th:each="status : ${paymentStatuses}"
-                                th:value="${status}"
-                                th:selected="${selectedStatus != null and selectedStatus == status}"
-                                th:text="${#messages.msgOrNull('enum.' + (status)) ?: (status)}">
-                        </option>
-                    </select>
+    <!-- Tab navigation -->
+    <ul class="nav nav-tabs admin-tab-bar mb-3" id="adminPaymentTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" th:classappend="${activeTab == 'payments'} ? ' active'"
+                    id="payments-tab" data-bs-toggle="tab" data-bs-target="#payments-pane"
+                    data-tab-name="payments" type="button" role="tab"
+                    th:attr="aria-selected=${activeTab == 'payments' ? 'true' : 'false'}">
+                <i class="bi bi-credit-card me-1"></i> Giao dịch thanh toán
+                <span class="badge rounded-pill bg-light text-dark border ms-1" th:text="${#lists.size(payments)}">0</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" th:classappend="${activeTab == 'bookings'} ? ' active'"
+                    id="bookings-tab" data-bs-toggle="tab" data-bs-target="#bookings-pane"
+                    data-tab-name="bookings" type="button" role="tab"
+                    th:attr="aria-selected=${activeTab == 'bookings' ? 'true' : 'false'}">
+                <i class="bi bi-ticket-perforated me-1"></i> Danh sách đơn đặt chỗ
+                <span class="badge rounded-pill bg-light text-dark border ms-1" th:text="${#lists.size(bookings)}">0</span>
+            </button>
+        </li>
+    </ul>
+
+    <!-- Tab contents -->
+    <div class="tab-content" id="adminPaymentTabContent">
+        <!-- TAB 1: PAYMENTS -->
+        <div class="tab-pane fade" th:classappend="${activeTab == 'payments'} ? ' show active'"
+             id="payments-pane" role="tabpanel" aria-labelledby="payments-tab">
+
+            <div class="card admin-filter-card">
+                <div class="card-header">
+                    <form th:action="@{/admin/payments}" method="get" class="row g-2">
+                        <input type="hidden" name="tab" value="payments">
+                        <div class="col-lg-4 col-md-6">
+                            <label class="form-label" for="paymentStatusFilter">[[#{common.status}]]</label>
+                            <select class="form-select" id="paymentStatusFilter" name="status">
+                                <option value="">[[#{common.allStatuses}]]</option>
+                                <option th:each="status : ${paymentStatuses}"
+                                        th:value="${status}"
+                                        th:selected="${selectedStatus != null and selectedStatus == status}"
+                                        th:text="${#messages.msgOrNull('enum.' + (status)) ?: (status)}">
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-lg-4 col-md-6">
+                            <label class="form-label" for="paymentBookingFilter">[[#{payment.bookingId}]]</label>
+                            <input class="form-control" id="paymentBookingFilter" type="number" name="bookingId" th:placeholder="#{payment.bookingId}" th:value="${selectedBookingId}">
+                        </div>
+                        <div class="col-lg-4 col-md-12 d-flex align-items-end gap-2">
+                            <button class="btn btn-primary flex-fill" type="submit">
+                                <i class="bi bi-funnel"></i> [[#{payment.filter}]]
+                            </button>
+                            <a class="btn btn-outline-secondary" th:href="@{/admin/payments(tab='payments')}">[[#{common.clear}]]</a>
+                        </div>
+                    </form>
                 </div>
-                <div class="col-lg-4 col-md-6">
-                    <label class="form-label" for="paymentBookingFilter">[[#{payment.bookingId}]]</label>
-                    <input class="form-control" id="paymentBookingFilter" type="number" name="bookingId" th:placeholder="#{payment.bookingId}" th:value="${selectedBookingId}">
+            </div>
+
+            <div class="card admin-table-card">
+                <div class="card-body table-responsive p-0">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>[[#{common.booking}]]</th>
+                            <th>[[#{payment.method}]]</th>
+                            <th class="text-end">[[#{common.amount}]]</th>
+                            <th>[[#{payment.transaction}]]</th>
+                            <th>[[#{common.status}]]</th>
+                            <th>[[#{payment.paidAt}]]</th>
+                            <th class="text-end">[[#{common.actions}]]</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="payment : ${payments}">
+                            <td class="text-muted small font-monospace" th:text="${payment.paymentId != null ? #strings.substring(payment.paymentId.toString(), 0, 8) + '...' : ''}" th:title="${payment.paymentId}">UUID</td>
+                            <td><strong class="rj-code" th:text="${payment.booking != null ? payment.booking.bookingNumber : ''}">RJ0001</strong></td>
+                            <td th:text="${#messages.msgOrNull('enum.' + (payment.paymentMethod)) ?: (payment.paymentMethod)}">BANK_TRANSFER</td>
+                            <td class="text-end rj-num" th:text="${payment.amount != null ? #numbers.formatDecimal(payment.amount, 0, 'COMMA', 0, 'POINT') + ' VND' : '0 VND'}">0 VND</td>
+                            <td class="rj-code" th:text="${payment.transactionCode != null ? payment.transactionCode : '-'}">TXN</td>
+                            <td><span th:replace="~{fragments/status-badge :: statusBadge(${payment.paymentStatus})}"></span></td>
+                            <td class="rj-num" th:text="${payment.paidAt != null ? #temporals.format(payment.paidAt, 'HH:mm dd/MM/yyyy') : '-'}">Paid At</td>
+                            <td class="text-end">
+                                <a class="rj-icon-btn is-info" th:href="@{/admin/payments/detail/{id}(id=${payment.paymentId})}" th:title="#{common.view}">
+                                    <i class="bi bi-eye" aria-hidden="true"></i><span class="visually-hidden">[[#{common.view}]]</span>
+                                </a>
+                                <a class="rj-icon-btn is-warning" th:href="@{/admin/payments/edit/{id}(id=${payment.paymentId})}" th:title="#{common.edit}">
+                                    <i class="bi bi-pencil-square" aria-hidden="true"></i><span class="visually-hidden">[[#{common.edit}]]</span>
+                                </a>
+                                <form class="d-inline" th:action="@{/admin/payments/failed/{id}(id=${payment.paymentId})}" method="post">
+                                    <button type="submit" class="rj-icon-btn" th:title="#{payment.markFailed}"><i class="bi bi-x-circle" aria-hidden="true"></i><span class="visually-hidden">[[#{payment.markFailed}]]</span></button>
+                                </form>
+                                <form class="d-inline" th:action="@{/admin/payments/delete/{id}(id=${payment.paymentId})}" method="post"
+                                      th:data-confirm="#{confirm.deletePayment}" onsubmit="return confirm(this.dataset.confirm)">
+                                    <button type="submit" class="rj-icon-btn is-danger" th:title="#{common.delete}"><i class="bi bi-trash3" aria-hidden="true"></i><span class="visually-hidden">[[#{common.delete}]]</span></button>
+                                </form>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(payments)}">
+                            <td colspan="8">
+                                <div class="admin-empty-state">
+                                    <i class="bi bi-credit-card"></i>
+                                    <strong>[[#{payment.noPaymentsFound}]]</strong>
+                                </div>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
                 </div>
-                <div class="col-lg-4 col-md-12 d-flex align-items-end gap-2">
-                    <button class="btn btn-primary flex-fill" type="submit">
-                        <i class="bi bi-funnel"></i>[[#{payment.filter}]]
-                    </button>
-                    <a class="btn btn-outline-secondary" th:href="@{/admin/payments}">[[#{common.clear}]]</a>
+            </div>
+        </div>
+
+        <!-- TAB 2: BOOKINGS -->
+        <div class="tab-pane fade" th:classappend="${activeTab == 'bookings'} ? ' show active'"
+             id="bookings-pane" role="tabpanel" aria-labelledby="bookings-tab">
+
+            <div class="card admin-filter-card">
+                <div class="card-header">
+                    <form th:action="@{/admin/payments}" method="get" class="row g-2">
+                        <input type="hidden" name="tab" value="bookings">
+                        <div class="col-lg-4 col-md-6">
+                            <label class="form-label" for="bookingStatusFilter">[[#{common.status}]]</label>
+                            <select class="form-select" id="bookingStatusFilter" name="bookingStatus">
+                                <option value="">[[#{common.allStatuses}]]</option>
+                                <option th:each="st : ${bookingStatuses}"
+                                        th:value="${st}"
+                                        th:selected="${selectedBookingStatus != null and selectedBookingStatus == st}"
+                                        th:text="${#messages.msgOrNull('enum.' + (st)) ?: (st)}">
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-lg-5 col-md-6">
+                            <label class="form-label" for="bookingKeywordInput">[[#{common.search}]]</label>
+                            <input class="form-control" id="bookingKeywordInput" type="text" name="bookingKeyword"
+                                   placeholder="Mã đơn, tên khách, email, SĐT..." th:value="${bookingKeyword}">
+                        </div>
+                        <div class="col-lg-3 col-md-12 d-flex align-items-end gap-2">
+                            <button class="btn btn-primary flex-fill" type="submit">
+                                <i class="bi bi-funnel"></i> [[#{payment.filter}]]
+                            </button>
+                            <a class="btn btn-outline-secondary" th:href="@{/admin/payments(tab='bookings')}">[[#{common.clear}]]</a>
+                        </div>
+                    </form>
                 </div>
-            </form>
+            </div>
+
+            <div class="card admin-table-card">
+                <div class="card-body table-responsive p-0">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                        <tr>
+                            <th>[[#{common.booking}]]</th>
+                            <th>[[#{common.customer}]]</th>
+                            <th>[[#{common.train}]] / [[#{common.route}]]</th>
+                            <th>[[#{booking.bookingDate}]]</th>
+                            <th class="text-end">[[#{common.total}]]</th>
+                            <th>[[#{common.status}]]</th>
+                            <th class="text-end">[[#{common.actions}]]</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="b : ${bookings}">
+                            <td>
+                                <strong class="rj-code" th:text="${b.bookingNumber}">RJ0001</strong>
+                                <small class="d-block text-muted" th:text="'#' + ${b.bookingId}"></small>
+                            </td>
+                            <td>
+                                <div class="fw-semibold" th:text="${b.bookerName != null ? b.bookerName : '-'}">Khách hàng</div>
+                                <small class="d-block text-muted">
+                                    <span th:if="${b.bookerPhone != null}" th:text="${b.bookerPhone}"></span>
+                                    <span th:if="${b.bookerPhone != null and b.bookerEmail != null}"> · </span>
+                                    <span th:if="${b.bookerEmail != null}" th:text="${b.bookerEmail}"></span>
+                                </small>
+                            </td>
+                            <td>
+                                <div class="fw-semibold" th:text="${b.trainTrip != null and b.trainTrip.train != null ? b.trainTrip.train.trainCode + ' - ' + b.trainTrip.train.trainName : '-'}">Tàu</div>
+                                <small class="text-muted">
+                                    <span th:text="${b.departureStation != null ? b.departureStation.stationName : '-'}">Hà Nội</span>
+                                    <span> → </span>
+                                    <span th:text="${b.arrivalStation != null ? b.arrivalStation.stationName : '-'}">Sài Gòn</span>
+                                </small>
+                            </td>
+                            <td class="rj-num" th:text="${b.bookingDate != null ? #temporals.format(b.bookingDate, 'HH:mm dd/MM/yyyy') : '-'}">01/01/2026</td>
+                            <td class="text-end rj-num">
+                                <strong th:text="${b.totalAmount != null ? #numbers.formatDecimal(b.totalAmount, 0, 'COMMA', 0, 'POINT') + ' VND' : '0 VND'}">0 VND</strong>
+                            </td>
+                            <td>
+                                <span th:replace="~{fragments/status-badge :: statusBadge(${b.bookingStatus})}"></span>
+                            </td>
+                            <td class="text-end">
+                                <a class="rj-icon-btn is-info" th:href="@{/booking/{id}(id=${b.bookingId})}" target="_blank" title="Xem chi tiết đơn">
+                                    <i class="bi bi-eye" aria-hidden="true"></i>
+                                    <span class="visually-hidden">Xem chi tiết</span>
+                                </a>
+                                <a class="rj-icon-btn is-warning" th:href="@{/admin/payments(bookingId=${b.bookingId}, tab='payments')}" title="Xem giao dịch thanh toán">
+                                    <i class="bi bi-credit-card" aria-hidden="true"></i>
+                                    <span class="visually-hidden">Xem thanh toán</span>
+                                </a>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(bookings)}">
+                            <td colspan="7">
+                                <div class="admin-empty-state">
+                                    <i class="bi bi-ticket-perforated"></i>
+                                    <strong>Không tìm thấy đơn đặt chỗ nào.</strong>
+                                </div>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div class="card admin-table-card">
-        <div class="card-body table-responsive p-0">
-            <table class="table table-hover mb-0">
-                <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>[[#{common.booking}]]</th>
-                    <th>[[#{payment.method}]]</th>
-                    <th class="text-end">[[#{common.amount}]]</th>
-                    <th>[[#{payment.transaction}]]</th>
-                    <th>[[#{common.status}]]</th>
-                    <th>[[#{payment.paidAt}]]</th>
-                    <th class="text-end">[[#{common.actions}]]</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="payment : ${payments}">
-                    <td class="text-muted small font-monospace" th:text="${payment.paymentId != null ? #strings.substring(payment.paymentId.toString(), 0, 8) + '...' : ''}" th:title="${payment.paymentId}">UUID</td>
-                    <td><strong class="rj-code" th:text="${payment.booking != null ? payment.booking.bookingNumber : ''}">RJ0001</strong></td>
-                    <td th:text="${#messages.msgOrNull('enum.' + (payment.paymentMethod)) ?: (payment.paymentMethod)}">BANK_TRANSFER</td>
-                    <td class="text-end rj-num" th:text="${payment.amount != null ? #numbers.formatDecimal(payment.amount, 0, 'COMMA', 0, 'POINT') + ' VND' : '0 VND'}">0 VND</td>
-                    <td class="rj-code" th:text="${payment.transactionCode != null ? payment.transactionCode : '-'}">TXN</td>
-                    <td><span th:replace="~{fragments/status-badge :: statusBadge(${payment.paymentStatus})}"></span></td>
-                    <td class="rj-num" th:text="${payment.paidAt != null ? #temporals.format(payment.paidAt, 'HH:mm dd/MM/yyyy') : '-'}">Paid At</td>
-                    <td class="text-end">
-                        <a class="rj-icon-btn is-info" th:href="@{/admin/payments/detail/{id}(id=${payment.paymentId})}" th:title="#{common.view}">
-                            <i class="bi bi-eye" aria-hidden="true"></i><span class="visually-hidden">[[#{common.view}]]</span>
-                        </a>
-                        <a class="rj-icon-btn is-warning" th:href="@{/admin/payments/edit/{id}(id=${payment.paymentId})}" th:title="#{common.edit}">
-                            <i class="bi bi-pencil-square" aria-hidden="true"></i><span class="visually-hidden">[[#{common.edit}]]</span>
-                        </a>
-                        <a class="rj-icon-btn is-success" th:href="@{/admin/payments/success/{id}(id=${payment.paymentId})}" th:title="#{payment.markSuccess}">
-                            <i class="bi bi-check-circle" aria-hidden="true"></i><span class="visually-hidden">[[#{payment.markSuccess}]]</span>
-                        </a>
-                        <a class="rj-icon-btn" th:href="@{/admin/payments/failed/{id}(id=${payment.paymentId})}" th:title="#{payment.markFailed}">
-                            <i class="bi bi-x-circle" aria-hidden="true"></i><span class="visually-hidden">[[#{payment.markFailed}]]</span>
-                        </a>
-                        <a class="rj-icon-btn is-danger"
-                           th:href="@{/admin/payments/delete/{id}(id=${payment.paymentId})}"
-                           th:title="#{common.delete}"
-                           th:data-confirm="#{confirm.deletePayment}" onclick="return confirm(this.dataset.confirm)">
-                            <i class="bi bi-trash3" aria-hidden="true"></i><span class="visually-hidden">[[#{common.delete}]]</span>
-                        </a>
-                    </td>
-                </tr>
-                <tr th:if="${#lists.isEmpty(payments)}">
-                    <td colspan="8">
-                        <div class="admin-empty-state">
-                            <i class="bi bi-credit-card"></i>
-                            <strong>[[#{payment.noPaymentsFound}]]</strong>
-                        </div>
-                    </td>
-                </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
+    <script th:inline="javascript">
+        document.addEventListener('DOMContentLoaded', function () {
+            const tabButtons = document.querySelectorAll('#adminPaymentTabs button[data-bs-toggle="tab"]');
+            tabButtons.forEach(function (btn) {
+                btn.addEventListener('shown.bs.tab', function (e) {
+                    const tabName = e.target.getAttribute('data-tab-name');
+                    if (tabName) {
+                        const url = new URL(window.location.href);
+                        url.searchParams.set('tab', tabName);
+                        window.history.replaceState({}, '', url.toString());
+                    }
+                });
+            });
+        });
+    </script>
 </section>
 </html>

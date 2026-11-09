@@ -112,9 +112,8 @@
                 <div class="rj-trip-buy">
                     <span class="rj-trip-class">[[#{booking.priceFrom}]]</span>
                     <span class="rj-price rj-num">
-                        <span th:if="${result.trainTrip.basePrice != null}"
-                              th:text="${#numbers.formatDecimal(result.trainTrip.basePrice, 0, 'COMMA', 0, 'POINT')}">870,000</span>
-                        <span th:if="${result.trainTrip.basePrice == null}">0</span>
+                        <span th:with="fare=${result.segment != null and result.segment.baseFare != null ? result.segment.baseFare : result.trainTrip.basePrice}"
+                              th:text="${fare != null ? #numbers.formatDecimal(fare, 0, 'COMMA', 0, 'POINT') : '0'}">870,000</span>
                         <small>VND</small>
                     </span>
                     <a class="btn btn-primary"

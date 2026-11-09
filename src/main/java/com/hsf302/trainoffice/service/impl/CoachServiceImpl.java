@@ -166,6 +166,14 @@ public class CoachServiceImpl implements CoachService {
             throw new IllegalStateException(I18n.t("err.coachTypeIsRequired"));
         }
 
+        if (coach.getSeatPrice() == null) {
+            throw new IllegalStateException(I18n.t("err.coachSeatPriceRequired"));
+        }
+
+        if (coach.getSeatPrice().signum() < 0) {
+            throw new IllegalStateException(I18n.t("err.coachSeatPriceMustNotBeNegative"));
+        }
+
         if (isSleeperCoach(coach)) {
             if (coach.getCompartmentCount() == null || coach.getCompartmentCount() <= 0) {
                 throw new IllegalStateException(I18n.t("err.sleeperCoachMustHaveCompartmentCount"));
@@ -202,6 +210,33 @@ public class CoachServiceImpl implements CoachService {
         }
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public BigDecimal getEffectiveSeatPrice(Coach coach) {
+        if (coach == null) {
+            return BigDecimal.ZERO;
+        }
+
+        if (coach.getSeatPrice() != null) {
+            return coach.getSeatPrice();
+        }
+
+        if (coach.getCoachId() != null) {
+            BigDecimal fromSeats = seatRepository.findByCoach_CoachIdOrderBySeatNumberAsc(coach.getCoachId())
+                    .stream()
+                    .map(Seat::getExtraPrice)
+                    .filter(price -> price != null)
+                    .findFirst()
+                    .orElse(null);
+
+            if (fromSeats != null) {
+                return fromSeats;
+            }
+        }
+
+        return resolveExtraPrice(coach.getCoachType());
+    }
+
     private String normalize(String value) {
         return value == null ? null : value.trim().toUpperCase();
     }
@@ -219,7 +254,7 @@ public class CoachServiceImpl implements CoachService {
         }
 
         String seatType = coach.getCoachType();
-        BigDecimal extraPrice = resolveExtraPrice(seatType);
+        BigDecimal extraPrice = getEffectiveSeatPrice(coach);
 
         Set<String> desiredSeatNumbers = new HashSet<>();
 
@@ -286,7 +321,7 @@ public class CoachServiceImpl implements CoachService {
         int compartmentCount = coach.getCompartmentCount();
         int berthsPerCompartment = coach.getBerthsPerCompartment();
 
-        BigDecimal extraPrice = resolveExtraPrice(coach.getCoachType());
+        BigDecimal extraPrice = getEffectiveSeatPrice(coach);
 
         Set<String> desiredSeatNumbers = new HashSet<>();
 
@@ -417,7 +452,7 @@ public class CoachServiceImpl implements CoachService {
         }
 
         String seatType = coach.getCoachType();
-        BigDecimal extraPrice = resolveExtraPrice(seatType);
+        BigDecimal extraPrice = getEffectiveSeatPrice(coach);
 
         for (int index = 1; index <= capacity; index++) {
             String seatNumber = generateNormalSeatNumber(index);
@@ -469,7 +504,7 @@ public class CoachServiceImpl implements CoachService {
         int compartmentCount = coach.getCompartmentCount();
         int berthsPerCompartment = coach.getBerthsPerCompartment();
 
-        BigDecimal extraPrice = resolveExtraPrice(coach.getCoachType());
+        BigDecimal extraPrice = getEffectiveSeatPrice(coach);
 
         for (int compartmentIndex = 1; compartmentIndex <= compartmentCount; compartmentIndex++) {
             String compartmentNumber = generateCompartmentNumber(compartmentIndex);

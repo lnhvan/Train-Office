@@ -1,5 +1,6 @@
 package com.hsf302.trainoffice.controller;
 
+import com.hsf302.trainoffice.common.enums.TicketStatus;
 
 import com.hsf302.trainoffice.security.CurrentUser;
 import com.hsf302.trainoffice.config.I18n;
@@ -38,7 +39,7 @@ public class TicketController {
                          HttpSession session,
                          Model model,
                          RedirectAttributes redirectAttributes) {
-        return showTicket(id, session, model, redirectAttributes, "tickets/detail");
+        return showTicket(id, session, model, redirectAttributes, "tickets/detail", false);
     }
 
     @GetMapping("/tickets/{id}/print")
@@ -46,14 +47,15 @@ public class TicketController {
                         HttpSession session,
                         Model model,
                         RedirectAttributes redirectAttributes) {
-        return showTicket(id, session, model, redirectAttributes, "tickets/print");
+        return showTicket(id, session, model, redirectAttributes, "tickets/print", true);
     }
 
     private String showTicket(Long id,
                               HttpSession session,
                               Model model,
                               RedirectAttributes redirectAttributes,
-                              String viewName) {
+                              String viewName,
+                              boolean printing) {
         User user = currentUser(session);
         if (user == null) {
             redirectAttributes.addFlashAttribute("error", I18n.t("msg.ticket.loginRequired"));
@@ -66,6 +68,15 @@ public class TicketController {
                     || !ticket.getBooking().getUser().getUserId().equals(user.getUserId())) {
                 redirectAttributes.addFlashAttribute("error", I18n.t("msg.ticket.notOwner"));
                 return "redirect:/tickets";
+            }
+            // Vé chỉ có sau khi thanh toán; in vé chỉ với vé còn hiệu lực.
+            TicketStatus status = ticket.getTicketStatus();
+            boolean issued = status == TicketStatus.CONFIRMED || (!printing && status == TicketStatus.REFUNDED);
+            if (!issued) {
+                redirectAttributes.addFlashAttribute("error", I18n.t(printing && status == TicketStatus.REFUNDED
+                        ? "msg.ticket.refundedCannotPrint"
+                        : "msg.ticket.notIssuedYet"));
+                return "redirect:/booking/" + ticket.getBooking().getBookingId();
             }
             model.addAttribute("ticket", ticket);
             return viewName;

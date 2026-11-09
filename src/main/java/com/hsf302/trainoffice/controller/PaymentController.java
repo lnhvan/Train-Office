@@ -10,6 +10,10 @@ import com.hsf302.trainoffice.entity.Payment;
 import com.hsf302.trainoffice.entity.User;
 import com.hsf302.trainoffice.repository.BookingRepository;
 import com.hsf302.trainoffice.service.PaymentService;
+import com.hsf302.trainoffice.service.SeatHoldService;
+import com.hsf302.trainoffice.dto.SeatHold;
+import com.hsf302.trainoffice.exception.SeatHoldException;
+import com.hsf302.trainoffice.common.enums.BookingStatus;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
@@ -30,11 +34,14 @@ public class PaymentController {
 
     private final PaymentService paymentService;
     private final BookingRepository bookingRepository;
+    private final SeatHoldService seatHoldService;
 
     public PaymentController(PaymentService paymentService,
-                             BookingRepository bookingRepository) {
+                             BookingRepository bookingRepository,
+                             SeatHoldService seatHoldService) {
         this.paymentService = paymentService;
         this.bookingRepository = bookingRepository;
+        this.seatHoldService = seatHoldService;
     }
 
     // =========================================================
@@ -47,7 +54,10 @@ public class PaymentController {
     public String listPayments(
             Model model,
             @RequestParam(value = "status", required = false) PaymentStatus status,
-            @RequestParam(value = "bookingId", required = false) Long bookingId
+            @RequestParam(value = "bookingId", required = false) Long bookingId,
+            @RequestParam(value = "bookingStatus", required = false) BookingStatus bookingStatus,
+            @RequestParam(value = "bookingKeyword", required = false) String bookingKeyword,
+            @RequestParam(value = "tab", required = false, defaultValue = "payments") String activeTab
     ) {
         List<Payment> payments;
 
@@ -59,10 +69,19 @@ public class PaymentController {
             payments = paymentService.getAllPayments();
         }
 
+        String kw = (bookingKeyword != null && !bookingKeyword.isBlank()) ? bookingKeyword.trim() : null;
+        List<Booking> bookings = bookingRepository.searchBookingsAdmin(bookingStatus, kw);
+
         model.addAttribute("payments", payments);
         model.addAttribute("paymentStatuses", PaymentStatus.values());
         model.addAttribute("selectedStatus", status);
         model.addAttribute("selectedBookingId", bookingId);
+
+        model.addAttribute("bookings", bookings);
+        model.addAttribute("bookingStatuses", BookingStatus.values());
+        model.addAttribute("selectedBookingStatus", bookingStatus);
+        model.addAttribute("bookingKeyword", bookingKeyword);
+        model.addAttribute("activeTab", "bookings".equalsIgnoreCase(activeTab) ? "bookings" : "payments");
 
         return "payments/list";
     }
@@ -151,22 +170,7 @@ public class PaymentController {
         return "payments/detail";
     }
 
-    @GetMapping("/admin/payments/success/{id}")
-    public String markPaymentSuccess(
-            @PathVariable("id") UUID id,
-            RedirectAttributes redirectAttributes
-    ) {
-        try {
-            paymentService.markPaymentSuccess(id);
-            redirectAttributes.addFlashAttribute("successMessage", I18n.t("msg.payment.markedSuccess"));
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", I18n.t("msg.payment.updateError", e.getMessage()));
-        }
-
-        return "redirect:/admin/payments";
-    }
-
-    @GetMapping("/admin/payments/failed/{id}")
+    @PostMapping("/admin/payments/failed/{id}")
     public String markPaymentFailed(
             @PathVariable("id") UUID id,
             RedirectAttributes redirectAttributes
@@ -181,7 +185,7 @@ public class PaymentController {
         return "redirect:/admin/payments";
     }
 
-    @GetMapping("/admin/payments/delete/{id}")
+    @PostMapping("/admin/payments/delete/{id}")
     public String deletePayment(
             @PathVariable("id") UUID id,
             RedirectAttributes redirectAttributes
@@ -229,6 +233,19 @@ public class PaymentController {
             }
 
             model.addAttribute("booking", booking);
+
+            // Thời gian giữ ghế còn lại của đơn (đọc từ Redis) cho đồng hồ trên trang thanh toán.
+            long remainingMs = 0L;
+            if (booking.getBookingStatus() == BookingStatus.PENDING_PAYMENT) {
+                try {
+                    remainingMs = seatHoldService.findBookingHold(bookingId)
+                            .map(SeatHold::remainingMillis)
+                            .orElse(0L);
+                } catch (SeatHoldException ex) {
+                    model.addAttribute("errorMessage", ex.getMessage());
+                }
+            }
+            model.addAttribute("seatHoldRemainingMs", remainingMs);
 
             return "payments/checkout";
 

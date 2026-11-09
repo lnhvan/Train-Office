@@ -67,6 +67,19 @@
                         </div>
                     </div>
                     <div class="col-md-4 mb-3">
+                        <label class="form-label" for="averageSpeedKmh">[[#{train.averageSpeed}]]</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-speedometer2"></i></span>
+                            <input class="form-control" type="number" id="averageSpeedKmh" name="averageSpeedKmh"
+                                   min="20" max="300" step="1" required
+                                   th:value="${train.averageSpeedKmh}"
+                                   th:placeholder="#{train.averageSpeedPlaceholder}">
+                            <span class="input-group-text">km/h</span>
+                        </div>
+                        <div class="text-danger small" th:if="${#fields.hasErrors('averageSpeedKmh')}" th:errors="*{averageSpeedKmh}"></div>
+                        <small class="form-text text-muted">[[#{train.averageSpeedHelp}]]</small>
+                    </div>
+                    <div class="col-md-4 mb-3">
                         <label class="form-label" for="status">[[#{common.status}]]</label>
                         <select class="form-select" th:field="*{status}" id="status">
                             <option th:each="s : ${allTrainStatus}" th:value="${s}" th:text="${#messages.msgOrNull('enum.' + s) ?: s.description}"></option>

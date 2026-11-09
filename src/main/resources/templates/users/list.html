@@ -100,10 +100,10 @@
                     <td class="text-end">
                         <a class="rj-icon-btn is-info" th:href="@{/admin/users/{id}(id=${user.userId})}" th:title="#{common.view}"><i class="bi bi-eye" aria-hidden="true"></i><span class="visually-hidden">[[#{common.view}]]</span></a>
                         <a class="rj-icon-btn is-warning" th:href="@{/admin/users/edit/{id}(id=${user.userId})}" th:title="#{common.edit}"><i class="bi bi-pencil-square" aria-hidden="true"></i><span class="visually-hidden">[[#{common.edit}]]</span></a>
-                        <a class="rj-icon-btn is-danger"
-                           th:if="${currentUser == null or currentUser.userId != user.userId}"
-                           th:href="@{/admin/users/delete/{id}(id=${user.userId})}"
-                           th:data-confirm="#{confirm.deleteUser}" onclick="return confirm(this.dataset.confirm)" th:title="#{common.delete}"><i class="bi bi-trash3" aria-hidden="true"></i><span class="visually-hidden">[[#{common.delete}]]</span></a>
+                        <form class="d-inline" th:action="@{/admin/users/delete/{id}(id=${user.userId})}" method="post" th:if="${currentUser == null or currentUser.userId != user.userId}"
+                              th:data-confirm="#{confirm.deleteUser}" onsubmit="return confirm(this.dataset.confirm)">
+                            <button type="submit" class="rj-icon-btn is-danger" th:title="#{common.delete}"><i class="bi bi-trash3" aria-hidden="true"></i><span class="visually-hidden">[[#{common.delete}]]</span></button>
+                        </form>
                     </td>
                 </tr>
                 <tr th:if="${#lists.isEmpty(users)}">

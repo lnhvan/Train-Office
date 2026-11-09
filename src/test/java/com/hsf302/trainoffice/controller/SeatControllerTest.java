@@ -1,6 +1,6 @@
 package com.hsf302.trainoffice.controller;
 
-import com.hsf302.trainoffice.exception.ResourceInUseException;
+import com.hsf302.trainoffice.entity.Seat;
 import com.hsf302.trainoffice.service.CoachService;
 import com.hsf302.trainoffice.service.SeatService;
 import com.hsf302.trainoffice.service.TrainService;
@@ -27,35 +27,40 @@ class SeatControllerTest {
     }
 
     @Test
-    void postDeleteSuccessPreservesFilterContextAndAddsSuccessFlash() throws Exception {
-        mockMvc.perform(post("/admin/seats/7/delete")
+    void markMaintenanceKeepsFilterContextAndAddsSuccessFlash() throws Exception {
+        Seat seat = new Seat();
+        seat.setSeatNumber("1A");
+        when(seatService.setUnderMaintenance(7L, true)).thenReturn(seat);
+
+        mockMvc.perform(post("/admin/seats/7/maintenance")
+                        .param("underMaintenance", "true")
                         .param("trainId", "1")
                         .param("coachId", "2"))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/admin/seats?coachId=2&trainId=1"))
-                .andExpect(flash().attribute("successMessage", "Seat with ID 7 has been deleted."));
+                .andExpect(redirectedUrl("/admin/seats?trainId=1&coachId=2"))
+                .andExpect(flash().attributeExists("successMessage"));
 
-        verify(seatService).deleteSeat(7L);
+        verify(seatService).setUnderMaintenance(7L, true);
     }
 
     @Test
-    void blockedDeleteRedirectsWithFriendlyErrorInsteadOfServerError() throws Exception {
-        doThrow(new ResourceInUseException(
-                "Cannot delete this seat because it is already used by one or more tickets."))
-                .when(seatService).deleteSeat(8L);
+    void businessErrorRedirectsWithErrorFlashInsteadOfServerError() throws Exception {
+        when(seatService.setUnderMaintenance(8L, true))
+                .thenThrow(new IllegalStateException("Seat 1A is retired."));
 
-        mockMvc.perform(post("/admin/seats/8/delete").param("coachId", "2"))
+        mockMvc.perform(post("/admin/seats/8/maintenance")
+                        .param("underMaintenance", "true")
+                        .param("coachId", "2"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/admin/seats?coachId=2"))
-                .andExpect(flash().attribute("errorMessage",
-                        "Cannot delete this seat because it is already used by one or more tickets."));
+                .andExpect(flash().attribute("errorMessage", "Seat 1A is retired."));
     }
 
     @Test
-    void getDeleteIsNotAllowed() throws Exception {
-        mockMvc.perform(get("/admin/seats/9/delete"))
+    void getMaintenanceIsNotAllowed() throws Exception {
+        mockMvc.perform(get("/admin/seats/9/maintenance"))
                 .andExpect(status().isMethodNotAllowed());
 
-        verify(seatService, never()).deleteSeat(anyLong());
+        verify(seatService, never()).setUnderMaintenance(anyLong(), anyBoolean());
     }
 }

@@ -1,14 +1,15 @@
 package com.hsf302.trainoffice.controller;
 
 import com.hsf302.trainoffice.common.enums.BookingStatus;
+import com.hsf302.trainoffice.common.enums.PaymentStatus;
 import com.hsf302.trainoffice.common.enums.RefundStatus;
 import com.hsf302.trainoffice.common.enums.TripStatus;
 import com.hsf302.trainoffice.entity.Booking;
 import com.hsf302.trainoffice.entity.TrainTrip;
 import com.hsf302.trainoffice.repository.BookingRepository;
+import com.hsf302.trainoffice.repository.PaymentRepository;
 import com.hsf302.trainoffice.repository.RefundRepository;
 import com.hsf302.trainoffice.repository.TrainTripRepository;
-import com.hsf302.trainoffice.service.AdminWalletService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Controller;
@@ -29,16 +30,16 @@ public class AdminDashboardController {
 
     private static final int DASHBOARD_PAGE_SIZE = 5;
 
-    private final AdminWalletService adminWalletService;
+    private final PaymentRepository paymentRepository;
     private final BookingRepository bookingRepository;
     private final RefundRepository refundRepository;
     private final TrainTripRepository trainTripRepository;
 
-    public AdminDashboardController(AdminWalletService adminWalletService,
+    public AdminDashboardController(PaymentRepository paymentRepository,
                                     BookingRepository bookingRepository,
                                     RefundRepository refundRepository,
                                     TrainTripRepository trainTripRepository) {
-        this.adminWalletService = adminWalletService;
+        this.paymentRepository = paymentRepository;
         this.bookingRepository = bookingRepository;
         this.refundRepository = refundRepository;
         this.trainTripRepository = trainTripRepository;
@@ -51,17 +52,26 @@ public class AdminDashboardController {
         int safeRecentPage = Math.max(recentPage, 1);
         int safeUpcomingPage = Math.max(upcomingPage, 1);
 
-        BigDecimal walletBalance = adminWalletService.getBalance();
+        // Doanh thu hôm nay = tiền thanh toán thành công hôm nay - tiền hoàn đã chuyển cho khách hôm nay.
+        LocalDateTime startOfToday = LocalDate.now().atStartOfDay();
+        LocalDateTime startOfTomorrow = startOfToday.plusDays(1);
+        BigDecimal paidToday = paymentRepository.sumAmountPaidBetween(
+                PaymentStatus.SUCCESS, startOfToday, startOfTomorrow);
+        BigDecimal refundedToday = refundRepository.sumRefundAmountBetween(
+                List.of(RefundStatus.COMPLETED), startOfToday, startOfTomorrow);
+        BigDecimal revenueToday = paidToday.subtract(refundedToday);
 
-        long totalBookings = bookingRepository.count();
-        long paidBookings = bookingRepository.countByBookingStatus(BookingStatus.PAID);
+        // Đặt chỗ: chỉ tính booking PAID trên các chuyến chưa COMPLETED
+        long totalBookings = bookingRepository.countPaidBookingsOnActiveTrips(
+                List.of(BookingStatus.PAID),
+                List.of(TripStatus.COMPLETED));
+        long paidBookings = totalBookings;
         long pendingRefunds = refundRepository.countByRefundStatus(RefundStatus.PENDING);
 
         model.addAttribute("adminMenus", adminMenus());
         model.addAttribute("adminMenuUrls", adminMenuUrls());
 
-        model.addAttribute("walletBalance", walletBalance);
-        model.addAttribute("totalRevenue", formatVnd(walletBalance));
+        model.addAttribute("totalRevenue", formatVnd(revenueToday));
         model.addAttribute("totalBookings", totalBookings);
         model.addAttribute("occupancyRate", "0%");
         model.addAttribute("pendingRefunds", pendingRefunds);
@@ -97,7 +107,7 @@ public class AdminDashboardController {
         model.addAttribute("upcomingTripsTotal", upcomingTripPage.getTotalElements());
 
         model.addAttribute("chartLabels", List.of("Revenue"));
-        model.addAttribute("chartData", List.of(walletBalance));
+        model.addAttribute("chartData", List.of(revenueToday));
 
         return "admin/dashboard";
     }

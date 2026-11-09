@@ -1,0 +1,44 @@
+<!--
+    Đồng hồ giữ ghế. Thời gian còn lại do server đọc từ TTL Redis (seatHoldRemainingMs),
+    nên tải lại trang vẫn đúng. Hết giờ: hiện popup rồi chuyển về trang tìm vé.
+
+    Dùng: <div th:replace="~{fragments/hold-timer :: timer(${seatHoldRemainingMs}, @{/api/booking/holds/current})}"></div>
+-->
+<th:block xmlns:th="http://www.thymeleaf.org" th:fragment="timer(remainingMs, syncUrl)">
+    <link rel="stylesheet" th:href="@{/css/rail-hold-timer.css}">
+
+    <div id="rjHoldTimer"
+         class="rj-hold-timer"
+         role="timer"
+         aria-live="off"
+         th:data-remaining-ms="${remainingMs != null ? remainingMs : 0}"
+         th:data-sync-url="${syncUrl}"
+         th:data-expired-url="@{/booking/search}"
+         th:hidden="${remainingMs == null or remainingMs <= 0}">
+        <i class="bi bi-hourglass-split" aria-hidden="true"></i>
+        <span class="rj-hold-timer-label">[[#{hold.timer.label}]]</span>
+        <strong class="rj-hold-timer-clock rj-num" data-hold-clock>--:--</strong>
+    </div>
+
+    <div class="modal fade" id="rjHoldExpiredModal" tabindex="-1"
+         data-bs-backdrop="static" data-bs-keyboard="false"
+         aria-labelledby="rjHoldExpiredTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rj-hold-expired">
+                <div class="modal-body text-center">
+                    <div class="rj-hold-expired-icon" aria-hidden="true"><i class="bi bi-alarm"></i></div>
+                    <h2 id="rjHoldExpiredTitle" class="h5">[[#{hold.expired.title}]]</h2>
+                    <p class="mb-0">[[#{hold.expired.message}]]</p>
+                    <p class="rj-hold-expired-countdown" data-hold-redirect-text></p>
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <a class="btn btn-primary" data-hold-redirect th:href="@{/booking/search}">
+                        <i class="bi bi-search" aria-hidden="true"></i>[[#{hold.expired.button}]]
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script th:src="@{/js/rail-hold-timer.js}"></script>
+</th:block>

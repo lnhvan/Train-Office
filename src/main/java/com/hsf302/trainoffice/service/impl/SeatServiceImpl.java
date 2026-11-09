@@ -4,18 +4,13 @@ package com.hsf302.trainoffice.service.impl;
 import com.hsf302.trainoffice.config.I18n;
 import com.hsf302.trainoffice.entity.Seat;
 import com.hsf302.trainoffice.repository.SeatRepository;
-import com.hsf302.trainoffice.repository.TicketRepository;
 import com.hsf302.trainoffice.service.SeatService;
-import com.hsf302.trainoffice.exception.ResourceInUseException;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Optional;
@@ -23,17 +18,12 @@ import java.util.Optional;
 @Service
 public class SeatServiceImpl implements SeatService {
 
-    private static final Logger log = LoggerFactory.getLogger(SeatServiceImpl.class);
-
     private static final int SEATS_PER_PAGE = 12;
 
     private final SeatRepository seatRepository;
-    private final TicketRepository ticketRepository;
 
-    public SeatServiceImpl(SeatRepository seatRepository,
-                           TicketRepository ticketRepository) {
+    public SeatServiceImpl(SeatRepository seatRepository) {
         this.seatRepository = seatRepository;
-        this.ticketRepository = ticketRepository;
     }
 
     @Override
@@ -96,26 +86,17 @@ public class SeatServiceImpl implements SeatService {
 
     @Override
     @Transactional
-    public void deleteSeat(Long id) {
+    public Seat setUnderMaintenance(Long id, boolean underMaintenance) {
         Seat seat = seatRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException(I18n.t("err.seatNotFoundWithId", id)));
+                .orElseThrow(() -> new IllegalArgumentException(I18n.t("err.seatNotFoundWithId", id)));
 
-        if (ticketRepository.existsBySeat_SeatId(id)) {
-            throw new ResourceInUseException(
-                    I18n.t("err.cannotDeleteThisSeatBecauseItIs2")
-            );
+        // Ghế đã ngừng sử dụng (toa bị giảm sức chứa) thì không còn cho đặt, không cần bảo trì.
+        if (!Boolean.TRUE.equals(seat.getActive())) {
+            throw new IllegalStateException(I18n.t("err.seatRetiredCannotChangeMaintenance", seat.getSeatNumber()));
         }
 
-        try {
-            seatRepository.delete(seat);
-            seatRepository.flush();
-        } catch (DataIntegrityViolationException ex) {
-            log.warn("Seat {} could not be deleted because a dependent record was added or still exists.", id, ex);
-            throw new ResourceInUseException(
-                    I18n.t("err.cannotDeleteThisSeatBecauseItIs"),
-                    ex
-            );
-        }
+        seat.setUnderMaintenance(underMaintenance);
+        return seatRepository.save(seat);
     }
 
     private String normalizeKeyword(String keyword) {

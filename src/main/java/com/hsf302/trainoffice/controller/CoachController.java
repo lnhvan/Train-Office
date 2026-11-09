@@ -116,6 +116,11 @@ public class CoachController {
         if (coachOpt.isPresent()) {
             Coach coach = coachOpt.get();
 
+            // Toa cũ chưa lưu phụ thu: hiển thị mức đang áp cho ghế để admin sửa tiếp.
+            if (coach.getSeatPrice() == null) {
+                coach.setSeatPrice(coachService.getEffectiveSeatPrice(coach));
+            }
+
             model.addAttribute("coach", coach);
             addCommonAttributes(model, coach.getTrain().getTrainId());
 
@@ -146,6 +151,14 @@ public class CoachController {
 
         if (coach.getCoachType() == null || coach.getCoachType().isBlank()) {
             result.rejectValue("coachType", "coachType.required", "Coach type is required.");
+        }
+
+        if (!result.hasFieldErrors("seatPrice")) {
+            if (coach.getSeatPrice() == null) {
+                result.rejectValue("seatPrice", "seatPrice.required", I18n.t("err.coachSeatPriceRequired"));
+            } else if (coach.getSeatPrice().signum() < 0) {
+                result.rejectValue("seatPrice", "seatPrice.negative", I18n.t("err.coachSeatPriceMustNotBeNegative"));
+            }
         }
 
         if (result.hasErrors()) {

@@ -70,6 +70,7 @@ class TrainServiceImplTest {
         train.setTrainCode(code);
         train.setTrainName("Test Train");
         train.setTrainType(type);
+        train.setAverageSpeedKmh(60);
         return train;
     }
 }

@@ -33,6 +33,7 @@
                 <dt>[[#{coach.coachNumber}]]</dt><dd th:text="${detail.coachNumber}">C01</dd>
                 <dt>[[#{common.type}]]</dt><dd th:text="${detail.coachType}">SOFT_SEAT</dd>
                 <dt>[[#{coach.capacity}]]</dt><dd><span class="capacity-pill" th:text="#{common.nSeats(${detail.capacity})}">64 seats</span></dd>
+                <dt>[[#{coach.seatPriceShort}]]</dt><dd class="rj-num" th:text="${detail.seatPrice != null ? #numbers.formatDecimal(detail.seatPrice, 0, 'COMMA', 0, 'POINT') + ' VND' : '-'}">180,000 VND</dd>
             </dl>
         </div>
     </div>

@@ -88,6 +88,7 @@
                     <th>[[#{common.train}]]</th>
                     <th>[[#{common.code}]]</th>
                     <th>[[#{common.type}]]</th>
+                    <th class="text-end">[[#{train.averageSpeed}]]</th>
                     <th>[[#{common.status}]]</th>
                     <th class="text-end">[[#{common.actions}]]</th>
                 </tr>
@@ -130,6 +131,11 @@
                         Express
                     </td>
 
+                    <td class="text-end rj-num"
+                        th:text="${train.averageSpeedKmh != null ? train.averageSpeedKmh + ' km/h' : '-'}">
+                        56 km/h
+                    </td>
+
                     <td>
                         <span class="rj-badge admin-badge-soft"
                               th:classappend="${train.status != null and train.status.toString() == 'AVAILABLE'} ? ' is-success' : ' is-neutral'"
@@ -145,14 +151,15 @@
                         <a class="rj-icon-btn is-warning"
                            th:href="@{/admin/trains/edit/{id}(id=${train.trainId})}" th:title="#{common.edit}"><i class="bi bi-pencil-square" aria-hidden="true"></i><span class="visually-hidden">[[#{common.edit}]]</span></a>
 
-                        <a class="rj-icon-btn is-danger"
-                           th:href="@{/admin/trains/delete/{id}(id=${train.trainId})}"
-                           th:data-confirm="#{confirm.deleteTrain}" onclick="return confirm(this.dataset.confirm)" th:title="#{common.delete}"><i class="bi bi-trash3" aria-hidden="true"></i><span class="visually-hidden">[[#{common.delete}]]</span></a>
+                        <form class="d-inline" th:action="@{/admin/trains/delete/{id}(id=${train.trainId})}" method="post"
+                              th:data-confirm="#{confirm.deleteTrain}" onsubmit="return confirm(this.dataset.confirm)">
+                            <button type="submit" class="rj-icon-btn is-danger" th:title="#{common.delete}"><i class="bi bi-trash3" aria-hidden="true"></i><span class="visually-hidden">[[#{common.delete}]]</span></button>
+                        </form>
                     </td>
                 </tr>
 
                 <tr th:if="${#lists.isEmpty(trains)}">
-                    <td colspan="6">
+                    <td colspan="7">
                         <div class="admin-empty-state">
                             <i class="bi bi-train-front"></i>
                             <strong>[[#{train.noTrainsFound}]]</strong>

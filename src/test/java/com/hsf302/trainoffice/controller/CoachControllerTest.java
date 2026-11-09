@@ -10,6 +10,7 @@ import org.springframework.ui.ExtendedModelMap;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -97,6 +98,7 @@ class CoachControllerTest {
         coach.setCoachType(type);
         coach.setCoachNumber("C01");
         coach.setCapacity(40);
+        coach.setSeatPrice(BigDecimal.ZERO);
         return coach;
     }
 }

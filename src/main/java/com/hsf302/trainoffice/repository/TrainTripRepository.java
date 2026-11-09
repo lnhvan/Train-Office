@@ -42,6 +42,14 @@ public interface TrainTripRepository extends JpaRepository<TrainTrip, Long> {
     @EntityGraph(attributePaths = {"train", "route"})
     Optional<TrainTrip> findByTripId(Long tripId);
 
+    /** Đã có chuyến của tàu này trên tuyến này khởi hành trong khoảng [start, end) chưa. */
+    boolean existsByTrain_TrainIdAndRoute_RouteIdAndDepartureTimeGreaterThanEqualAndDepartureTimeLessThan(
+            Long trainId,
+            Long routeId,
+            LocalDateTime start,
+            LocalDateTime end
+    );
+
     @EntityGraph(attributePaths = {"train", "route"})
     List<TrainTrip> findByStatusAndDepartureTimeGreaterThanEqualAndDepartureTimeLessThanOrderByDepartureTimeAsc(
             TripStatus status,

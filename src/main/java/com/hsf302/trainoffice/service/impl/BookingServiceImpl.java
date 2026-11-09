@@ -1,12 +1,15 @@
 package com.hsf302.trainoffice.service.impl;
 
 
+import com.hsf302.trainoffice.common.BookingHoldPolicy;
 import com.hsf302.trainoffice.config.I18n;
 import com.hsf302.trainoffice.common.enums.TicketStatus;
 import com.hsf302.trainoffice.common.enums.BookingStatus;
 import com.hsf302.trainoffice.common.enums.TripStatus;
+import com.hsf302.trainoffice.dto.BookingPriceSummary;
 import com.hsf302.trainoffice.dto.CreateBookingRequest;
 import com.hsf302.trainoffice.dto.PassengerBookingRequest;
+import com.hsf302.trainoffice.dto.TripSegment;
 import com.hsf302.trainoffice.entity.Booking;
 import com.hsf302.trainoffice.entity.Passenger;
 import com.hsf302.trainoffice.entity.Seat;
@@ -22,13 +25,17 @@ import com.hsf302.trainoffice.repository.StationRepository;
 import com.hsf302.trainoffice.repository.TicketRepository;
 import com.hsf302.trainoffice.repository.TripStationRepository;
 import com.hsf302.trainoffice.repository.TrainTripRepository;
+import com.hsf302.trainoffice.event.SeatHoldReleaseEvent;
 import com.hsf302.trainoffice.service.BookingPricingService;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.Period;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.function.LongPredicate;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -54,6 +61,7 @@ public class BookingServiceImpl implements com.hsf302.trainoffice.service.Bookin
     private final TrainTripRepository trainTripRepository;
     private final BookingPricingService bookingPricingService;
     private final DiscountPolicyService discountPolicyService;
+    private final ApplicationEventPublisher eventPublisher;
 
 
     public BookingServiceImpl(BookingRepository bookingRepository,
@@ -64,7 +72,8 @@ public class BookingServiceImpl implements com.hsf302.trainoffice.service.Bookin
                               TripStationRepository tripStationRepository,
                               TrainTripRepository trainTripRepository,
                               DiscountPolicyService discountPolicyService,
-                              BookingPricingService bookingPricingService) {
+                              BookingPricingService bookingPricingService,
+                              ApplicationEventPublisher eventPublisher) {
         this.bookingRepository = bookingRepository;
         this.passengerRepository = passengerRepository;
         this.seatRepository = seatRepository;
@@ -74,6 +83,7 @@ public class BookingServiceImpl implements com.hsf302.trainoffice.service.Bookin
         this.trainTripRepository = trainTripRepository;
         this.bookingPricingService = bookingPricingService;
         this.discountPolicyService = discountPolicyService;
+        this.eventPublisher = eventPublisher;
     }
 
     @Override
@@ -141,7 +151,9 @@ public class BookingServiceImpl implements com.hsf302.trainoffice.service.Bookin
             ticket.setTicketStatus(TicketStatus.CANCELLED);
         }
         ticketRepository.saveAll(tickets);
-        return bookingRepository.save(booking);
+        Booking saved = bookingRepository.save(booking);
+        eventPublisher.publishEvent(SeatHoldReleaseEvent.booking(bookingId));
+        return saved;
     }
 
     @Override
@@ -161,11 +173,19 @@ public class BookingServiceImpl implements com.hsf302.trainoffice.service.Bookin
             ticket.setTicketStatus(TicketStatus.CANCELLED);
         }
         ticketRepository.saveAll(tickets);
-        return bookingRepository.save(booking);
+        Booking saved = bookingRepository.save(booking);
+        eventPublisher.publishEvent(SeatHoldReleaseEvent.booking(bookingId));
+        return saved;
     }
 
     private Booking createBooking(CreateBookingRequest request, User user) {
         validateRequest(request);
+        if (user != null && user.getUserId() != null
+                && bookingRepository.countByUser_UserIdAndBookingStatus(user.getUserId(), BookingStatus.PENDING_PAYMENT)
+                >= BookingHoldPolicy.MAX_PENDING_BOOKINGS_PER_USER) {
+            throw new IllegalArgumentException(I18n.t("err.tooManyPendingBookings",
+                    BookingHoldPolicy.MAX_PENDING_BOOKINGS_PER_USER));
+        }
         List<Seat> fetchedSeats = seatRepository.findAllById(request.getSeatIds());
         if (fetchedSeats.size() != request.getSeatIds().size()) {
             throw new IllegalArgumentException(I18n.t("err.oneOrMoreSeatsDoNotExist"));
@@ -182,7 +202,7 @@ public class BookingServiceImpl implements com.hsf302.trainoffice.service.Bookin
                 .orElseThrow(() -> new IllegalArgumentException(I18n.t("err.departureStationDoesNotExist")));
         Station arrivalStation = stationRepository.findById(request.getArrivalStationId())
                 .orElseThrow(() -> new IllegalArgumentException(I18n.t("err.arrivalStationDoesNotExist")));
-        Segment segment = validateSegment(trainTrip, departureStation, arrivalStation);
+        TripSegment segment = validateSegment(trainTrip, departureStation, arrivalStation);
         if (trainTrip.getStatus() != TripStatus.SCHEDULED) {
             throw new IllegalArgumentException(I18n.t("err.trainTripIsNotAvailableForBooking"));
         }
@@ -193,11 +213,14 @@ public class BookingServiceImpl implements com.hsf302.trainoffice.service.Bookin
                     || !seat.getCoach().getTrain().getTrainId().equals(trainTrip.getTrain().getTrainId())) {
                 throw new IllegalArgumentException(I18n.t("err.seatDoesNotBelongToThisTrain", seatId));
             }
+            if (!seat.isBookable()) {
+                throw new IllegalArgumentException(I18n.t("err.seatUnderMaintenance", seat.getSeatNumber()));
+            }
             if (ticketRepository.existsActiveOverlappingSeatBooking(
                     seatId,
                     trainTrip.getTripId(),
-                    segment.departureOrder,
-                    segment.arrivalOrder,
+                    segment.getDepartureOrder(),
+                    segment.getArrivalOrder(),
                     ACTIVE_TICKET_STATUSES)) {
                 throw new IllegalArgumentException(I18n.t("err.seatAlreadyBooked", seatId));
             }
@@ -214,12 +237,18 @@ public class BookingServiceImpl implements com.hsf302.trainoffice.service.Bookin
         booking.setBookerEmail(request.getBookerEmail().trim());
         booking.setBookingStatus(BookingStatus.PENDING_PAYMENT);
         booking.setBookingDate(LocalDateTime.now());
-        booking.setTotalAmount(bookingPricingService.calculateTotal(
+        BookingPriceSummary priceSummary = bookingPricingService.buildPriceSummary(
                 booking.getTrainTrip(),
+                segment,
                 seats,
                 request.getPassengers(),
                 request.getGroupDiscountPolicyId()
-        ));
+        );
+        // Giá lưu trên từng vé = số tiền khách thực trả cho vé đó (đã chia giảm giá nhóm),
+        // nên tổng giá vé = tổng tiền đơn và hoàn tiền theo giá vé không bao giờ vượt số đã trả.
+        List<BigDecimal> paidPrices = bookingPricingService.allocatePaidPrices(priceSummary);
+
+        booking.setTotalAmount(priceSummary.getTotalAmount());
         booking = bookingRepository.save(booking);
 
         for (int i = 0; i < request.getPassengers().size(); i++) {
@@ -233,13 +262,7 @@ public class BookingServiceImpl implements com.hsf302.trainoffice.service.Bookin
             ticket.setPassenger(passenger);
             ticket.setTrainTrip(trainTrip);
             ticket.setSeat(seat);
-            PassengerBookingRequest passengerRequest = request.getPassengers().get(i);
-
-            ticket.setTicketPrice(bookingPricingService.ticketPrice(
-                    booking.getTrainTrip(),
-                    seat,
-                    passengerRequest.getPassengerType()
-            ));
+            ticket.setTicketPrice(paidPrices.get(i));
             ticket.setTicketStatus(TicketStatus.BOOKED);
             ticketRepository.save(ticket);
         }
@@ -313,7 +336,7 @@ public class BookingServiceImpl implements com.hsf302.trainoffice.service.Bookin
         }
     }
 
-    private Segment validateSegment(TrainTrip trainTrip, Station departureStation, Station arrivalStation) {
+    private TripSegment validateSegment(TrainTrip trainTrip, Station departureStation, Station arrivalStation) {
         TripStation departure = tripStationRepository
                 .findStop(trainTrip.getTripId(), departureStation.getStationId())
                 .orElseThrow(() -> new IllegalArgumentException(I18n.t("err.departureStationIsNotPartOfThis")));
@@ -324,7 +347,7 @@ public class BookingServiceImpl implements com.hsf302.trainoffice.service.Bookin
                 || departure.getStationOrder() >= arrival.getStationOrder()) {
             throw new IllegalArgumentException(I18n.t("err.departureStationMustBeBeforeArrivalStation"));
         }
-        return new Segment(departure.getStationOrder(), arrival.getStationOrder());
+        return new TripSegment(departure, arrival);
     }
 
     private Passenger toPassenger(PassengerBookingRequest request, Booking booking) {
@@ -380,27 +403,25 @@ public class BookingServiceImpl implements com.hsf302.trainoffice.service.Bookin
         return bookingNumber;
     }
 
-    private static class Segment {
-        private final Integer departureOrder;
-        private final Integer arrivalOrder;
-
-        private Segment(Integer departureOrder, Integer arrivalOrder) {
-            this.departureOrder = departureOrder;
-            this.arrivalOrder = arrivalOrder;
-        }
-    }
-
     @Override
     @Transactional
-    public int expirePendingBookingsOlderThan(int minutes) {
-        LocalDateTime cutoff = LocalDateTime.now().minusMinutes(minutes);
+    public List<Long> expireBookingsWithoutHold(LongPredicate holdActive) {
+        // Đơn vừa tạo được miễn một chút để khóa Redis kịp chuyển từ khách sang đơn.
+        LocalDateTime cutoff = LocalDateTime.now().minusSeconds(BookingHoldPolicy.NEW_BOOKING_GRACE_SECONDS);
 
-        List<Booking> expiredBookings = bookingRepository.findByBookingStatusAndBookingDateBefore(
+        List<Booking> pendingBookings = bookingRepository.findByBookingStatusAndBookingDateBefore(
                 BookingStatus.PENDING_PAYMENT,
                 cutoff
         );
 
-        for (Booking booking : expiredBookings) {
+        List<Booking> expiredBookings = new ArrayList<>();
+
+        for (Booking booking : pendingBookings) {
+            // Khóa ghế trong Redis còn hạn (đang giữ chỗ / đang thanh toán VNPay): chưa hủy.
+            if (holdActive.test(booking.getBookingId())) {
+                continue;
+            }
+
             booking.setBookingStatus(BookingStatus.CANCELLED);
 
             List<Ticket> tickets = ticketRepository.findByBooking_BookingIdOrderByTicketIdAsc(
@@ -414,10 +435,15 @@ public class BookingServiceImpl implements com.hsf302.trainoffice.service.Bookin
             }
 
             ticketRepository.saveAll(tickets);
+            expiredBookings.add(booking);
         }
 
         bookingRepository.saveAll(expiredBookings);
 
-        return expiredBookings.size();
+        List<Long> ids = expiredBookings.stream().map(Booking::getBookingId).toList();
+        if (!ids.isEmpty()) {
+            eventPublisher.publishEvent(SeatHoldReleaseEvent.bookings(ids));
+        }
+        return ids;
     }
 }

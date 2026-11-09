@@ -105,6 +105,20 @@
                             </button>
                         </form>
                     </div>
+
+                    <div class="rj-decision"
+                         th:if="${refund.refundStatus != null and refund.refundStatus.name() == 'APPROVED'}">
+                        <form th:action="@{/admin/refunds/{id}/complete(id=${refund.refundId})}"
+                              method="post"
+                              class="flex-fill"
+                              th:data-confirm="#{confirm.completeRefund(${#numbers.formatDecimal(refund.refundAmount, 0, 'COMMA', 0, 'POINT')}, ${refund.bankName}, ${refund.bankAccountNumber}, ${refund.bankAccountHolder})}"
+                              onsubmit="return confirm(this.dataset.confirm)">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-bank"></i>
+                                [[#{refund.markTransferred}]]
+                            </button>
+                        </form>
+                    </div>
                 </div>
 
                 <div class="col-lg-8">

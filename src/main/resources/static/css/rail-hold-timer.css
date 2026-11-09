@@ -1,0 +1,103 @@
+/* Đồng hồ giữ ghế (fragments/hold-timer.html) */
+.rj-hold-timer {
+    position: sticky;
+    top: calc(var(--rj-header-h, 68px) + 8px);
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: fit-content;
+    margin: 0 0 16px auto;
+    padding: 8px 14px;
+    border: 1px solid var(--rj-line, #d9e3ef);
+    border-radius: 999px;
+    background: var(--rj-surface, #fff);
+    color: var(--rj-text, inherit);
+    box-shadow: 0 6px 18px rgba(5, 18, 34, .12);
+    font-size: .95rem;
+}
+
+.rj-hold-timer[hidden] {
+    display: none;
+}
+
+.rj-hold-timer > .bi {
+    color: var(--rj-accent, #1287c4);
+}
+
+.rj-hold-timer-label {
+    color: var(--rj-text-2, #657287);
+}
+
+.rj-hold-timer-clock {
+    min-width: 3.2em;
+    font-size: 1.05rem;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+}
+
+.rj-hold-timer.is-warning {
+    border-color: var(--rj-warning, #b7791f);
+    background: var(--rj-warning-soft, #fdf3dc);
+}
+
+.rj-hold-timer.is-warning > .bi,
+.rj-hold-timer.is-warning .rj-hold-timer-clock {
+    color: var(--rj-warning, #b7791f);
+}
+
+.rj-hold-timer.is-critical {
+    border-color: var(--rj-danger, #c53030);
+    background: var(--rj-danger-soft, #fdecec);
+}
+
+.rj-hold-timer.is-critical > .bi,
+.rj-hold-timer.is-critical .rj-hold-timer-clock {
+    color: var(--rj-danger, #c53030);
+}
+
+.rj-hold-expired .modal-body {
+    padding: 28px 24px 8px;
+}
+
+.rj-hold-expired-icon {
+    display: inline-grid;
+    place-items: center;
+    width: 56px;
+    height: 56px;
+    margin-bottom: 12px;
+    border-radius: 50%;
+    background: var(--rj-danger-soft, #fdecec);
+    color: var(--rj-danger, #c53030);
+    font-size: 1.6rem;
+}
+
+.rj-hold-expired-countdown {
+    margin: 12px 0 0;
+    color: var(--rj-text-3, #7d92aa);
+    font-size: .9rem;
+}
+
+.rj-hold-expired .modal-footer {
+    border-top: 0;
+    padding-bottom: 24px;
+}
+
+.rj-hold-expired .btn .bi {
+    margin-right: 6px;
+}
+
+@media (max-width: 575.98px) {
+    .rj-hold-timer {
+        margin-left: 0;
+        width: 100%;
+        justify-content: center;
+        border-radius: var(--rj-radius, 12px);
+    }
+}
+
+/* Ghế đang gửi yêu cầu giữ / nhả */
+.rj-seat-option.is-pending {
+    opacity: .6;
+    pointer-events: none;
+}

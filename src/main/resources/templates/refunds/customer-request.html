@@ -23,6 +23,26 @@
               th:object="${refundRequestForm}"
               method="post"
               novalidate>
+            <div class="rj-card-section" th:if="${refundQuote != null}">
+                <div class="rj-section-head">
+                    <i class="bi bi-cash-coin"></i>
+                    <div>
+                        <h2>[[#{refund.estimatedRefund}]]</h2>
+                        <p>[[#{refund.policySummary}]]</p>
+                    </div>
+                </div>
+                <dl class="rj-rows">
+                    <div>
+                        <dt>[[#{refund.paidAmount}]]</dt>
+                        <dd class="rj-num" th:text="${#numbers.formatDecimal(refundQuote.paidAmount, 0, 'COMMA', 0, 'POINT')} + ' VND'">450,000 VND</dd>
+                    </div>
+                    <div>
+                        <dt><strong>[[#{refund.amountYouReceive}]]</strong></dt>
+                        <dd class="rj-num"><strong th:text="${#numbers.formatDecimal(refundQuote.refundAmount, 0, 'COMMA', 0, 'POINT')} + ' VND'">450,000 VND</strong></dd>
+                    </div>
+                </dl>
+            </div>
+
             <div class="rj-card-section">
                 <div class="rj-section-head">
                     <i class="bi bi-person-vcard"></i>

@@ -191,6 +191,15 @@ body.rj-admin { background: var(--rj-bg); min-height: 100vh; }
     background: rgba(255, 255, 255, .94); backdrop-filter: blur(6px);
 }
 .admin-form-card .card-body .row { row-gap: .25rem; }
+
+/* form tạo chuyến: xem trước giờ từng ga */
+.trip-schedule-preview { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--rj-line); }
+.trip-schedule-preview-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: .25rem 1rem; margin-bottom: .5rem; }
+.trip-schedule-preview-head .admin-card-title { display: inline-flex; align-items: center; gap: .4rem; }
+.trip-schedule-preview-body { font-size: .9rem; }
+.trip-schedule-preview-body .table-responsive { max-height: 420px; overflow-y: auto; border: 1px solid var(--rj-line); border-radius: var(--rj-radius-sm); }
+.trip-schedule-table th { position: sticky; top: 0; background: var(--rj-surface); font-size: .78rem; font-weight: 600; color: var(--rj-muted-light); }
+.trip-schedule-table th, .trip-schedule-table td { padding: .45rem .75rem; white-space: nowrap; }
 .rj-admin .input-group > .input-group-text { min-width: 44px; justify-content: center; color: var(--rj-text-3); background: var(--rj-surface-2); }
 .rj-admin .input-group > :not(:first-child) { border-top-left-radius: 0; border-bottom-left-radius: 0; }
 .rj-admin .input-group > :not(:last-child) { border-top-right-radius: 0; border-bottom-right-radius: 0; }

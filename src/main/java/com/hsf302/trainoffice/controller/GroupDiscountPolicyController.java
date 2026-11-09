@@ -60,7 +60,7 @@ public class GroupDiscountPolicyController {
         }
     }
 
-    @GetMapping("/delete/{id}")
+    @PostMapping("/delete/{id}")
     public String delete(@PathVariable Long id,
                          RedirectAttributes redirectAttributes) {
         try {

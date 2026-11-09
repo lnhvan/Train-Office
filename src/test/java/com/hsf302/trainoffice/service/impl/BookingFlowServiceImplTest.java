@@ -19,7 +19,8 @@ class BookingFlowServiceImplTest {
         DiscountPolicyService discountPolicies = mock(DiscountPolicyService.class);
         BookingFlowServiceImpl service = new BookingFlowServiceImpl(
                 mock(TrainTripService.class), mock(TicketService.class), mock(BookingService.class),
-                mock(BookingPricingService.class), mock(GroupDiscountPolicyService.class), discountPolicies);
+                mock(BookingPricingService.class), mock(GroupDiscountPolicyService.class), discountPolicies,
+                null); // SeatHoldService (Redis) không dùng trong test lưu thông tin hành khách
         LocalDate dob = LocalDate.now().minusYears(10);
         when(discountPolicies.resolvePassengerType(dob)).thenReturn("CHILD");
 
@@ -42,7 +43,8 @@ class BookingFlowServiceImplTest {
         DiscountPolicyService discountPolicies = mock(DiscountPolicyService.class);
         BookingFlowServiceImpl service = new BookingFlowServiceImpl(
                 mock(TrainTripService.class), mock(TicketService.class), mock(BookingService.class),
-                mock(BookingPricingService.class), mock(GroupDiscountPolicyService.class), discountPolicies);
+                mock(BookingPricingService.class), mock(GroupDiscountPolicyService.class), discountPolicies,
+                null); // SeatHoldService (Redis) không dùng trong test lưu thông tin hành khách
         LocalDate future = LocalDate.now().plusDays(1);
         when(discountPolicies.resolvePassengerType(future))
                 .thenThrow(new IllegalArgumentException("Passenger date of birth cannot be in the future"));

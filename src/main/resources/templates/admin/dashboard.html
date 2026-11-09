@@ -48,50 +48,6 @@
         </div>
     </div>
 
-    <div class="rj-dash-grid">
-        <div class="card dashboard-card">
-            <div class="card-header d-flex align-items-center justify-content-between">
-                <div>
-                    <span class="dashboard-card-title">[[#{admin.revenueOverview}]]</span>
-                    <small>[[#{admin.paymentTrendPlaceholderForAdminReview}]]</small>
-                </div>
-                <span class="rj-badge is-info">[[#{admin.liveUi}]]</span>
-            </div>
-            <div class="card-body">
-                <div class="dashboard-chart-wrap">
-                    <canvas id="revenueChart" height="116"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <div class="card dashboard-card">
-            <div class="card-header">
-                <span class="dashboard-card-title">[[#{admin.operationsSnapshot}]]</span>
-                <small>[[#{admin.currentSystemSummary}]]</small>
-            </div>
-            <div class="card-body">
-                <ul class="ops-list">
-                    <li>
-                        <span><i class="bi bi-database text-primary"></i>[[#{admin.totalRecords}]]</span>
-                        <strong th:text="${totalItems}">0</strong>
-                    </li>
-                    <li>
-                        <span><i class="bi bi-check-lg text-success"></i>[[#{common.active}]]</span>
-                        <strong th:text="${activeItems}">0</strong>
-                    </li>
-                    <li>
-                        <span><i class="bi bi-clock text-warning"></i>[[#{admin.pending}]]</span>
-                        <strong th:text="${pendingItems}">0</strong>
-                    </li>
-                    <li>
-                        <span><i class="bi bi-exclamation-triangle text-danger"></i>[[#{admin.issues}]]</span>
-                        <strong th:text="${issueItems}">0</strong>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </div>
-
     <div class="rj-dash-grid is-even">
         <!-- Recent Activity -->
         <div class="card dashboard-card dashboard-preview-card">
@@ -301,74 +257,5 @@
         </div>
     </div>
 
-    <script th:inline="javascript">
-        window.addEventListener('load', function () {
-            const canvas = document.getElementById('revenueChart');
-
-            if (!canvas) {
-                return;
-            }
-
-            if (typeof Chart === 'undefined') {
-                console.error('Chart.js is not loaded.');
-                return;
-            }
-
-            const labels = /*[[${chartLabels}]]*/ ['Revenue'];
-            const chartData = /*[[${chartData}]]*/ [0];
-
-            new Chart(canvas, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: window.railT ? window.railT('js.revenue', 'Revenue') : 'Revenue',
-                        data: chartData,
-                        backgroundColor: 'rgba(11, 111, 164, 0.85)',
-                        hoverBackgroundColor: '#38bdf8',
-                        borderColor: '#0b6fa4',
-                        borderWidth: 0,
-                        maxBarThickness: 44,
-                        borderRadius: 8
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function (context) {
-                                    const value = context.raw || 0;
-                                    return new Intl.NumberFormat('vi-VN').format(value) + ' VND';
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            grid: { display: false },
-                            ticks: { color: '#657287', font: { family: 'Be Vietnam Pro' } }
-                        },
-                        y: {
-                            beginAtZero: true,
-                            border: { display: false },
-                            grid: { color: '#e6edf5' },
-                            ticks: {
-                                color: '#657287',
-                                font: { family: 'Be Vietnam Pro' },
-                                callback: function (value) {
-                                    return new Intl.NumberFormat('vi-VN').format(value);
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-        });
-    </script>
 </section>
 </html>

@@ -55,8 +55,32 @@ public class Seat {
     @Builder.Default
     private Boolean active = true;
 
+    /**
+     * Admin tạm khóa ghế (hỏng, đang sửa...). Khách không đặt được ghế đang bảo trì.
+     * Trường này độc lập với {@link #active} nên không bị ghi đè khi sinh lại ghế từ toa.
+     */
+    @Column(name = "under_maintenance", nullable = false, columnDefinition = "bit default 0")
+    @Builder.Default
+    private Boolean underMaintenance = false;
+
     @Builder.Default
     @OneToMany(mappedBy = "seat", fetch = FetchType.LAZY)
     @ToString.Exclude
     private List<Ticket> tickets = new ArrayList<>();
+
+    /** Ghế đang dùng được và không bảo trì: khách có thể chọn. */
+    public boolean isBookable() {
+        return Boolean.TRUE.equals(active) && !Boolean.TRUE.equals(underMaintenance);
+    }
+
+    @PrePersist
+    @PreUpdate
+    void applyDefaults() {
+        if (active == null) {
+            active = true;
+        }
+        if (underMaintenance == null) {
+            underMaintenance = false;
+        }
+    }
 }

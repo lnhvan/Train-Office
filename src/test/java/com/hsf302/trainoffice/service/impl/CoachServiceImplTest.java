@@ -7,6 +7,7 @@ import com.hsf302.trainoffice.exception.ResourceInUseException;
 import org.junit.jupiter.api.Test;
 import org.springframework.dao.DataIntegrityViolationException;
 
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
 
@@ -128,6 +129,7 @@ class CoachServiceImplTest {
         coach.setCoachType(type);
         coach.setCapacity(1);
         coach.setSleeperCoach(false);
+        coach.setSeatPrice(BigDecimal.ZERO);
         when(coachRepository.save(coach)).thenAnswer(invocation -> {
             Coach saved = invocation.getArgument(0);
             saved.setCoachId(10L);

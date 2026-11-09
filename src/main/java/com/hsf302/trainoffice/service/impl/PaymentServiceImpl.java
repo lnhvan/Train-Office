@@ -1,11 +1,13 @@
 package com.hsf302.trainoffice.service.impl;
 
 
+import com.hsf302.trainoffice.common.BookingHoldPolicy;
 import com.hsf302.trainoffice.config.I18n;
 import com.hsf302.trainoffice.common.enums.BookingStatus;
 import com.hsf302.trainoffice.common.enums.PaymentMethod;
 import com.hsf302.trainoffice.common.enums.PaymentStatus;
 import com.hsf302.trainoffice.common.enums.TicketStatus;
+import com.hsf302.trainoffice.common.enums.TripStatus;
 import com.hsf302.trainoffice.entity.Booking;
 import com.hsf302.trainoffice.entity.Payment;
 import com.hsf302.trainoffice.entity.Ticket;
@@ -14,6 +16,11 @@ import com.hsf302.trainoffice.repository.PaymentRepository;
 import com.hsf302.trainoffice.repository.TicketRepository;
 import com.hsf302.trainoffice.service.AdminWalletService;
 import com.hsf302.trainoffice.service.PaymentService;
+import com.hsf302.trainoffice.service.RefundService;
+import com.hsf302.trainoffice.service.SeatHoldService;
+import com.hsf302.trainoffice.event.SeatHoldReleaseEvent;
+import com.hsf302.trainoffice.exception.SeatHoldException;
+import org.springframework.context.ApplicationEventPublisher;
 import com.hsf302.trainoffice.util.VnpayUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -35,6 +42,9 @@ public class PaymentServiceImpl implements PaymentService {
     private final BookingRepository bookingRepository;
     private final TicketRepository ticketRepository;
     private final AdminWalletService adminWalletService;
+    private final RefundService refundService;
+    private final SeatHoldService seatHoldService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Value("${vnpay.tmn-code}")
     private String tmnCode;
@@ -51,11 +61,17 @@ public class PaymentServiceImpl implements PaymentService {
     public PaymentServiceImpl(PaymentRepository paymentRepository,
                               BookingRepository bookingRepository,
                               TicketRepository ticketRepository,
-                              AdminWalletService adminWalletService) {
+                              AdminWalletService adminWalletService,
+                              RefundService refundService,
+                              SeatHoldService seatHoldService,
+                              ApplicationEventPublisher eventPublisher) {
         this.paymentRepository = paymentRepository;
         this.bookingRepository = bookingRepository;
         this.ticketRepository = ticketRepository;
         this.adminWalletService = adminWalletService;
+        this.refundService = refundService;
+        this.seatHoldService = seatHoldService;
+        this.eventPublisher = eventPublisher;
     }
 
     // =========================================================
@@ -97,6 +113,30 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     @Transactional
     public Payment savePayment(Payment payment) {
+        Payment existing = payment.getPaymentId() == null
+                ? null
+                : paymentRepository.findById(payment.getPaymentId()).orElse(null);
+
+        // Thanh toán đã thành công đã được cộng vào ví: không cho sửa trạng thái / số tiền (dùng hoàn tiền nếu cần).
+        if (existing != null && existing.getPaymentStatus() == PaymentStatus.SUCCESS) {
+            boolean statusChanged = payment.getPaymentStatus() != PaymentStatus.SUCCESS;
+            boolean amountChanged = payment.getAmount() == null
+                    || existing.getAmount() == null
+                    || payment.getAmount().compareTo(existing.getAmount()) != 0;
+
+            if (statusChanged || amountChanged) {
+                throw new IllegalStateException(I18n.t("err.successfulPaymentIsLocked"));
+            }
+        }
+
+        // Chỉ VNPay mới chuyển thanh toán sang thành công; admin không tự đánh dấu được.
+        boolean becomesSuccess = payment.getPaymentStatus() == PaymentStatus.SUCCESS
+                && (existing == null || existing.getPaymentStatus() != PaymentStatus.SUCCESS);
+
+        if (becomesSuccess) {
+            throw new IllegalStateException(I18n.t("err.adminCannotMarkPaymentSuccess"));
+        }
+
         if (payment.getPaymentStatus() == null) {
             payment.setPaymentStatus(PaymentStatus.PENDING);
         }
@@ -105,35 +145,9 @@ public class PaymentServiceImpl implements PaymentService {
             payment.setTransactionCode(generateTransactionCode());
         }
 
-        if (payment.getPaymentStatus() == PaymentStatus.SUCCESS && payment.getPaidAt() == null) {
-            payment.setPaidAt(LocalDateTime.now());
-        }
-
-        return paymentRepository.save(payment);
-    }
-
-    @Override
-    @Transactional
-    public Payment markPaymentSuccess(UUID id) {
-        Payment payment = paymentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException(I18n.t("err.paymentNotFoundWithId", id)));
-
-        if (payment.getPaymentStatus() == PaymentStatus.SUCCESS) {
-            return payment;
-        }
-
-        payment.setPaymentStatus(PaymentStatus.SUCCESS);
-        payment.setPaidAt(LocalDateTime.now());
-
-        Booking booking = payment.getBooking();
-
-        if (booking != null) {
-            booking.setBookingStatus(BookingStatus.PAID);
-            bookingRepository.save(booking);
-
-            confirmTicketsOfBooking(booking.getBookingId());
-
-            adminWalletService.addToBalance(payment.getAmount());
+        // Form sửa không gửi thời điểm thanh toán: giữ nguyên giá trị cũ.
+        if (existing != null && payment.getPaidAt() == null) {
+            payment.setPaidAt(existing.getPaidAt());
         }
 
         return paymentRepository.save(payment);
@@ -145,6 +159,11 @@ public class PaymentServiceImpl implements PaymentService {
         Payment payment = paymentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException(I18n.t("err.paymentNotFoundWithId", id)));
 
+        // Tiền đã vào ví, đơn đã thanh toán: không đảo ngược ở đây, phải đi qua hoàn tiền.
+        if (payment.getPaymentStatus() == PaymentStatus.SUCCESS) {
+            throw new IllegalStateException(I18n.t("err.successfulPaymentIsLocked"));
+        }
+
         payment.setPaymentStatus(PaymentStatus.FAILED);
 
         return paymentRepository.save(payment);
@@ -153,8 +172,11 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     @Transactional
     public void deletePayment(UUID id) {
-        if (!paymentRepository.existsById(id)) {
-            throw new RuntimeException(I18n.t("err.paymentNotFoundWithId", id));
+        Payment payment = paymentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException(I18n.t("err.paymentNotFoundWithId", id)));
+
+        if (payment.getPaymentStatus() == PaymentStatus.SUCCESS) {
+            throw new IllegalStateException(I18n.t("err.successfulPaymentIsLocked"));
         }
 
         paymentRepository.deleteById(id);
@@ -194,6 +216,22 @@ public class PaymentServiceImpl implements PaymentService {
             throw new IllegalStateException(I18n.t("err.invalidBookingAmount"));
         }
 
+        if (booking.getTrainTrip() == null || booking.getTrainTrip().getStatus() != TripStatus.SCHEDULED) {
+            throw new IllegalStateException(I18n.t("err.tripNoLongerAvailableForPayment"));
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+
+        // Khóa ghế trong Redis đã hết hạn: ghế đã nhả, không cho thanh toán (job sẽ hủy đơn).
+        // Còn hạn thì gia hạn tới hết hạn link VNPay + dự phòng: người khác không đặt được,
+        // job nhả chỗ không hủy đơn trong lúc khách đang thanh toán.
+        LocalDateTime vnpayExpireAt = now.plusMinutes(BookingHoldPolicy.VNPAY_PAYMENT_MINUTES);
+        LocalDateTime lockUntil = vnpayExpireAt.plusMinutes(BookingHoldPolicy.ORDER_LOCK_GRACE_MINUTES);
+
+        if (!seatHoldService.extendBookingHold(booking.getBookingId(), lockUntil)) {
+            throw new IllegalStateException(I18n.t("err.bookingHoldExpired"));
+        }
+
         Payment payment = new Payment();
         payment.setBooking(booking);
         payment.setPaymentMethod(PaymentMethod.VNPAY);
@@ -225,7 +263,9 @@ public class PaymentServiceImpl implements PaymentService {
         params.put("vnp_Locale", "vn");
         params.put("vnp_ReturnUrl", returnUrl);
         params.put("vnp_IpAddr", resolvedIp);
-        params.put("vnp_CreateDate", LocalDateTime.now().format(VnpayUtils.VNPAY_DATE_FORMAT));
+        params.put("vnp_CreateDate", now.format(VnpayUtils.VNPAY_DATE_FORMAT));
+        // VNPay từ chối thanh toán sau thời điểm này, nên không có tiền về sau khi ghế đã nhả.
+        params.put("vnp_ExpireDate", vnpayExpireAt.format(VnpayUtils.VNPAY_DATE_FORMAT));
 
         String query = VnpayUtils.buildSignedQuery(params, secretKey);
 
@@ -289,14 +329,29 @@ public class PaymentServiceImpl implements PaymentService {
                 throw new IllegalStateException(I18n.t("err.paymentDoesNotHaveBooking"));
             }
 
-            booking.setBookingStatus(BookingStatus.PAID);
-            bookingRepository.save(booking);
+            // Tiền đã thực sự bị trừ của khách: luôn ghi nhận vào ví.
+            adminWalletService.credit(
+                    payment.getAmount(),
+                    payment.getTransactionCode(),
+                    I18n.t("wallet.tx.paymentVnpay", booking.getBookingNumber()));
 
-            confirmTicketsOfBooking(booking.getBookingId());
+            if (booking.getBookingStatus() == BookingStatus.PENDING_PAYMENT) {
+                booking.setBookingStatus(BookingStatus.PAID);
+                bookingRepository.save(booking);
 
-            adminWalletService.addToBalance(payment.getAmount());
+                confirmTicketsOfBooking(booking.getBookingId());
+
+                // Vé đã CONFIRMED trong DB: bỏ khóa tạm trong Redis sau khi commit.
+                eventPublisher.publishEvent(SeatHoldReleaseEvent.booking(booking.getBookingId()));
+            } else {
+                // Đơn đã bị hủy trong lúc khách thanh toán (vd. admin hủy chuyến): không xuất vé,
+                // tạo sẵn yêu cầu hoàn tiền đã duyệt để admin chuyển trả khách.
+                paymentRepository.save(payment);
+                refundService.createRefundsForLatePayment(booking, payment.getAmount());
+            }
         } else {
             payment.setPaymentStatus(PaymentStatus.FAILED);
+            restoreHoldAfterFailedPayment(payment.getBooking());
         }
 
         return paymentRepository.save(payment);
@@ -312,6 +367,19 @@ public class PaymentServiceImpl implements PaymentService {
         }
 
         ticketRepository.saveAll(tickets);
+    }
+
+    /** Thanh toán thất bại / khách hủy trên VNPay: khóa ghế quay về hạn giữ chỗ ban đầu. */
+    private void restoreHoldAfterFailedPayment(Booking booking) {
+        if (booking == null || booking.getBookingId() == null) {
+            return;
+        }
+
+        try {
+            seatHoldService.restoreBookingHoldAfterFailedPayment(booking.getBookingId());
+        } catch (SeatHoldException ignored) {
+            // Redis lỗi: khóa vẫn tự hết hạn theo TTL đã gia hạn.
+        }
     }
 
     private void validatePaidAmount(Payment payment, Map<String, String> vnpayParams) {

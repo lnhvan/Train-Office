@@ -25,36 +25,45 @@
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label class="form-label">[[#{common.train}]]</label>
-                        <select class="form-select" name="train.trainId" required>
+                        <select class="form-select" id="tripTrain" name="train.trainId" required>
                             <option value="">[[#{common.selectTrain}]]</option>
-                            <option th:each="train : ${trains}" th:value="${train.trainId}" th:text="${train.trainCode + ' - ' + train.trainName}"></option>
+                            <option th:each="train : ${trains}" th:value="${train.trainId}" th:text="${train.trainCode + ' - ' + train.trainName}"
+                                    th:selected="${trip.train != null and trip.train.trainId == train.trainId}"></option>
                         </select>
                     </div>
                     <div class="col-md-6 mb-3">
                         <label class="form-label">[[#{common.route}]]</label>
-                        <select class="form-select" name="route.routeId" required>
+                        <select class="form-select" id="tripRoute" name="route.routeId" required>
                             <option value="">[[#{trip.selectRoute}]]</option>
-                            <option th:each="route : ${routes}" th:value="${route.routeId}" th:text="${route.routeCode + ' - ' + route.routeName}"></option>
+                            <option th:each="route : ${routes}" th:value="${route.routeId}" th:text="${route.routeCode + ' - ' + route.routeName}"
+                                    th:selected="${trip.route != null and trip.route.routeId == route.routeId}"></option>
                         </select>
                     </div>
                     <div class="col-md-6 mb-3">
                         <label class="form-label">[[#{common.departureTime}]]</label>
-                        <input class="form-control" type="datetime-local" th:field="*{departureTime}" required>
+                        <input class="form-control" type="datetime-local" id="tripDeparture" th:field="*{departureTime}"
+                               th:min="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd''T''HH:mm')}"
+                               required>
                     </div>
                     <div class="col-md-6 mb-3">
                         <label class="form-label">[[#{common.arrivalTime}]]</label>
-                        <input class="form-control" type="datetime-local" th:field="*{arrivalTime}" required>
+                        <div class="form-control-plaintext text-muted">[[#{trip.arrivalAutoCalculated}]]</div>
                     </div>
                     <div class="col-md-6 mb-3">
                         <label class="form-label">[[#{common.basePrice}]]</label>
                         <input class="form-control" type="number" step="1000" min="0" th:field="*{basePrice}" required>
+                        <small class="form-text text-muted">[[#{trip.basePriceHelp}]]</small>
                     </div>
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">[[#{common.status}]]</label>
-                        <select class="form-select" th:field="*{status}" required>
-                            <option th:each="status : ${statuses}" th:value="${status}" th:text="${#messages.msgOrNull('enum.' + (status)) ?: (status)}"></option>
-                        </select>
+
+                </div>
+
+                <div class="trip-schedule-preview" id="schedulePreview"
+                     th:data-url="@{/admin/trips/schedule-preview}">
+                    <div class="trip-schedule-preview-head">
+                        <span class="admin-card-title"><i class="bi bi-clock-history"></i> [[#{trip.schedulePreview}]]</span>
+                        <small id="schedulePreviewSummary" class="text-muted"></small>
                     </div>
+                    <div id="schedulePreviewBody" class="trip-schedule-preview-body text-muted">[[#{trip.previewHint}]]</div>
                 </div>
             </div>
             <div class="card-footer d-flex justify-content-end gap-2">
@@ -65,5 +74,139 @@
             </div>
         </form>
     </div>
+
+    <script th:inline="javascript">
+        (function () {
+            const T = {
+                hint: /*[[#{trip.previewHint}]]*/ 'Choose train, route and departure time to preview.',
+                loading: /*[[#{trip.previewLoading}]]*/ 'Calculating...',
+                failed: /*[[#{trip.previewFailed}]]*/ 'Cannot preview the schedule.',
+                station: /*[[#{common.station}]]*/ 'Station',
+                km: /*[[#{trip.previewKm}]]*/ 'Km',
+                arrival: /*[[#{common.arrivalTime}]]*/ 'Arrival',
+                departure: /*[[#{trip.previewDepart}]]*/ 'Departure',
+                summary: /*[[#{trip.previewSummary}]]*/ 'Arrives {0} · {1} · {2} km/h',
+                duration: /*[[#{trip.previewDuration}]]*/ '{0} h {1} min'
+            };
+
+            const box = document.getElementById('schedulePreview');
+            const body = document.getElementById('schedulePreviewBody');
+            const summary = document.getElementById('schedulePreviewSummary');
+            const train = document.getElementById('tripTrain');
+            const route = document.getElementById('tripRoute');
+            const departure = document.getElementById('tripDeparture');
+            if (!box || !train || !route || !departure) {
+                return;
+            }
+
+            let requestId = 0;
+            let timer = null;
+
+            function fill(text, args) {
+                return String(text).replace(/\{(\d+)\}/g, function (m, i) {
+                    return args[i] !== undefined ? args[i] : m;
+                });
+            }
+
+            function showMessage(text, isError) {
+                summary.textContent = '';
+                body.className = 'trip-schedule-preview-body ' + (isError ? 'text-danger' : 'text-muted');
+                body.textContent = text;
+            }
+
+            function cell(tag, text, className) {
+                const el = document.createElement(tag);
+                el.textContent = text == null ? '–' : text;
+                if (className) {
+                    el.className = className;
+                }
+                return el;
+            }
+
+            function render(data) {
+                const table = document.createElement('table');
+                table.className = 'table table-sm mb-0 trip-schedule-table';
+
+                const head = document.createElement('tr');
+                head.append(cell('th', '#'), cell('th', T.station), cell('th', T.km, 'text-end'),
+                    cell('th', T.arrival), cell('th', T.departure));
+                const thead = document.createElement('thead');
+                thead.appendChild(head);
+
+                const tbody = document.createElement('tbody');
+                data.stops.forEach(function (stop) {
+                    const row = document.createElement('tr');
+                    row.append(
+                        cell('td', stop.order, 'text-muted'),
+                        cell('td', stop.stationName, 'fw-semibold'),
+                        cell('td', Math.round(stop.km).toLocaleString(), 'text-end rj-num'),
+                        cell('td', stop.arrivalTime, 'rj-num'),
+                        cell('td', stop.departureTime, 'rj-num')
+                    );
+                    tbody.appendChild(row);
+                });
+
+                table.append(thead, tbody);
+
+                const wrap = document.createElement('div');
+                wrap.className = 'table-responsive';
+                wrap.appendChild(table);
+
+                body.className = 'trip-schedule-preview-body';
+                body.replaceChildren(wrap);
+
+                const duration = fill(T.duration, [Math.floor(data.totalMinutes / 60), data.totalMinutes % 60]);
+                summary.textContent = fill(T.summary, [data.arrivalTime, duration, data.speedKmh]);
+            }
+
+            function refresh() {
+                if (!train.value || !route.value || !departure.value) {
+                    showMessage(T.hint, false);
+                    return;
+                }
+
+                const current = ++requestId;
+                showMessage(T.loading, false);
+
+                const url = new URL(box.dataset.url, window.location.origin);
+                url.searchParams.set('trainId', train.value);
+                url.searchParams.set('routeId', route.value);
+                url.searchParams.set('departureTime', departure.value);
+
+                fetch(url, { headers: { 'Accept': 'application/json' }, credentials: 'same-origin' })
+                    .then(function (response) {
+                        return response.json().catch(function () { return {}; }).then(function (json) {
+                            return { ok: response.ok, json: json };
+                        });
+                    })
+                    .then(function (result) {
+                        if (current !== requestId) {
+                            return;
+                        }
+                        if (!result.ok || !result.json.stops) {
+                            showMessage(result.json.error || T.failed, true);
+                            return;
+                        }
+                        render(result.json);
+                    })
+                    .catch(function () {
+                        if (current === requestId) {
+                            showMessage(T.failed, true);
+                        }
+                    });
+            }
+
+            function schedule() {
+                clearTimeout(timer);
+                timer = setTimeout(refresh, 250);
+            }
+
+            [train, route].forEach(function (el) { el.addEventListener('change', schedule); });
+            departure.addEventListener('change', schedule);
+            departure.addEventListener('input', schedule);
+
+            refresh();
+        })();
+    </script>
 </section>
 </html>

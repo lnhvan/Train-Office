@@ -61,6 +61,10 @@ public class TrainServiceImpl implements TrainService {
             throw new IllegalStateException(I18n.t("err.trainTypeIsRequired"));
         }
 
+        if (!TrainService.isValidSpeed(train.getAverageSpeedKmh())) {
+            throw new IllegalStateException(I18n.t("err.trainSpeedInvalid", MIN_SPEED_KMH, MAX_SPEED_KMH));
+        }
+
         getAvailableTrainTypes().stream()
                 .filter(existingType -> existingType.equalsIgnoreCase(train.getTrainType()))
                 .findFirst()

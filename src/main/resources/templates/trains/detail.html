@@ -32,6 +32,7 @@
                 <dt>[[#{common.code}]]</dt><dd th:text="${detail.trainCode}">SE1</dd>
                 <dt>[[#{common.name}]]</dt><dd th:text="${detail.trainName}">Train</dd>
                 <dt>[[#{common.type}]]</dt><dd th:text="${detail.trainType}">Express</dd>
+                <dt>[[#{train.averageSpeed}]]</dt><dd class="rj-num" th:text="${detail.averageSpeedKmh != null ? detail.averageSpeedKmh + ' km/h' : '-'}">56 km/h</dd>
             </dl>
         </div>
     </div>

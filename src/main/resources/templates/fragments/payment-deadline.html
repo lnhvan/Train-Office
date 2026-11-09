@@ -1,0 +1,72 @@
+<!--
+    Thời hạn thanh toán của đơn chờ thanh toán (10 phút kể từ lúc đặt chỗ, xem BookingHoldPolicy).
+    Dùng: <div th:replace="~{fragments/payment-deadline :: notice(${booking}, false)}"></div>
+    compact = true cho danh sách "Đặt chỗ của tôi".
+-->
+<div xmlns:th="http://www.thymeleaf.org"
+     th:fragment="notice(booking, compact)"
+     th:if="${booking != null and booking.bookingStatus != null
+              and booking.bookingStatus.name() == 'PENDING_PAYMENT' and booking.paymentDeadline != null}"
+     class="rj-pay-deadline"
+     th:classappend="${(booking.paymentDeadlinePassed ? ' is-expired' : '') + (compact ? ' is-compact' : '')}"
+     role="status">
+    <i class="bi" th:classappend="${booking.paymentDeadlinePassed} ? 'bi-x-circle' : 'bi-clock-history'" aria-hidden="true"></i>
+    <div class="rj-pay-deadline-body">
+        <small th:unless="${compact}">[[#{booking.paymentDeadline.label}]]</small>
+        <span th:unless="${booking.paymentDeadlinePassed}"
+              th:utext="#{booking.paymentDeadline.payBefore(${'<strong class=&quot;rj-num&quot;>'
+                  + #temporals.format(booking.paymentDeadline, 'HH:mm, dd/MM/yyyy') + '</strong>'})}">
+            Vui lòng thanh toán trước <strong>20:14, 09/11/2026</strong>
+        </span>
+        <span th:if="${booking.paymentDeadlinePassed}">[[#{booking.paymentDeadline.expired}]]</span>
+    </div>
+
+    <style>
+        .rj-pay-deadline {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin: 16px 0;
+            padding: 12px 14px;
+            border: 1px solid var(--rj-warning, #b7791f);
+            border-radius: var(--rj-radius, 12px);
+            background: var(--rj-warning-soft, #fdf3dc);
+            color: var(--rj-text, inherit);
+            text-align: left;
+        }
+        .rj-pay-deadline > .bi {
+            color: var(--rj-warning, #b7791f);
+            font-size: 1.25rem;
+            line-height: 1.2;
+        }
+        .rj-pay-deadline-body {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .rj-pay-deadline-body small {
+            color: var(--rj-text-2, #657287);
+            font-size: .8rem;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+        }
+        .rj-pay-deadline-body strong {
+            color: var(--rj-warning, #b7791f);
+        }
+        .rj-pay-deadline.is-expired {
+            border-color: var(--rj-danger, #c53030);
+            background: var(--rj-danger-soft, #fdecec);
+        }
+        .rj-pay-deadline.is-expired > .bi {
+            color: var(--rj-danger, #c53030);
+        }
+        .rj-pay-deadline.is-compact {
+            margin: 8px 0 0;
+            padding: 6px 10px;
+            font-size: .88rem;
+        }
+        .rj-pay-deadline.is-compact > .bi {
+            font-size: 1rem;
+        }
+    </style>
+</div>

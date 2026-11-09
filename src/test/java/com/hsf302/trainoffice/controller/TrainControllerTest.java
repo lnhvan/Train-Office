@@ -43,6 +43,7 @@ class TrainControllerTest {
         Train train = new Train();
         train.setTrainCode("LX01");
         train.setTrainName("Luxury");
+        train.setAverageSpeedKmh(60);
         BeanPropertyBindingResult result = new BeanPropertyBindingResult(train, "train");
 
         assertEquals("redirect:/admin/trains", controller.saveTrain(

@@ -132,7 +132,7 @@ public class StationController {
         }
     }
 
-    @GetMapping("/delete/{id}")
+    @PostMapping("/delete/{id}")
     public String deleteStation(@PathVariable("id") Long id,
                                 RedirectAttributes redirectAttributes) {
         try {

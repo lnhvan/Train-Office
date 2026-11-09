@@ -34,6 +34,13 @@ public class Train {
     @Column(name = "train_type", nullable = false, length = 50, columnDefinition = "NVARCHAR(50)")
     private String trainType;
 
+    /**
+     * Tốc độ chạy trung bình (km/h), dùng để tự tính giờ đến từng ga khi tạo chuyến.
+     * Bắt buộc khi admin lưu tàu (kiểm tra ở TrainController / TrainServiceImpl).
+     */
+    @Column(name = "average_speed_kmh")
+    private Integer averageSpeedKmh;
+
     @Builder.Default
     @OneToMany(mappedBy = "train", fetch = FetchType.LAZY)
     @ToString.Exclude

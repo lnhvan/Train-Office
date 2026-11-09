@@ -137,9 +137,10 @@
                             <a class="rj-icon-btn is-warning"
                                th:href="@{/admin/routes/{routeId}/stations/edit/{id}(routeId=${route.routeId},id=${routeStation.routeStationId})}" th:title="#{common.edit}"><i class="bi bi-pencil-square" aria-hidden="true"></i><span class="visually-hidden">[[#{common.edit}]]</span></a>
 
-                            <a class="rj-icon-btn is-danger"
-                               th:data-confirm="#{confirm.removeRouteStation}" onclick="return confirm(this.dataset.confirm)"
-                               th:href="@{/admin/routes/{routeId}/stations/delete/{id}(routeId=${route.routeId},id=${routeStation.routeStationId})}" th:title="#{common.delete}"><i class="bi bi-trash3" aria-hidden="true"></i><span class="visually-hidden">[[#{common.delete}]]</span></a>
+                            <form class="d-inline" th:action="@{/admin/routes/{routeId}/stations/delete/{id}(routeId=${route.routeId},id=${routeStation.routeStationId})}" method="post"
+                                  th:data-confirm="#{confirm.removeRouteStation}" onsubmit="return confirm(this.dataset.confirm)">
+                                <button type="submit" class="rj-icon-btn is-danger" th:title="#{common.delete}"><i class="bi bi-trash3" aria-hidden="true"></i><span class="visually-hidden">[[#{common.delete}]]</span></button>
+                            </form>
                         </td>
                     </tr>
 

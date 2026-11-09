@@ -1,5 +1,6 @@
 package com.hsf302.trainoffice.entity;
 
+import com.hsf302.trainoffice.common.BookingHoldPolicy;
 import com.hsf302.trainoffice.common.enums.BookingStatus;
 import jakarta.persistence.*;
 import lombok.*;
@@ -99,6 +100,16 @@ public class Booking {
         if (bookingStatus == null) {
             bookingStatus = BookingStatus.PENDING_PAYMENT;
         }
+    }
+
+    /** Thời hạn thanh toán: {@link BookingHoldPolicy#PAYMENT_WINDOW_MINUTES} phút kể từ lúc đặt chỗ. */
+    public LocalDateTime getPaymentDeadline() {
+        return BookingHoldPolicy.paymentDeadline(bookingDate);
+    }
+
+    public boolean isPaymentDeadlinePassed() {
+        LocalDateTime deadline = getPaymentDeadline();
+        return deadline != null && !deadline.isAfter(LocalDateTime.now());
     }
 
     public String getBookingCode() {

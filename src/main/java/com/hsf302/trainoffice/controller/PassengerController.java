@@ -82,7 +82,7 @@ public class PassengerController {
         }
     }
 
-    @GetMapping("/delete/{id}")
+    @PostMapping("/delete/{id}")
     public String deletePassenger(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         try {
             passengerService.deletePassenger(id);

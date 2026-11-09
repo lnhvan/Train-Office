@@ -38,8 +38,9 @@ public class AdminRefundController {
             return "redirect:/login";
         }
 
-        model.addAttribute("refunds", refundService.getPendingRefunds());
+        model.addAttribute("refunds", refundService.getRefundsToProcess());
         model.addAttribute("walletBalance", adminWalletService.getBalance());
+        model.addAttribute("walletTransactions", adminWalletService.getRecentTransactions());
 
         return "refunds/admin-list";
     }
@@ -79,6 +80,28 @@ public class AdminRefundController {
         try {
             refundService.rejectRefund(refundId, admin);
             redirectAttributes.addFlashAttribute("successMessage", I18n.t("msg.refund.rejected"));
+        } catch (IllegalArgumentException | IllegalStateException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+
+        return "redirect:/admin/refunds";
+    }
+
+    /** Admin xác nhận đã chuyển khoản tiền hoàn cho khách (bên ngoài hệ thống): trừ ví, chuyển COMPLETED. */
+    @PostMapping("/{refundId}/complete")
+    public String complete(@PathVariable Long refundId,
+                           HttpSession session,
+                           RedirectAttributes redirectAttributes) {
+        User admin = currentUser(session);
+
+        if (!isAdmin(admin)) {
+            redirectAttributes.addFlashAttribute("error", I18n.t("msg.adminAccessRequired"));
+            return "redirect:/login";
+        }
+
+        try {
+            refundService.completeRefund(refundId, admin);
+            redirectAttributes.addFlashAttribute("successMessage", I18n.t("msg.refund.completed"));
         } catch (IllegalArgumentException | IllegalStateException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         }

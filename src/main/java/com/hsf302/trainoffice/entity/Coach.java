@@ -3,6 +3,7 @@ package com.hsf302.trainoffice.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,6 +48,13 @@ public class Coach {
 
     @Column(name = "berths_per_compartment")
     private Integer berthsPerCompartment;
+
+    /**
+     * Phụ thu chung cho mọi ghế/giường của toa. Giá vé = giá cơ bản của chuyến + phụ thu này.
+     * Bắt buộc nhập khi admin lưu toa (kiểm tra ở CoachController / CoachServiceImpl).
+     */
+    @Column(name = "seat_price", precision = 12, scale = 2)
+    private BigDecimal seatPrice;
 
     @Builder.Default
     @OneToMany(mappedBy = "coach", fetch = FetchType.LAZY)

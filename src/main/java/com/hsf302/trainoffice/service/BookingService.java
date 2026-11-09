@@ -1,5 +1,6 @@
 package com.hsf302.trainoffice.service;
 
+import java.util.function.LongPredicate;
 import com.hsf302.trainoffice.dto.CreateBookingRequest;
 import com.hsf302.trainoffice.entity.Booking;
 import com.hsf302.trainoffice.entity.Passenger;
@@ -23,5 +24,12 @@ public interface BookingService {
     Booking cancelPendingBooking(Long bookingId, User user);
 
     Booking cancelPendingGuestBooking(Long bookingId);
-    int expirePendingBookingsOlderThan(int minutes);
+
+    /**
+     * Hủy các đơn chờ thanh toán đã hết khóa giữ ghế trong Redis.
+     *
+     * @param holdActive trả true nếu khóa của đơn (bookingId) còn hạn
+     * @return id các đơn vừa bị hủy
+     */
+    List<Long> expireBookingsWithoutHold(LongPredicate holdActive);
 }

@@ -146,6 +146,33 @@
                         </small>
                     </div>
 
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label" for="seatPrice">[[#{coach.seatPrice}]]</label>
+
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                    <i class="bi bi-cash-coin"></i>
+                                </span>
+
+                            <input id="seatPrice"
+                                   name="seatPrice"
+                                   type="number"
+                                   min="0"
+                                   step="1000"
+                                   class="form-control"
+                                   th:value="${coach != null and coach.seatPrice != null ? coach.seatPrice.stripTrailingZeros().toPlainString() : ''}"
+                                   th:placeholder="#{coach.seatPricePlaceholder}"
+                                   required>
+
+                            <span class="input-group-text">VND</span>
+                        </div>
+                        <div class="text-danger small" th:if="${#fields.hasErrors('seatPrice')}" th:errors="*{seatPrice}"></div>
+
+                        <small class="form-text text-muted">
+                            [[#{coach.seatPriceHelp}]]
+                        </small>
+                    </div>
+
                     <div class="col-12 mb-3">
                         <div class="form-check form-switch">
                             <input type="checkbox"

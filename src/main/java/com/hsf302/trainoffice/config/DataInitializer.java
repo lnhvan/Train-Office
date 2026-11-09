@@ -1,5 +1,6 @@
 package com.hsf302.trainoffice.config;
 
+import com.hsf302.trainoffice.common.enums.RefundStatus;
 import com.hsf302.trainoffice.common.enums.Region;
 import com.hsf302.trainoffice.common.enums.TrainStatus;
 import com.hsf302.trainoffice.common.enums.TripStatus;
@@ -15,10 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.text.Normalizer;
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -29,9 +28,9 @@ import java.util.Map;
 public class DataInitializer implements CommandLineRunner {
 
     /**
-     * Tốc độ trung bình (km/h) của từng tàu, đã gồm thời gian dừng ở các ga,
-     * dùng để ước lượng thời gian chạy của chuyến mẫu: thời gian = quãng đường / tốc độ.
-     * Tham chiếu: tàu SE Thống Nhất chạy Hà Nội - Sài Gòn (1.726 km) khoảng 30-34 giờ (~52-57 km/h).
+     * Tốc độ chạy trung bình (km/h) mặc định của tàu mẫu, lưu vào Train.averageSpeedKmh khi tàu chưa có.
+     * Giờ đến từng ga = km ÷ tốc độ, cộng 5 phút dừng ở mỗi ga giữa (xem TripScheduleBuilder).
+     * Tham chiếu: tàu SE Thống Nhất chạy Hà Nội - Sài Gòn (1.726 km) khoảng 30-34 giờ.
      */
     private static final Map<String, Integer> AVERAGE_SPEED_KMH = Map.ofEntries(
             Map.entry("SE1", 56),   // tàu nhanh Bắc - Nam
@@ -54,19 +53,10 @@ public class DataInitializer implements CommandLineRunner {
 
     private static final int DEFAULT_SPEED_KMH = 50;
 
-    /**
-     * Tốc độ tối đa của tuyến (km/h): tuyến núi, đèo chạy chậm dù tàu nhanh.
-     * Tốc độ dùng để tính = min(tốc độ tàu, tốc độ tối đa của tuyến).
-     */
-    private static final Map<String, Integer> ROUTE_MAX_SPEED_KMH = Map.of(
-            "HN-NW", 38,             // Tây Bắc: dốc, nhiều đường cong
-            "DN-HUE-QT", 42,         // đèo Hải Vân
-            "DN-HCM-HIGHLAND", 45    // Tây Nguyên: đèo dốc
-    );
-
     private final UserRepository userRepository;
     private final ProvinceRepository provinceRepository;
     private final AdminWalletRepository adminWalletRepository;
+    private final RefundRepository refundRepository;
     private final StationRepository stationRepository;
     private final RouteRepository routeRepository;
     private final RouteStationRepository routeStationRepository;
@@ -75,14 +65,13 @@ public class DataInitializer implements CommandLineRunner {
     private final SeatRepository seatRepository;
     private final CompartmentRepository compartmentRepository;
     private final TrainTripRepository trainTripRepository;
-    private final TripStationRepository tripStationRepository;
     private final TripScheduleBuilder tripScheduleBuilder;
-    private final BookingRepository bookingRepository;
     private final PasswordEncoder passwordEncoder;
 
     public DataInitializer(UserRepository userRepository,
                            ProvinceRepository provinceRepository,
                            AdminWalletRepository adminWalletRepository,
+                           RefundRepository refundRepository,
                            StationRepository stationRepository,
                            RouteRepository routeRepository,
                            RouteStationRepository routeStationRepository,
@@ -91,13 +80,12 @@ public class DataInitializer implements CommandLineRunner {
                            SeatRepository seatRepository,
                            CompartmentRepository compartmentRepository,
                            TrainTripRepository trainTripRepository,
-                           TripStationRepository tripStationRepository,
                            TripScheduleBuilder tripScheduleBuilder,
-                           BookingRepository bookingRepository,
                            PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.provinceRepository = provinceRepository;
         this.adminWalletRepository = adminWalletRepository;
+        this.refundRepository = refundRepository;
         this.stationRepository = stationRepository;
         this.routeRepository = routeRepository;
         this.routeStationRepository = routeStationRepository;
@@ -106,9 +94,7 @@ public class DataInitializer implements CommandLineRunner {
         this.seatRepository = seatRepository;
         this.compartmentRepository = compartmentRepository;
         this.trainTripRepository = trainTripRepository;
-        this.tripStationRepository = tripStationRepository;
         this.tripScheduleBuilder = tripScheduleBuilder;
-        this.bookingRepository = bookingRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -118,17 +104,43 @@ public class DataInitializer implements CommandLineRunner {
         createAdminAccount();
         createAdminWallet();
 
-        Map<String, Station> stations = seedAllVietnamStations();
-        Map<String, Train> trains = seedTrainsWithCoachesCompartmentsAndSeats();
+        // Dữ liệu gốc chỉ seed khi bảng của nhóm đó còn trống (lần chạy đầu trên DB mới).
+        // Sau đó seed không sửa/xóa/tạo lại tỉnh, ga, tàu, toa, ghế, tuyến: thay đổi của admin được giữ nguyên.
+        boolean seededProvinces = false;
+        boolean seededTrains = false;
+        boolean seededRoutes = false;
 
-        seedRoutesAndTrips(stations, trains);
+        if (provinceRepository.count() == 0) {
+            seedAllVietnamStations();
+            seededProvinces = true;
+        }
+
+        if (trainRepository.count() == 0) {
+            seedTrainsWithCoachesCompartmentsAndSeats();
+            seededTrains = true;
+        }
+
+        if (routeRepository.count() == 0) {
+            seedRoutes();
+            seededRoutes = true;
+        }
+
+        // Chỉ điền chỗ còn trống (DB cũ trước khi có các cột này), không ghi đè giá trị admin đã nhập.
+        backfillTrainSpeeds();
+        backfillCoachSeatPrices();
+        migrateLegacyApprovedRefunds();
+
+        // Chuyến demo cho hôm nay, ngày mai, ngày kia: chỉ thêm ngày còn thiếu.
+        seedDemoTrips();
 
         System.out.println("======================================");
-        System.out.println("Train Office seed data initialized.");
+        System.out.println("Train Office seed data checked.");
         System.out.println("Admin email: admin@railjet.com");
         System.out.println("Admin password: 123456");
-        System.out.println("Provinces: 34, each with one seed station");
-        System.out.println("Trains, coaches, compartments, seats, routes, trips initialized.");
+        System.out.println("Seeded now -> provinces/stations: " + seededProvinces
+                + ", trains/coaches/seats: " + seededTrains
+                + ", routes: " + seededRoutes);
+        System.out.println("Demo trips added for missing days (today + 2 days).");
         System.out.println("======================================");
     }
 
@@ -388,215 +400,162 @@ public class DataInitializer implements CommandLineRunner {
         createNormalSeatsForCoach(economy, "Economy Class", BigDecimal.ZERO);
     }
 
-    private void seedRoutesAndTrips(Map<String, Station> stations,
-                                    Map<String, Train> trains) {
+    /**
+     * 7 tuyến mẫu: mã, tên, các ga kèm lý trình (km), tàu chạy chuyến mẫu, giờ chạy đầu ngày, giá đi hết tuyến.
+     */
+    private List<RouteSeed> routeSeeds() {
         // Lý trình (km tính từ ga đầu) ước lượng theo đường sắt / quốc lộ thực tế giữa các tỉnh lỵ.
         // Tổng chiều dài tuyến = km của ga cuối. Tham chiếu đường sắt Thống Nhất (km từ ga Hà Nội):
         // Ninh Bình 115, Thanh Hóa 175, Vinh 319, Đông Hà 622, Huế 688, Đà Nẵng 791, Quảng Ngãi 928,
         // Nha Trang 1315, Bình Thuận 1551, Biên Hòa 1697, Sài Gòn 1726. Tuyến mẫu vòng qua Bắc Ninh,
         // Hưng Yên nên dài hơn khoảng 30 km.
-        List<StopSeed> northSouthStops = List.of(
-                stop("HAN", 0), stop("BNH", 31), stop("HYN", 76), stop("NBI", 142),
-                stop("THA", 202), stop("NAN", 346), stop("HTI", 392), stop("QTR", 649),
-                stop("HUE", 715), stop("DNG", 818), stop("QNG", 955), stop("KHA", 1342),
-                stop("LDO", 1578), stop("DNI", 1724), stop("HCM", 1753)
-        );
-        Route northSouth = findOrCreateRoute("HN-SG", "Ha Noi - Sai Gon", routeLength(northSouthStops));
-        List<Station> northSouthStations = stationList(stations, northSouthStops);
-        syncRouteStations(northSouth, northSouthStations, northSouthStops);
+        return List.of(
+                new RouteSeed("HN-SG", "Ha Noi - Sai Gon",
+                        List.of(stop("HAN", 0), stop("BNH", 31), stop("HYN", 76), stop("NBI", 142),
+                                stop("THA", 202), stop("NAN", 346), stop("HTI", 392), stop("QTR", 649),
+                                stop("HUE", 715), stop("DNG", 818), stop("QNG", 955), stop("KHA", 1342),
+                                stop("LDO", 1578), stop("DNI", 1724), stop("HCM", 1753)),
+                        List.of("SE1", "SE2", "SE3", "SE4", "RJ01", "RJ02"), 6, new BigDecimal("870000")),
 
-        // Hà Nội - Bắc Ninh 31 km, Bắc Ninh - Hải Phòng ~94 km, Hải Phòng - Hạ Long ~71 km.
-        List<StopSeed> coastalNorthStops = List.of(
-                stop("HAN", 0), stop("BNH", 31), stop("HPH", 125), stop("QNH", 196)
-        );
-        Route haNoiHaiPhongQuangNinh = findOrCreateRoute("HN-HP-QN", "Ha Noi - Hai Phong - Quang Ninh", routeLength(coastalNorthStops));
-        List<Station> coastalNorthStations = stationList(stations, coastalNorthStops);
-        syncRouteStations(haNoiHaiPhongQuangNinh, coastalNorthStations, coastalNorthStops);
+                // Hà Nội - Bắc Ninh 31 km, Bắc Ninh - Hải Phòng ~94 km, Hải Phòng - Hạ Long ~71 km.
+                new RouteSeed("HN-HP-QN", "Ha Noi - Hai Phong - Quang Ninh",
+                        List.of(stop("HAN", 0), stop("BNH", 31), stop("HPH", 125), stop("QNH", 196)),
+                        List.of("HP01", "QN01", "RJ03"), 7, new BigDecimal("220000")),
 
-        // Việt Trì 73 km, Tuyên Quang, Lào Cai (~300 km theo đường sắt Hà Nội - Lào Cai), rồi qua Lai Châu, Điện Biên, Sơn La.
-        List<StopSeed> mountainNorthStops = List.of(
-                stop("HAN", 0), stop("PTO", 73), stop("TQG", 155), stop("LCA", 332),
-                stop("LCH", 472), stop("DBN", 662), stop("SLA", 812)
-        );
-        Route mountainNorth = findOrCreateRoute("HN-NW", "Ha Noi - Northwest Highlands", routeLength(mountainNorthStops));
-        List<Station> mountainNorthStations = stationList(stations, mountainNorthStops);
-        syncRouteStations(mountainNorth, mountainNorthStations, mountainNorthStops);
+                // Việt Trì 73 km, Tuyên Quang, Lào Cai (~300 km theo đường sắt Hà Nội - Lào Cai), rồi qua Lai Châu, Điện Biên, Sơn La.
+                new RouteSeed("HN-NW", "Ha Noi - Northwest Highlands",
+                        List.of(stop("HAN", 0), stop("PTO", 73), stop("TQG", 155), stop("LCA", 332),
+                                stop("LCH", 472), stop("DBN", 662), stop("SLA", 812)),
+                        List.of("LP01", "SE5"), 20, new BigDecimal("520000")),
 
-        // Đà Nẵng - Huế 103 km (qua đèo Hải Vân), Huế - Đông Hà 66 km.
-        List<StopSeed> centralHeritageStops = List.of(
-                stop("DNG", 0), stop("HUE", 103), stop("QTR", 169)
-        );
-        Route centralHeritage = findOrCreateRoute("DN-HUE-QT", "Da Nang - Hue - Quang Tri", routeLength(centralHeritageStops));
-        List<Station> centralHeritageStations = stationList(stations, centralHeritageStops);
-        syncRouteStations(centralHeritage, centralHeritageStations, centralHeritageStops);
+                // Đà Nẵng - Huế 103 km (qua đèo Hải Vân), Huế - Đông Hà 66 km.
+                new RouteSeed("DN-HUE-QT", "Da Nang - Hue - Quang Tri",
+                        List.of(stop("DNG", 0), stop("HUE", 103), stop("QTR", 169)),
+                        List.of("DH01", "SE6"), 8, new BigDecimal("180000")),
 
-        // Quảng Ngãi, lên Pleiku qua Kon Tum, Buôn Ma Thuột, Đà Lạt, xuống Biên Hòa và TP.HCM.
-        List<StopSeed> centralHighlandStops = List.of(
-                stop("DNG", 0), stop("QNG", 137), stop("GLA", 387), stop("DLA", 567),
-                stop("LDO", 767), stop("DNI", 1057), stop("HCM", 1086)
-        );
-        Route centralHighland = findOrCreateRoute("DN-HCM-HIGHLAND", "Da Nang - Central Highlands - Ho Chi Minh City", routeLength(centralHighlandStops));
-        List<Station> centralHighlandStations = stationList(stations, centralHighlandStops);
-        syncRouteStations(centralHighland, centralHighlandStations, centralHighlandStops);
+                // Quảng Ngãi, lên Pleiku qua Kon Tum, Buôn Ma Thuột, Đà Lạt, xuống Biên Hòa và TP.HCM.
+                new RouteSeed("DN-HCM-HIGHLAND", "Da Nang - Central Highlands - Ho Chi Minh City",
+                        List.of(stop("DNG", 0), stop("QNG", 137), stop("GLA", 387), stop("DLA", 567),
+                                stop("LDO", 767), stop("DNI", 1057), stop("HCM", 1086)),
+                        List.of("RJ02", "SE5"), 9, new BigDecimal("650000")),
 
-        // Tân An 48 km, Mỹ Tho 72 km, Vĩnh Long, Cần Thơ 172 km, Long Xuyên, rồi qua Rạch Giá xuống Cà Mau.
-        List<StopSeed> mekongStops = List.of(
-                stop("HCM", 0), stop("TNI", 48), stop("DTH", 72), stop("VLO", 137),
-                stop("CTO", 172), stop("AGI", 234), stop("CMA", 429)
-        );
-        Route mekong = findOrCreateRoute("HCM-MEKONG", "Ho Chi Minh City - Mekong Delta", routeLength(mekongStops));
-        List<Station> mekongStations = stationList(stations, mekongStops);
-        syncRouteStations(mekong, mekongStations, mekongStops);
+                // Tân An 48 km, Mỹ Tho 72 km, Vĩnh Long, Cần Thơ 172 km, Long Xuyên, rồi qua Rạch Giá xuống Cà Mau.
+                new RouteSeed("HCM-MEKONG", "Ho Chi Minh City - Mekong Delta",
+                        List.of(stop("HCM", 0), stop("TNI", 48), stop("DTH", 72), stop("VLO", 137),
+                                stop("CTO", 172), stop("AGI", 234), stop("CMA", 429)),
+                        List.of("CT01", "CT02"), 10, new BigDecimal("360000")),
 
-        // Đúng lý trình đường sắt: Sài Gòn - Biên Hòa 29 km, Bình Thuận (Mương Mán) 175 km, Nha Trang 411 km.
-        List<StopSeed> southCoastStops = List.of(
-                stop("HCM", 0), stop("DNI", 29), stop("LDO", 175), stop("KHA", 411)
+                // Đúng lý trình đường sắt: Sài Gòn - Biên Hòa 29 km, Bình Thuận (Mương Mán) 175 km, Nha Trang 411 km.
+                new RouteSeed("HCM-NT", "Ho Chi Minh City - Nha Trang",
+                        List.of(stop("HCM", 0), stop("DNI", 29), stop("LDO", 175), stop("KHA", 411)),
+                        List.of("NT01", "RJ03"), 13, new BigDecimal("420000"))
         );
-        Route southCoast = findOrCreateRoute("HCM-NT", "Ho Chi Minh City - Nha Trang", routeLength(southCoastStops));
-        List<Station> southCoastStations = stationList(stations, southCoastStops);
-        syncRouteStations(southCoast, southCoastStations, southCoastStops);
+    }
 
+    /** Tạo 7 tuyến mẫu và các ga của tuyến. Chỉ gọi khi bảng routes còn trống. */
+    private void seedRoutes() {
+        for (RouteSeed seed : routeSeeds()) {
+            List<Station> stations = new ArrayList<>();
+
+            for (StopSeed stop : seed.stops()) {
+                stationRepository.findByStationCode(stop.code()).ifPresent(stations::add);
+            }
+
+            if (stations.size() != seed.stops().size()) {
+                System.out.println("Seed: skip route " + seed.code() + " because some of its stations are missing.");
+                continue;
+            }
+
+            Route route = findOrCreateRoute(seed.code(), seed.name(), routeLength(seed.stops()));
+
+            for (int i = 0; i < stations.size(); i++) {
+                routeStationRepository.save(RouteStation.builder()
+                        .route(route)
+                        .station(stations.get(i))
+                        .stationOrder(i + 1)
+                        .distanceFromStartKm(seed.stops().get(i).km())
+                        .build());
+            }
+        }
+    }
+
+    /**
+     * Chuyến demo: với mỗi tuyến mẫu và mỗi tàu chạy tuyến đó, thêm chuyến cho hôm nay, ngày mai, ngày kia
+     * nếu ngày đó chưa có chuyến. Không sửa chuyến đã có.
+     * Bỏ qua nếu admin đã xóa tuyến/tàu, tàu đang bảo trì, tàu chưa có tốc độ hoặc tuyến thiếu km.
+     */
+    private void seedDemoTrips() {
         LocalDateTime baseDate = LocalDateTime.now()
                 .withHour(0)
                 .withMinute(0)
                 .withSecond(0)
                 .withNano(0);
 
-        createTripsForRoute(
-                northSouth,
-                northSouthStations,
-                List.of(
-                        trains.get("SE1"),
-                        trains.get("SE2"),
-                        trains.get("SE3"),
-                        trains.get("SE4"),
-                        trains.get("RJ01"),
-                        trains.get("RJ02")
-                ),
-                baseDate.withHour(6),
-                new BigDecimal("870000")
-        );
+        for (RouteSeed seed : routeSeeds()) {
+            Route route = routeRepository.findAll()
+                    .stream()
+                    .filter(item -> seed.code().equalsIgnoreCase(item.getRouteCode()))
+                    .findFirst()
+                    .orElse(null);
 
-        createTripsForRoute(
-                haNoiHaiPhongQuangNinh,
-                coastalNorthStations,
-                List.of(
-                        trains.get("HP01"),
-                        trains.get("QN01"),
-                        trains.get("RJ03")
-                ),
-                baseDate.withHour(7),
-                new BigDecimal("220000")
-        );
-
-        createTripsForRoute(
-                mountainNorth,
-                mountainNorthStations,
-                List.of(
-                        trains.get("LP01"),
-                        trains.get("SE5")
-                ),
-                baseDate.withHour(20),
-                new BigDecimal("520000")
-        );
-
-        createTripsForRoute(
-                centralHeritage,
-                centralHeritageStations,
-                List.of(
-                        trains.get("DH01"),
-                        trains.get("SE6")
-                ),
-                baseDate.withHour(8),
-                new BigDecimal("180000")
-        );
-
-        createTripsForRoute(
-                centralHighland,
-                centralHighlandStations,
-                List.of(
-                        trains.get("RJ02"),
-                        trains.get("SE5")
-                ),
-                baseDate.withHour(9),
-                new BigDecimal("650000")
-        );
-
-        createTripsForRoute(
-                mekong,
-                mekongStations,
-                List.of(
-                        trains.get("CT01"),
-                        trains.get("CT02")
-                ),
-                baseDate.withHour(10),
-                new BigDecimal("360000")
-        );
-
-        createTripsForRoute(
-                southCoast,
-                southCoastStations,
-                List.of(
-                        trains.get("NT01"),
-                        trains.get("RJ03")
-                ),
-                baseDate.withHour(13),
-                new BigDecimal("420000")
-        );
-    }
-
-    private void createTripsForRoute(Route route,
-                                     List<Station> stations,
-                                     List<Train> trains,
-                                     LocalDateTime firstDeparture,
-                                     BigDecimal basePrice) {
-        int dayOffset = 0;
-
-        for (Train train : trains) {
-            if (train == null) {
+            if (route == null || !hasValidDistances(route)) {
                 continue;
             }
 
-            for (int i = 0; i < 3; i++) {
-                LocalDateTime departure = firstDeparture
-                        .plusDays(i)
-                        .plusHours(dayOffset % 4L);
+            LocalDateTime firstDeparture = baseDate.withHour(seed.firstHour());
+            int dayOffset = 0;
 
-                // Thời gian chạy ước lượng theo chiều dài tuyến và tốc độ trung bình của tàu.
-                LocalDateTime arrival = departure.plus(travelTime(route, train));
+            for (String trainCode : seed.trainCodes()) {
+                Train train = trainRepository.findByTrainCode(trainCode).orElse(null);
+                boolean usable = train != null
+                        && train.getStatus() != TrainStatus.MAINTENANCE
+                        && train.getAverageSpeedKmh() != null
+                        && train.getAverageSpeedKmh() > 0;
 
-                BigDecimal finalPrice = basePrice.add(
-                        BigDecimal.valueOf(dayOffset * 25000L)
-                );
+                for (int i = 0; i < 3; i++) {
+                    if (usable) {
+                        LocalDateTime departure = firstDeparture
+                                .plusDays(i)
+                                .plusHours(dayOffset % 4L);
 
-                TrainTrip trip = findOrCreateOrUpdateSeedTrip(
-                        train,
-                        route,
-                        i,
-                        departure,
-                        arrival,
-                        finalPrice
-                );
+                        BigDecimal price = seed.basePrice().add(BigDecimal.valueOf(dayOffset * 25000L));
 
-                syncTripStations(trip, stations);
+                        // Giờ đến tạm = giờ đi; lịch dừng và giờ đến tính theo tốc độ tàu ngay sau đó.
+                        TrainTrip trip = createSeedTripIfMissing(train, route, departure, departure, price);
 
-                dayOffset++;
+                        if (trip != null) {
+                            tripScheduleBuilder.addMissingStops(trip);
+                            trainTripRepository.save(trip);
+                        }
+                    }
+
+                    dayOffset++;
+                }
             }
         }
     }
 
-    /**
-     * Thời gian chạy = chiều dài tuyến / tốc độ, làm tròn đến 5 phút.
-     * Tốc độ = tốc độ trung bình của tàu, nhưng không vượt tốc độ tối đa của tuyến.
-     */
-    private Duration travelTime(Route route, Train train) {
-        int speed = Math.min(
-                AVERAGE_SPEED_KMH.getOrDefault(train.getTrainCode(), DEFAULT_SPEED_KMH),
-                ROUTE_MAX_SPEED_KMH.getOrDefault(route.getRouteCode(), Integer.MAX_VALUE));
-        Double distanceKm = route.getDistanceKm();
-        double hours = (distanceKm == null ? 0.0 : distanceKm) / speed;
-        long minutes = Math.round(hours * 60 / 5.0) * 5;
-        return Duration.ofMinutes(Math.max(30, minutes));
+    /** Tuyến có ít nhất 2 ga và km tăng dần: đủ điều kiện tính lịch chạy (tránh lỗi làm hỏng transaction khởi động). */
+    private boolean hasValidDistances(Route route) {
+        List<RouteStation> routeStations = routeStationRepository
+                .findByRoute_RouteIdOrderByStationOrderAsc(route.getRouteId());
+
+        if (routeStations.size() < 2) {
+            return false;
+        }
+
+        for (int i = 1; i < routeStations.size(); i++) {
+            Double previous = routeStations.get(i - 1).getDistanceFromStartKm();
+            Double current = routeStations.get(i).getDistanceFromStartKm();
+
+            if (previous == null || current == null || current <= previous) {
+                System.out.println("Seed: skip demo trips on route " + route.getRouteCode()
+                        + " because station distances are not increasing.");
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /** Chiều dài tuyến = lý trình của ga cuối. */
@@ -651,6 +610,11 @@ public class DataInitializer implements CommandLineRunner {
         train.setTrainType(trainType);
         train.setStatus(TrainStatus.AVAILABLE);
 
+        // Chỉ điền tốc độ khi tàu chưa có, không ghi đè tốc độ admin đã sửa.
+        if (train.getAverageSpeedKmh() == null) {
+            train.setAverageSpeedKmh(AVERAGE_SPEED_KMH.getOrDefault(trainCode, DEFAULT_SPEED_KMH));
+        }
+
         return trainRepository.save(train);
     }
 
@@ -692,9 +656,73 @@ public class DataInitializer implements CommandLineRunner {
         return coachRepository.save(coach);
     }
 
+    /**
+     * Luồng hoàn tiền cũ: "Đã duyệt" = đã trừ ví ngay. Luồng mới tách thành Đã duyệt (nhả ghế) và
+     * Đã chuyển tiền (trừ ví). Yêu cầu duyệt theo luồng cũ (chưa có processed_at) đã bị trừ ví rồi,
+     * nên chuyển thẳng sang COMPLETED để không bị trừ ví lần nữa.
+     */
+    private void migrateLegacyApprovedRefunds() {
+        for (Refund refund : refundRepository.findByRefundStatusAndProcessedAtIsNull(RefundStatus.APPROVED)) {
+            refund.setProcessedAt(refund.getRefundedAt() != null ? refund.getRefundedAt() : LocalDateTime.now());
+            if (refund.getRefundedAt() == null) {
+                refund.setRefundedAt(refund.getProcessedAt());
+            }
+            refund.setRefundStatus(RefundStatus.COMPLETED);
+            refundRepository.save(refund);
+        }
+    }
+
+    /** Tàu mẫu tạo trước khi có cột average_speed_kmh: điền tốc độ mặc định theo mã tàu. Tàu admin tự tạo giữ nguyên. */
+    private void backfillTrainSpeeds() {
+        for (Train train : trainRepository.findAll()) {
+            if (train.getAverageSpeedKmh() != null) {
+                continue;
+            }
+
+            Integer speed = AVERAGE_SPEED_KMH.get(train.getTrainCode());
+            if (speed != null) {
+                train.setAverageSpeedKmh(speed);
+                trainRepository.save(train);
+            }
+        }
+    }
+
+    /**
+     * Toa tạo trước khi có cột seat_price: lấy phụ thu đang áp cho ghế của toa làm giá chung.
+     * Chỉ điền toa còn trống, không đổi giá admin đã nhập.
+     */
+    private void backfillCoachSeatPrices() {
+        for (Coach coach : coachRepository.findAll()) {
+            if (coach.getSeatPrice() != null) {
+                continue;
+            }
+
+            BigDecimal priceFromSeats = seatRepository.findByCoach_CoachIdOrderBySeatNumberAsc(coach.getCoachId())
+                    .stream()
+                    .map(Seat::getExtraPrice)
+                    .filter(price -> price != null)
+                    .findFirst()
+                    .orElse(BigDecimal.ZERO);
+
+            coach.setSeatPrice(priceFromSeats);
+            coachRepository.save(coach);
+        }
+    }
+
+    /** Giá chung của toa nếu đã có (admin có thể đã sửa), nếu chưa thì lưu mức mặc định của seed. */
+    private BigDecimal resolveCoachSeatPrice(Coach coach, BigDecimal defaultPrice) {
+        if (coach.getSeatPrice() == null) {
+            coach.setSeatPrice(defaultPrice);
+            coachRepository.save(coach);
+        }
+
+        return coach.getSeatPrice();
+    }
+
     private void createNormalSeatsForCoach(Coach coach,
                                            String seatType,
-                                           BigDecimal extraPrice) {
+                                           BigDecimal defaultExtraPrice) {
+        BigDecimal extraPrice = resolveCoachSeatPrice(coach, defaultExtraPrice);
         String[] columns = {"A", "B", "C", "D"};
         int capacity = coach.getCapacity() == null ? 40 : coach.getCapacity();
         int created = 0;
@@ -735,7 +763,8 @@ public class DataInitializer implements CommandLineRunner {
 
     private void createSleeperCompartmentsAndBerths(Coach coach,
                                                     String seatType,
-                                                    BigDecimal extraPrice) {
+                                                    BigDecimal defaultExtraPrice) {
+        BigDecimal extraPrice = resolveCoachSeatPrice(coach, defaultExtraPrice);
         int compartmentCount = coach.getCompartmentCount() == null ? 0 : coach.getCompartmentCount();
         int berthsPerCompartment = coach.getBerthsPerCompartment() == null ? 0 : coach.getBerthsPerCompartment();
 
@@ -837,35 +866,28 @@ public class DataInitializer implements CommandLineRunner {
         return "LEVEL_" + berthIndex;
     }
 
-    private TrainTrip findOrCreateOrUpdateSeedTrip(Train train,
-                                                   Route route,
-                                                   int tripIndex,
-                                                   LocalDateTime departureTime,
-                                                   LocalDateTime arrivalTime,
-                                                   BigDecimal basePrice) {
-        List<TrainTrip> existingTrips = trainTripRepository.findAll()
-                .stream()
-                .filter(trip -> trip.getTrain() != null
-                        && trip.getTrain().getTrainId().equals(train.getTrainId())
-                        && trip.getRoute() != null
-                        && trip.getRoute().getRouteId().equals(route.getRouteId()))
-                .sorted(Comparator.comparing(
-                        TrainTrip::getDepartureTime,
-                        Comparator.nullsLast(Comparator.naturalOrder())
-                ))
-                .toList();
+    /**
+     * Tạo chuyến mẫu nếu ngày khởi hành đó chưa có chuyến nào của cùng tàu + tuyến.
+     * Không bao giờ sửa chuyến đã có (kể cả chuyến trong quá khứ, chuyến admin tạo/sửa,
+     * chuyến đã có người đặt). Trả về null khi đã có chuyến cho ngày đó.
+     */
+    private TrainTrip createSeedTripIfMissing(Train train,
+                                              Route route,
+                                              LocalDateTime departureTime,
+                                              LocalDateTime arrivalTime,
+                                              BigDecimal basePrice) {
+        LocalDateTime startOfDay = departureTime.toLocalDate().atStartOfDay();
 
-        if (existingTrips.size() > tripIndex) {
-            TrainTrip trip = existingTrips.get(tripIndex);
+        boolean alreadyScheduled = trainTripRepository
+                .existsByTrain_TrainIdAndRoute_RouteIdAndDepartureTimeGreaterThanEqualAndDepartureTimeLessThan(
+                        train.getTrainId(),
+                        route.getRouteId(),
+                        startOfDay,
+                        startOfDay.plusDays(1)
+                );
 
-            trip.setTrain(train);
-            trip.setRoute(route);
-            trip.setDepartureTime(departureTime);
-            trip.setArrivalTime(arrivalTime);
-            trip.setBasePrice(basePrice);
-            trip.setStatus(TripStatus.SCHEDULED);
-
-            return trainTripRepository.save(trip);
+        if (alreadyScheduled) {
+            return null;
         }
 
         return trainTripRepository.save(
@@ -880,144 +902,6 @@ public class DataInitializer implements CommandLineRunner {
         );
     }
 
-    private void syncRouteStations(Route route,
-                                   List<Station> stations,
-                                   List<StopSeed> stops) {
-        List<RouteStation> existing = routeStationRepository
-                .findByRoute_RouteIdOrderByStationOrderAsc(route.getRouteId());
-
-        boolean sameOrder = existing.size() == stations.size();
-
-        if (sameOrder) {
-            for (int i = 0; i < stations.size(); i++) {
-                RouteStation routeStation = existing.get(i);
-
-                if (routeStation.getStation() == null
-                        || !routeStation.getStation().getStationId().equals(stations.get(i).getStationId())
-                        || routeStation.getStationOrder() == null
-                        || routeStation.getStationOrder() != i + 1) {
-                    sameOrder = false;
-                    break;
-                }
-            }
-        }
-
-        if (sameOrder) {
-            // Cùng ga, cùng thứ tự: chỉ cập nhật lý trình (km) theo dữ liệu mẫu.
-            applySeedDistances(existing, stops);
-            return;
-        }
-
-        if (!existing.isEmpty()) {
-            // Tuyến đã được admin chỉnh và đang có chuyến dùng -> giữ nguyên các ga, chỉ cập nhật km của ga trùng mã.
-            if (!tripStationRepository.findByRouteStation_Route_RouteId(route.getRouteId()).isEmpty()) {
-                applySeedDistances(existing, stops);
-                System.out.println("Seed: route " + route.getRouteCode() + " is in use, keeping its current stations.");
-                return;
-            }
-
-            routeStationRepository.deleteAll(existing);
-            routeStationRepository.flush();
-        }
-
-        for (int i = 0; i < stations.size(); i++) {
-            RouteStation routeStation = RouteStation.builder()
-                    .route(route)
-                    .station(stations.get(i))
-                    .stationOrder(i + 1)
-                    .distanceFromStartKm(stops.get(i).km())
-                    .build();
-
-            routeStationRepository.save(routeStation);
-        }
-    }
-
-    /** Ghi km từ dữ liệu mẫu vào các ga đã có của tuyến (ghép theo mã ga). */
-    private void applySeedDistances(List<RouteStation> routeStations, List<StopSeed> stops) {
-        Map<String, Double> kmByCode = new HashMap<>();
-        for (StopSeed stop : stops) {
-            kmByCode.put(stop.code(), stop.km());
-        }
-
-        for (RouteStation routeStation : routeStations) {
-            if (routeStation.getStation() == null) {
-                continue;
-            }
-            Double km = kmByCode.get(routeStation.getStation().getStationCode());
-            if (km != null && !km.equals(routeStation.getDistanceFromStartKm())) {
-                routeStation.setDistanceFromStartKm(km);
-                routeStationRepository.save(routeStation);
-            }
-        }
-    }
-
-    private void syncTripStations(TrainTrip trip,
-                                  List<Station> stations) {
-        Map<Long, RouteStation> routeStationByStation = new HashMap<>();
-        for (RouteStation routeStation : routeStationRepository
-                .findByRoute_RouteIdOrderByStationOrderAsc(trip.getRoute().getRouteId())) {
-            routeStationByStation.put(routeStation.getStation().getStationId(), routeStation);
-        }
-
-        // Các ga của tuyến mà chuyến mẫu dừng, theo thứ tự trên tuyến.
-        List<RouteStation> desired = stations.stream()
-                .map(station -> routeStationByStation.get(station.getStationId()))
-                .filter(java.util.Objects::nonNull)
-                .sorted(Comparator.comparing(RouteStation::getStationOrder))
-                .toList();
-
-        if (desired.size() < 2) {
-            return;
-        }
-
-        List<TripStation> existing = tripStationRepository.findStopsOfTrip(trip.getTripId());
-
-        boolean sameStops = existing.size() == desired.size();
-        for (int i = 0; sameStops && i < desired.size(); i++) {
-            sameStops = existing.get(i).getRouteStation().getRouteStationId()
-                    .equals(desired.get(i).getRouteStationId());
-        }
-
-        if (!sameStops) {
-            // Không đụng vào lịch dừng của chuyến đã có người đặt.
-            if (bookingRepository.existsByTrainTrip_TripId(trip.getTripId())) {
-                return;
-            }
-
-            if (!existing.isEmpty()) {
-                tripStationRepository.deleteAll(existing);
-                tripStationRepository.flush();
-            }
-        }
-
-        for (int i = 0; i < desired.size(); i++) {
-            TripStation stop = sameStops ? existing.get(i) : new TripStation();
-
-            stop.setTrainTrip(trip);
-            stop.setRouteStation(desired.get(i));
-            tripScheduleBuilder.applyInterpolatedTimes(
-                    stop, trip.getDepartureTime(), trip.getArrivalTime(), desired, i);
-
-            tripStationRepository.save(stop);
-        }
-    }
-
-
-    private List<Station> stationList(Map<String, Station> stations,
-                                      List<StopSeed> stops) {
-        return stops.stream()
-                .map(stop -> {
-                    Station station = stations.get(stop.code());
-
-                    if (station == null) {
-                        throw new IllegalStateException("Missing station code: " + stop.code());
-                    }
-
-                    return station;
-                })
-                .toList();
-    }
-
     private static StopSeed stop(String code, double km) {
         return new StopSeed(code, km);
     }
@@ -1030,5 +914,13 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private record TrainSeed(String code, String name, String type) {
+    }
+
+    private record RouteSeed(String code,
+                             String name,
+                             List<StopSeed> stops,
+                             List<String> trainCodes,
+                             int firstHour,
+                             BigDecimal basePrice) {
     }
 }

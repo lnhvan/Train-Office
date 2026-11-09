@@ -87,6 +87,7 @@
                               and booking.bookingStatus.name() != 'REFUNDED'
                           )}"
                           th:text="${#messages.msgOrNull('enum.' + (booking.bookingStatus != null ? booking.bookingStatus : 'UNKNOWN')) ?: (booking.bookingStatus != null ? booking.bookingStatus : 'UNKNOWN')}">PENDING_PAYMENT</span>
+                    <div th:replace="~{fragments/payment-deadline :: notice(${booking}, true)}"></div>
                 </div>
 
                 <div class="rj-booking-actions">

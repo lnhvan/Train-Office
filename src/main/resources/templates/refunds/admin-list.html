@@ -107,7 +107,7 @@
 
                             <span class="rj-badge is-success"
                                   th:if="${refund.refundStatus != null and refund.refundStatus.name() == 'APPROVED'}"
-                                  th:text="${#messages.msgOrNull('enum.' + (refund.refundStatus)) ?: (refund.refundStatus)}">
+                                  th:text="#{refund.awaitingTransfer}">
                                 APPROVED
                             </span>
 
@@ -152,6 +152,18 @@
                                     [[#{refund.reject}]]
                                 </button>
                             </form>
+
+                            <form th:if="${refund.refundStatus != null and refund.refundStatus.name() == 'APPROVED'}"
+                                  th:action="@{/admin/refunds/{id}/complete(id=${refund.refundId})}"
+                                  method="post"
+                                  class="d-inline"
+                                  th:data-confirm="#{confirm.completeRefund(${#numbers.formatDecimal(refund.refundAmount, 0, 'COMMA', 0, 'POINT')}, ${refund.bankName}, ${refund.bankAccountNumber}, ${refund.bankAccountHolder})}"
+                                  onsubmit="return confirm(this.dataset.confirm)">
+                                <button type="submit" class="btn btn-sm btn-primary">
+                                    <i class="bi bi-bank"></i>
+                                    [[#{refund.markTransferred}]]
+                                </button>
+                            </form>
                         </td>
                     </tr>
 
@@ -162,6 +174,42 @@
                                 <strong>[[#{refund.noPendingRefundRequests}]]</strong>
                             </div>
                         </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="card admin-table-card mt-3">
+        <div class="card-header">
+            <span class="admin-card-title"><i class="bi bi-journal-text"></i> [[#{wallet.recentTransactions}]]</span>
+            <small>[[#{wallet.recentTransactionsHint}]]</small>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-sm table-hover align-middle mb-0">
+                    <thead>
+                    <tr>
+                        <th>[[#{wallet.time}]]</th>
+                        <th>[[#{wallet.description}]]</th>
+                        <th>[[#{wallet.reference}]]</th>
+                        <th class="text-end">[[#{common.amount}]]</th>
+                        <th class="text-end">[[#{wallet.balanceAfter}]]</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="tx : ${walletTransactions}">
+                        <td class="rj-num text-nowrap" th:text="${#temporals.format(tx.createdAt, 'HH:mm dd/MM/yyyy')}">10:00 09/11/2026</td>
+                        <td th:text="${tx.description}">Thanh toán VNPay</td>
+                        <td class="rj-code small" th:text="${tx.referenceCode != null ? tx.referenceCode : '-'}">RF001</td>
+                        <td class="text-end rj-num text-nowrap"
+                            th:classappend="${tx.type.name() == 'CREDIT'} ? ' text-success' : ' text-danger'"
+                            th:text="${(tx.type.name() == 'CREDIT' ? '+' : '−') + #numbers.formatDecimal(tx.amount, 0, 'COMMA', 0, 'POINT')} + ' VND'">+0 VND</td>
+                        <td class="text-end rj-num text-nowrap" th:text="${#numbers.formatDecimal(tx.balanceAfter, 0, 'COMMA', 0, 'POINT')} + ' VND'">0 VND</td>
+                    </tr>
+                    <tr th:if="${walletTransactions == null or #lists.isEmpty(walletTransactions)}">
+                        <td colspan="5" class="text-muted text-center py-3">[[#{wallet.noTransactions}]]</td>
                     </tr>
                     </tbody>
                 </table>

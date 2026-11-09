@@ -98,7 +98,7 @@ public class RouteController {
         }
     }
 
-    @GetMapping("/delete/{id}")
+    @PostMapping("/delete/{id}")
     public String deleteRoute(@PathVariable Long id,
                               RedirectAttributes redirectAttributes) {
         try {

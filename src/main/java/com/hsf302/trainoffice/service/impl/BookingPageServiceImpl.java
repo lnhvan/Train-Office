@@ -1,9 +1,12 @@
 package com.hsf302.trainoffice.service.impl;
 
+import com.hsf302.trainoffice.dto.SeatHold;
+import com.hsf302.trainoffice.exception.SeatHoldException;
 
 import com.hsf302.trainoffice.security.CurrentUser;
 import com.hsf302.trainoffice.config.I18n;
 import com.hsf302.trainoffice.common.enums.BookingStatus;
+import com.hsf302.trainoffice.common.enums.UserRole;
 import com.hsf302.trainoffice.common.enums.Gender;
 import com.hsf302.trainoffice.dto.BookingConfirmationView;
 import com.hsf302.trainoffice.dto.BookingSession;
@@ -138,8 +141,21 @@ public class BookingPageServiceImpl implements BookingPageService {
             model.addAttribute("seats", bookingFlowService.getSeatAvailability(
                     tripId,
                     departureStationId,
-                    arrivalStationId
+                    arrivalStationId,
+                    currentUser(session).getUserId()
             ));
+
+            // Khách tải lại trang: lấy ghế đang giữ và thời gian còn lại từ Redis.
+            // Đã bỏ hết ghế thì đồng hồ vẫn chạy tiếp theo hạn cũ (không reset, không ẩn).
+            SeatHold hold = bookingFlowService.findUserHold(currentUser(session))
+                    .filter(item -> item.isForSegment(tripId, departureStationId, arrivalStationId))
+                    .orElse(null);
+
+            if (hold != null && hold.seatIds().size() > passengerCount) {
+                form.setPassengerCount(hold.seatIds().size());
+            }
+
+            model.addAttribute("seatHoldRemainingMs", hold == null ? 0L : hold.remainingMillis());
 
             return "booking/seat-selection";
 
@@ -172,7 +188,7 @@ public class BookingPageServiceImpl implements BookingPageService {
         try {
             BookingSession previousSession = getBookingSession(session);
 
-            BookingSession bookingSession = bookingFlowService.buildBookingSession(form);
+            BookingSession bookingSession = bookingFlowService.buildBookingSession(form, currentUser(session));
 
             if (canReusePassengerInfo(previousSession, bookingSession)) {
                 bookingSession.setPassengerInfo(previousSession.getPassengerInfo());
@@ -210,6 +226,12 @@ public class BookingPageServiceImpl implements BookingPageService {
             return "redirect:/booking/search";
         }
 
+        SeatHold hold = activeHold(bookingSession, user, session, redirectAttributes);
+        if (hold == null) {
+            return "redirect:/booking/search";
+        }
+        model.addAttribute("seatHoldRemainingMs", hold.remainingMillis());
+
         PassengerInfoForm form;
         if (!model.containsAttribute("passengerInfoForm")) {
             form = bookingSession.getPassengerInfo() == null
@@ -245,6 +267,12 @@ public class BookingPageServiceImpl implements BookingPageService {
         if (bookingSession == null) {
             return "redirect:/booking/search";
         }
+
+        SeatHold hold = activeHold(bookingSession, currentUser(session), session, redirectAttributes);
+        if (hold == null) {
+            return "redirect:/booking/search";
+        }
+        model.addAttribute("seatHoldRemainingMs", hold.remainingMillis());
 
         if (bindingResult.hasErrors()
                 || form.getPassengers() == null
@@ -328,6 +356,10 @@ public class BookingPageServiceImpl implements BookingPageService {
             return "redirect:/booking/search";
         }
 
+        if (activeHold(bookingSession, currentUser(session), session, redirectAttributes) == null) {
+            return "redirect:/booking/search";
+        }
+
         try {
             bookingFlowService.applyGroupDiscount(bookingSession, groupDiscountPolicyId);
             session.setAttribute(BOOKING_SESSION_KEY, bookingSession);
@@ -361,9 +393,15 @@ public class BookingPageServiceImpl implements BookingPageService {
             return "redirect:/booking/search";
         }
 
+        SeatHold hold = activeHold(bookingSession, currentUser(session), session, redirectAttributes);
+        if (hold == null) {
+            return "redirect:/booking/search";
+        }
+
         try {
             BookingConfirmationView confirmation = bookingFlowService.buildConfirmation(bookingSession);
             addConfirmationModel(confirmation, model);
+            model.addAttribute("seatHoldRemainingMs", hold.remainingMillis());
 
             return "booking/confirmation";
 
@@ -397,6 +435,13 @@ public class BookingPageServiceImpl implements BookingPageService {
 
             return "redirect:/booking/success?bookingId=" + booking.getBookingId();
 
+        } catch (SeatHoldException ex) {
+            redirectAttributes.addFlashAttribute("error", ex.getMessage());
+            if (ex.getReason() == SeatHoldException.Reason.EXPIRED) {
+                session.removeAttribute(BOOKING_SESSION_KEY);
+                return "redirect:/booking/search";
+            }
+            return "redirect:/booking/confirmation";
         } catch (IllegalArgumentException ex) {
             redirectAttributes.addFlashAttribute("error", ex.getMessage());
             return "redirect:/booking/confirmation";
@@ -624,6 +669,25 @@ public class BookingPageServiceImpl implements BookingPageService {
     }
 
     /** Người dùng đăng nhập (JWT) của request hiện tại; null nếu chưa đăng nhập. */
+    /**
+     * Khóa ghế trong Redis của phiên đặt vé còn hạn thì trả về; hết hạn thì xóa phiên,
+     * đặt thông báo lỗi và trả null (caller chuyển về trang tìm vé).
+     */
+    private SeatHold activeHold(BookingSession bookingSession,
+                                User user,
+                                HttpSession session,
+                                RedirectAttributes redirectAttributes) {
+        try {
+            return bookingFlowService.requireActiveHold(bookingSession, user);
+        } catch (SeatHoldException ex) {
+            if (ex.getReason() == SeatHoldException.Reason.EXPIRED) {
+                session.removeAttribute(BOOKING_SESSION_KEY);
+            }
+            redirectAttributes.addFlashAttribute("error", ex.getMessage());
+            return null;
+        }
+    }
+
     private User currentUser(HttpSession session) {
         return CurrentUser.get();
     }
@@ -631,6 +695,10 @@ public class BookingPageServiceImpl implements BookingPageService {
     private boolean canAccessBooking(Booking booking, User user) {
         if (booking == null || user == null) {
             return false;
+        }
+
+        if (user.getRole() == UserRole.ADMIN) {
+            return true;
         }
 
         if (booking.getUser() == null) {

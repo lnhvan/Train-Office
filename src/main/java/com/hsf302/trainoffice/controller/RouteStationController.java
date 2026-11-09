@@ -130,7 +130,7 @@ public class RouteStationController {
         return "redirect:/admin/routes/" + routeId + "/stations";
     }
 
-    @GetMapping("/admin/routes/{routeId}/stations/delete/{routeStationId}")
+    @PostMapping("/admin/routes/{routeId}/stations/delete/{routeStationId}")
     public String delete(@PathVariable Long routeId,
                          @PathVariable Long routeStationId,
                          RedirectAttributes redirectAttributes) {

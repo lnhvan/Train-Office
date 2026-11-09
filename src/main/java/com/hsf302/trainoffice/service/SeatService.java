@@ -15,5 +15,6 @@ public interface SeatService {
 
     Seat saveSeat(Seat seat);
 
-    void deleteSeat(Long id);
+    /** Đánh dấu / bỏ đánh dấu ghế đang bảo trì. Ghế bảo trì không cho khách đặt. */
+    Seat setUnderMaintenance(Long id, boolean underMaintenance);
 }

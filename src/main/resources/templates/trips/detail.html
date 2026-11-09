@@ -168,9 +168,11 @@
                                th:value="${tripForm.departureTime != null ? #strings.substring(tripForm.departureTime.toString(), 0, 16) : ''}">
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label class="form-label" for="editArrival">[[#{common.arrivalTime}]]</label>
-                        <input class="form-control" id="editArrival" name="arrivalTime" type="datetime-local" required
-                               th:value="${tripForm.arrivalTime != null ? #strings.substring(tripForm.arrivalTime.toString(), 0, 16) : ''}">
+                        <label class="form-label">[[#{common.arrivalTime}]]</label>
+                        <div class="form-control-plaintext">
+                            <span th:text="${trip.arrivalTime != null ? #temporals.format(trip.arrivalTime, 'HH:mm dd/MM/yyyy') : '-'}">14:00 27/10/2026</span>
+                            <small class="d-block text-muted">[[#{trip.arrivalRecalculatedHint}]]</small>
+                        </div>
                     </div>
                     <div class="col-md-6 mb-3">
                         <label class="form-label" for="editPrice">[[#{common.basePrice}]]</label>

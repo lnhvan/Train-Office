@@ -62,6 +62,17 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
     })
     List<Ticket> findByBooking_BookingIdOrderByTicketIdAsc(Long bookingId);
 
+    /** Vé của một chuyến theo trạng thái (đi qua booking để lấy cả vé cũ chưa có trip_id). */
+    @Query("""
+            select t
+            from Ticket t
+            where t.booking.trainTrip.tripId = :tripId
+              and t.ticketStatus in :statuses
+            order by t.ticketId
+            """)
+    List<Ticket> findByTripAndStatuses(@Param("tripId") Long tripId,
+                                       @Param("statuses") Collection<TicketStatus> statuses);
+
     @EntityGraph(attributePaths = {
             "booking",
             "booking.trainTrip",

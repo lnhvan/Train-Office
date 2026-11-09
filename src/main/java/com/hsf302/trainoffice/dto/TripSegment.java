@@ -4,6 +4,7 @@ import com.hsf302.trainoffice.entity.TripStation;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -13,6 +14,13 @@ import java.time.temporal.ChronoUnit;
 public class TripSegment {
     private TripStation departureStop;
     private TripStation arrivalStop;
+
+    /** Giá cơ bản của đoạn này (tỉ lệ km, đã làm tròn/tối thiểu). Do service điền, có thể null. */
+    private BigDecimal baseFare;
+
+    public TripSegment(TripStation departureStop, TripStation arrivalStop) {
+        this(departureStop, arrivalStop, null);
+    }
 
     public Integer getDepartureOrder() {
         return departureStop.getStationOrder();

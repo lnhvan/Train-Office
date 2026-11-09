@@ -3,6 +3,7 @@ package com.hsf302.trainoffice.controller;
 
 import com.hsf302.trainoffice.security.CurrentUser;
 import com.hsf302.trainoffice.config.I18n;
+import com.hsf302.trainoffice.dto.RefundQuote;
 import com.hsf302.trainoffice.dto.RefundRequestForm;
 import com.hsf302.trainoffice.entity.User;
 import com.hsf302.trainoffice.service.RefundService;
@@ -40,6 +41,17 @@ public class TicketRefundController {
             );
             return "redirect:/login";
         }
+
+        // Kiểm tra vé còn hoàn được và tính trước số tiền hoàn để khách thấy trước khi gửi.
+        RefundQuote quote;
+        try {
+            quote = refundService.quoteRefund(ticketId, user);
+        } catch (IllegalArgumentException | IllegalStateException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+            return "redirect:/tickets";
+        }
+
+        model.addAttribute("refundQuote", quote);
 
         if (!model.containsAttribute("refundRequestForm")) {
             RefundRequestForm form = new RefundRequestForm();
@@ -81,6 +93,7 @@ public class TicketRefundController {
 
         if (bindingResult.hasErrors()) {
             model.addAttribute("ticketId", ticketId);
+            addQuote(model, ticketId, user);
             return "refunds/customer-request";
         }
 
@@ -97,12 +110,22 @@ public class TicketRefundController {
         } catch (IllegalArgumentException | IllegalStateException ex) {
             model.addAttribute("errorMessage", ex.getMessage());
             model.addAttribute("ticketId", ticketId);
+            addQuote(model, ticketId, user);
             return "refunds/customer-request";
 
         } catch (Exception ex) {
             model.addAttribute("errorMessage", I18n.t("msg.refund.createError"));
             model.addAttribute("ticketId", ticketId);
+            addQuote(model, ticketId, user);
             return "refunds/customer-request";
+        }
+    }
+
+    private void addQuote(Model model, Long ticketId, User user) {
+        try {
+            model.addAttribute("refundQuote", refundService.quoteRefund(ticketId, user));
+        } catch (IllegalArgumentException | IllegalStateException ignored) {
+            // Lỗi đã hiện qua errorMessage; không có báo giá thì trang chỉ ẩn khung số tiền.
         }
     }
 

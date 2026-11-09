@@ -137,7 +137,7 @@ public class UserController {
         }
     }
 
-    @GetMapping("/delete/{id}")
+    @PostMapping("/delete/{id}")
     public String deleteUser(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         try {
             userService.deleteUser(id);

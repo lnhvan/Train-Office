@@ -46,6 +46,8 @@
             </div>
         </div>
 
+        <div th:replace="~{fragments/payment-deadline :: notice(${booking}, false)}"></div>
+
         <div class="alert alert-success" th:if="${successMessage}" th:text="${successMessage}"></div>
         <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
         <div class="alert alert-danger" th:if="${error}" th:text="${error}"></div>
@@ -103,7 +105,10 @@
 
                 <section class="rj-card rj-card-flush">
                     <div class="rj-card-head">
-                        <h2><i class="bi bi-ticket-perforated rj-head-icon"></i>[[#{booking.tickets}]]</h2>
+                        <h2 th:with="issued=${booking.bookingStatus != null and (booking.bookingStatus.name() == 'PAID' or booking.bookingStatus.name() == 'REFUNDED')}">
+                            <i class="bi rj-head-icon" th:classappend="${issued} ? 'bi-ticket-perforated' : 'bi-grid-3x3-gap'"></i>
+                            <span th:text="${issued} ? #{booking.tickets} : #{booking.reservedSeats}">Vé</span>
+                        </h2>
                     </div>
                     <div class="rj-table-wrap"
                          th:if="${tickets != null and !#lists.isEmpty(tickets)}">
@@ -122,7 +127,9 @@
                             <tr th:each="ticket : ${tickets}">
                                 <td>
                                     <strong th:text="${ticket.passenger != null ? ticket.passenger.fullName : '-'}">Passenger</strong>
-                                    <small class="d-block text-muted rj-code" th:text="${ticket.ticketCode}">RJ-T001</small>
+                                    <small class="d-block text-muted rj-code"
+                                           th:if="${ticket.ticketStatus != null and (ticket.ticketStatus.name() == 'CONFIRMED' or ticket.ticketStatus.name() == 'REFUNDED')}"
+                                           th:text="${ticket.ticketCode}">RJ-T001</small>
                                 </td>
                                 <td class="rj-num" th:text="${ticket.seat != null and ticket.seat.coach != null ? ticket.seat.coach.coachNumber : '-'}">1</td>
                                 <td class="rj-num" th:text="${ticket.seat != null and ticket.seat.compartment != null ? ticket.seat.compartment.compartmentNumber : '-'}">K01</td>
@@ -140,13 +147,13 @@
                                 </td>
                                 <td class="text-end">
                                     <div class="rj-actions">
-                                        <a th:if="${guestMode != true}"
+                                        <a th:if="${guestMode != true and ticket.ticketStatus != null and (ticket.ticketStatus.name() == 'CONFIRMED' or ticket.ticketStatus.name() == 'REFUNDED')}"
                                            class="rj-icon-btn"
                                            th:href="@{/tickets/{id}(id=${ticket.ticketId})}"
                                            th:title="#{common.details}" th:aria-label="#{common.details}">
                                             <i class="bi bi-eye"></i>
                                         </a>
-                                        <a th:if="${guestMode != true and ticket.ticketStatus != null and ticket.ticketStatus.name() != 'REFUNDED'}"
+                                        <a th:if="${guestMode != true and ticket.ticketStatus != null and ticket.ticketStatus.name() == 'CONFIRMED'}"
                                            class="rj-icon-btn"
                                            th:href="@{/tickets/{id}/print(id=${ticket.ticketId})}"
                                            th:title="#{booking.print}" th:aria-label="#{booking.print}">

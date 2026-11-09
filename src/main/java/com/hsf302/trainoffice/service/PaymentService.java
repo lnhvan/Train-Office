@@ -25,7 +25,6 @@ public interface PaymentService {
 
     Payment savePayment(Payment payment);
 
-    Payment markPaymentSuccess(UUID id);
 
     Payment markPaymentFailed(UUID id);
 

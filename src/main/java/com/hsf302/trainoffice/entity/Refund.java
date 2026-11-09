@@ -47,6 +47,11 @@ public class Refund {
     @Column(name = "refund_status", nullable = false, length = 20)
     private RefundStatus refundStatus;
 
+    /** Thời điểm admin duyệt / từ chối yêu cầu. */
+    @Column(name = "processed_at")
+    private LocalDateTime processedAt;
+
+    /** Thời điểm admin xác nhận đã chuyển tiền hoàn cho khách (trạng thái COMPLETED). */
     @Column(name = "refunded_at")
     private LocalDateTime refundedAt;
 
