@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -37,6 +38,21 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             "arrivalStation"
     })
     List<Booking> findByUser_UserIdOrderByBookingDateDesc(Long userId);
+
+    @EntityGraph(attributePaths = {
+            "trainTrip",
+            "trainTrip.train",
+            "trainTrip.route",
+            "departureStation",
+            "arrivalStation"
+    })
+    @Query("""
+            SELECT b FROM Booking b
+            WHERE b.user.userId = :userId
+               OR (b.user IS NULL AND :email IS NOT NULL AND LOWER(b.bookerEmail) = LOWER(:email))
+            ORDER BY b.bookingDate DESC
+            """)
+    List<Booking> findByUserOrEmailOrderByBookingDateDesc(@Param("userId") Long userId, @Param("email") String email);
 
     @EntityGraph(attributePaths = {
             "trainTrip",

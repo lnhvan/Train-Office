@@ -373,7 +373,7 @@ public class CoachServiceImpl implements CoachService {
 
             for (int berthIndex = 1; berthIndex <= berthsPerCompartment; berthIndex++) {
                 String seatNumber = generateSleeperSeatNumber(compartmentNumber, berthIndex);
-                String berthLevel = resolveBerthLevel(berthIndex);
+                String berthLevel = resolveBerthLevel(berthIndex, berthsPerCompartment);
 
                 Seat seat = seatRepository.findByCoach_CoachIdOrderBySeatNumberAsc(coach.getCoachId())
                         .stream()
@@ -526,7 +526,7 @@ public class CoachServiceImpl implements CoachService {
 
             for (int berthIndex = 1; berthIndex <= berthsPerCompartment; berthIndex++) {
                 String seatNumber = generateSleeperSeatNumber(compartmentNumber, berthIndex);
-                String berthLevel = resolveBerthLevel(berthIndex);
+                String berthLevel = resolveBerthLevel(berthIndex, berthsPerCompartment);
 
                 boolean exists = seatRepository.existsByCoach_CoachIdAndSeatNumber(
                         coach.getCoachId(),
@@ -578,9 +578,13 @@ public class CoachServiceImpl implements CoachService {
         return compartmentNumber + "-" + suffix;
     }
 
-    private String resolveBerthLevel(int berthIndex) {
+    private String resolveBerthLevel(int berthIndex, Integer totalBerths) {
         if (berthIndex == 1 || berthIndex == 2) {
             return "LOWER";
+        }
+
+        if (totalBerths != null && totalBerths == 4) {
+            return (berthIndex == 3 || berthIndex == 4) ? "UPPER" : "LEVEL_" + berthIndex;
         }
 
         if (berthIndex == 3 || berthIndex == 4) {

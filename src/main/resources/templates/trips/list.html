@@ -154,14 +154,14 @@
                     </td>
                     <td class="align-middle">
                         <span class="trip-status-pill"
-                              th:classappend="${trip.status != null and trip.status.toString() == 'SCHEDULED'} ? ' trip-status-scheduled' : (${trip.status != null and trip.status.toString() == 'CANCELLED'} ? ' trip-status-cancelled' : ' trip-status-completed')"
+                              th:classappend="${trip.status != null and trip.status.toString() == 'SCHEDULED'} ? ' trip-status-scheduled' : (${trip.status != null and trip.status.toString() == 'ONGOING'} ? ' trip-status-ongoing' : (${trip.status != null and trip.status.toString() == 'CANCELLED'} ? ' trip-status-cancelled' : ' trip-status-completed'))"
                               th:text="${#messages.msgOrNull('enum.' + (trip.status)) ?: (trip.status)}">SCHEDULED</span>
                     </td>
                     <td class="text-end align-middle">
                         <a class="rj-icon-btn is-info" th:href="@{/admin/trips/{id}(id=${trip.tripId})}" th:title="#{common.detail}"><i class="bi bi-eye" aria-hidden="true"></i><span class="visually-hidden">[[#{common.detail}]]</span></a>
                         <a class="rj-icon-btn is-warning" th:href="@{/admin/trips/{id}/edit(id=${trip.tripId})}" th:title="#{common.edit}"><i class="bi bi-pencil-square" aria-hidden="true"></i><span class="visually-hidden">[[#{common.edit}]]</span></a>
                         <a class="rj-icon-btn is-info" th:href="@{/admin/trips/{id}/stations(id=${trip.tripId})}" th:title="#{common.stations}"><i class="bi bi-list-ol" aria-hidden="true"></i><span class="visually-hidden">[[#{common.stations}]]</span></a>
-                        <form th:action="@{/admin/trips/{id}/cancel(id=${trip.tripId})}" method="post" class="d-inline">
+                        <form th:if="${trip.status != null and trip.status.toString() == 'SCHEDULED'}" th:action="@{/admin/trips/{id}/cancel(id=${trip.tripId})}" method="post" class="d-inline">
                             <button type="submit" class="rj-icon-btn is-danger" th:data-confirm="#{confirm.cancelTrip}" onclick="return confirm(this.dataset.confirm)" th:title="#{common.cancel}"><i class="bi bi-slash-circle" aria-hidden="true"></i><span class="visually-hidden">[[#{common.cancel}]]</span></button>
                         </form>
                     </td>

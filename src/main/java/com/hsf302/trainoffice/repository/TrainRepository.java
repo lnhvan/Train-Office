@@ -1,5 +1,6 @@
 package com.hsf302.trainoffice.repository;
 
+import com.hsf302.trainoffice.common.enums.TrainStatus;
 import com.hsf302.trainoffice.entity.Train;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -12,6 +13,8 @@ import java.util.List;
 
 @Repository
 public interface TrainRepository extends JpaRepository<Train, Long> {
+
+    List<Train> findByStatusOrderByTrainCodeAsc(TrainStatus status);
 
     Optional<Train> findByTrainCode(String trainCode);
 

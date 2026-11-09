@@ -544,7 +544,20 @@ public class BookingPageServiceImpl implements BookingPageService {
                 return "redirect:/booking/history";
             }
 
+            TripSegment segment = null;
+            try {
+                if (booking.getTrainTrip() != null && booking.getDepartureStation() != null && booking.getArrivalStation() != null) {
+                    segment = trainTripService.getValidSegment(
+                            booking.getTrainTrip().getTripId(),
+                            booking.getDepartureStation().getStationId(),
+                            booking.getArrivalStation().getStationId()
+                    );
+                }
+            } catch (Exception ignored) {
+            }
+
             model.addAttribute("booking", booking);
+            model.addAttribute("segment", segment);
             model.addAttribute("passengers", bookingService.getPassengersForBooking(bookingId));
             model.addAttribute("tickets", ticketService.getTicketsByBookingId(bookingId));
 

@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -103,6 +104,26 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
             "seat.compartment"
     })
     Optional<Ticket> findWithDetailsByTicketId(Long ticketId);
+
+    @Query("""
+            select t
+            from Ticket t
+            join fetch t.booking b
+            left join fetch t.trainTrip tr
+            left join fetch tr.train train
+            left join fetch tr.route route
+            left join fetch t.passenger p
+            left join fetch b.departureStation dep
+            left join fetch b.arrivalStation arr
+            where t.seat.seatId = :seatId
+              and tr.departureTime > :now
+              and tr.status != com.hsf302.trainoffice.common.enums.TripStatus.CANCELLED
+              and t.ticketStatus in :statuses
+            order by tr.departureTime asc, t.ticketId asc
+            """)
+    List<Ticket> findFutureActiveTicketsBySeat(@Param("seatId") Long seatId,
+                                              @Param("now") LocalDateTime now,
+                                              @Param("statuses") Collection<TicketStatus> statuses);
 
     boolean existsBySeat_SeatId(Long seatId);
 }

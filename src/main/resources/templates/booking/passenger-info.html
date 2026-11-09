@@ -46,7 +46,8 @@
 
                     <div class="rj-passenger-list">
                         <fieldset class="rj-card rail-passenger-card"
-                                  th:each="passenger, stat : ${passengerInfoForm.passengers}">
+                                  th:each="passenger, stat : ${passengerInfoForm.passengers}"
+                                  th:attr="data-index=${stat.index}">
                             <legend class="rj-passenger-head">
                                 <span class="rj-passenger-no rj-num" th:text="${stat.count}">1</span>
                                 <span th:text="#{booking.passengerN(${stat.count})}">Passenger 1</span>
@@ -108,7 +109,7 @@
 
                                 <div class="rj-field">
                                     <label class="form-label">[[#{booking.passengerType}]]</label>
-                                    <select class="form-select passenger-type-display" disabled>
+                                    <select class="form-control passenger-type-display" disabled>
                                         <option value="DEFAULT"
                                                 th:selected="${passenger.passengerType == null or passenger.passengerType == 'DEFAULT'}"
                                                 th:text="${passenger.dateOfBirth == null ? #messages.msg('booking.typeFromDob') : #messages.msg('booking.default0')}">Theo ngày sinh</option>
@@ -140,7 +141,7 @@
                                     <div class="form-text">[[#{booking.requiredForAdultAndSeniorPassengers}]]</div>
                                 </div>
 
-                                <div class="rj-field relationship-wrapper" style="display:none;">
+                                <div class="rj-field relationship-wrapper" th:if="${stat.index > 0}" style="display:none;">
                                     <label class="form-label" th:for="|relationship${stat.index}|">[[#{booking.relationshipToBooker}]]</label>
                                     <input class="form-control relationship-input"
                                            type="text"
@@ -375,6 +376,15 @@
     </div>
 
     <style>
+        select.passenger-type-display,
+        .passenger-type-display {
+            background-image: none !important;
+            padding-right: 0.75rem !important;
+            cursor: default !important;
+            -webkit-appearance: none !important;
+            -moz-appearance: none !important;
+            appearance: none !important;
+        }
         .rail-ocr-scan { margin-bottom: 14px; }
         .rail-dashed-btn {
             display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px;

@@ -9,7 +9,6 @@ import com.hsf302.trainoffice.dto.RegisterRequest;
 import com.hsf302.trainoffice.entity.User;
 import com.hsf302.trainoffice.repository.UserRepository;
 import com.hsf302.trainoffice.service.UserService;
-import com.hsf302.trainoffice.repository.PasswordResetCodeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -31,9 +30,6 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private UserRepository userRepository;
-
-    @Autowired
-    private PasswordResetCodeRepository passwordResetCodeRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -231,7 +227,6 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void deleteUser(Long userId) {
-        passwordResetCodeRepository.deleteAllForUser(userId);
         userRepository.deleteById(userId);
         userRepository.flush();
     }

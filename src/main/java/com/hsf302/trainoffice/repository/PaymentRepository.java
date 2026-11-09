@@ -20,6 +20,19 @@ public interface PaymentRepository extends JpaRepository<Payment, UUID> {
 
     List<Payment> findByBooking_BookingId(Long bookingId);
 
+    @Query("""
+            SELECT p FROM Payment p
+            JOIN FETCH p.booking b
+            LEFT JOIN FETCH b.trainTrip t
+            LEFT JOIN FETCH t.train
+            LEFT JOIN FETCH t.route
+            LEFT JOIN FETCH b.departureStation ds
+            LEFT JOIN FETCH b.arrivalStation as_st
+            WHERE b.user.userId = :userId
+               OR (b.user IS NULL AND :email IS NOT NULL AND LOWER(b.bookerEmail) = LOWER(:email))
+            """)
+    List<Payment> findByUserOrEmail(@Param("userId") Long userId, @Param("email") String email);
+
     Optional<Payment> findByTransactionCode(String transactionCode);
 
     /** Tổng tiền các thanh toán có trạng thái {@code status} và thời điểm trả trong [from, to). */

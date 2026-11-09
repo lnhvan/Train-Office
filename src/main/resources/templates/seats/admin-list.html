@@ -228,10 +228,14 @@
                         <form th:if="${seat.active == true}"
                               th:action="@{/admin/seats/{seatId}/maintenance(seatId=${seat.seatId})}"
                               method="post"
-                              class="d-inline"
-                              th:data-confirm="${seat.underMaintenance == true} ? #{seat.confirmMaintenanceOff(${seat.seatNumber})} : #{seat.confirmMaintenanceOn(${seat.seatNumber})}"
-                              onsubmit="return confirm(this.dataset.confirm)">
+                              class="d-inline seat-maintenance-form"
+                              th:id="'maintenance-form-' + ${seat.seatId}"
+                              th:data-seat-id="${seat.seatId}"
+                              th:data-seat-number="${seat.seatNumber}"
+                              th:data-is-maintenance="${seat.underMaintenance == true}"
+                              th:data-confirm="${seat.underMaintenance == true} ? #{seat.confirmMaintenanceOff(${seat.seatNumber})} : #{seat.confirmMaintenanceOn(${seat.seatNumber})}">
                             <input type="hidden" name="underMaintenance" th:value="${seat.underMaintenance != true}">
+                            <input type="hidden" name="confirmRefund" value="false">
                             <input type="hidden" name="trainId" th:value="${selectedTrainId}">
                             <input type="hidden" name="coachId" th:value="${selectedCoachId}">
                             <input type="hidden" name="keyword" th:value="${keyword}">
@@ -240,13 +244,16 @@
                             <button th:if="${seat.underMaintenance == true}"
                                     type="submit"
                                     class="rj-icon-btn is-success"
+                                    onclick="return confirm(this.form.dataset.confirm)"
                                     th:title="#{seat.markAvailable}">
                                 <i class="bi bi-check2-circle" aria-hidden="true"></i>
                                 <span class="visually-hidden">[[#{seat.markAvailable}]]</span>
                             </button>
                             <button th:if="${seat.underMaintenance != true}"
-                                    type="submit"
-                                    class="rj-icon-btn is-warning"
+                                    type="button"
+                                    class="rj-icon-btn is-warning btn-open-maintenance-modal"
+                                    th:data-seat-id="${seat.seatId}"
+                                    th:data-seat-number="${seat.seatNumber}"
                                     th:title="#{seat.markMaintenance}">
                                 <i class="bi bi-tools" aria-hidden="true"></i>
                                 <span class="visually-hidden">[[#{seat.markMaintenance}]]</span>
@@ -311,5 +318,181 @@
         </div>
     </div>
 
+
+    <!-- Modal xác nhận bảo trì ghế & thông báo danh sách vé bị ảnh hưởng -->
+    <div class="modal fade" id="seatMaintenanceModal" tabindex="-1" aria-labelledby="seatMaintenanceModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-bottom">
+                    <h5 class="modal-title d-flex align-items-center gap-2" id="seatMaintenanceModalLabel">
+                        <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+                        <span>[[#{seat.maintenanceModal.title}]]</span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="seatModalLoading" class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2 text-muted">[[#{seat.maintenanceModal.loading}]]</p>
+                    </div>
+
+                    <div id="seatModalContent" style="display: none;">
+                        <div id="seatModalHasTicketsAlert" class="alert alert-warning mb-3">
+                            <div class="d-flex align-items-start gap-2">
+                                <i class="bi bi-exclamation-diamond-fill mt-1 fs-5"></i>
+                                <div>
+                                    <strong id="seatModalWarningHeading"></strong>
+                                    <p class="mb-0 small text-body-secondary mt-1">[[#{seat.maintenanceModal.desc}]]</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="seatModalNoTicketsAlert" class="alert alert-info mb-3" style="display: none;">
+                            <i class="bi bi-info-circle me-1"></i>
+                            <span>[[#{seat.maintenanceModal.noTickets}]]</span>
+                        </div>
+
+                        <div id="seatModalTableWrapper" class="table-responsive border rounded" style="max-height: 320px; overflow-y: auto;">
+                            <table class="table table-sm table-hover align-middle mb-0">
+                                <thead class="table-light sticky-top">
+                                <tr>
+                                    <th>[[#{seat.maintenanceModal.ticketCode}]]</th>
+                                    <th>[[#{seat.maintenanceModal.trip}]]</th>
+                                    <th>[[#{seat.maintenanceModal.segment}]]</th>
+                                    <th>[[#{seat.maintenanceModal.passenger}]]</th>
+                                    <th class="text-end">[[#{seat.maintenanceModal.amount}]]</th>
+                                    <th>[[#{seat.maintenanceModal.status}]]</th>
+                                </tr>
+                                </thead>
+                                <tbody id="seatModalTicketsTbody">
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div id="seatModalSummary" class="d-flex justify-content-between align-items-center mt-3 p-2 bg-light rounded">
+                            <span class="fw-semibold">Tổng tiền hoàn trả:</span>
+                            <span id="seatModalTotalAmount" class="fs-5 fw-bold text-danger">0 đ</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">[[#{seat.maintenanceModal.cancelBtn}]]</button>
+                    <button type="button" class="btn btn-warning" id="seatModalConfirmBtn">
+                        <i class="bi bi-tools me-1"></i>
+                        <span>[[#{seat.maintenanceModal.confirmBtn}]]</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const modalEl = document.getElementById('seatMaintenanceModal');
+            if (!modalEl) return;
+            const modal = new bootstrap.Modal(modalEl);
+            const loadingEl = document.getElementById('seatModalLoading');
+            const contentEl = document.getElementById('seatModalContent');
+            const hasTicketsAlert = document.getElementById('seatModalHasTicketsAlert');
+            const noTicketsAlert = document.getElementById('seatModalNoTicketsAlert');
+            const tableWrapper = document.getElementById('seatModalTableWrapper');
+            const tbody = document.getElementById('seatModalTicketsTbody');
+            const totalAmountEl = document.getElementById('seatModalTotalAmount');
+            const summaryEl = document.getElementById('seatModalSummary');
+            const warningHeading = document.getElementById('seatModalWarningHeading');
+            const confirmBtn = document.getElementById('seatModalConfirmBtn');
+
+            let currentForm = null;
+
+            document.querySelectorAll('.btn-open-maintenance-modal').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const seatId = this.dataset.seatId;
+                    const seatNumber = this.dataset.seatNumber;
+                    currentForm = document.getElementById('maintenance-form-' + seatId);
+
+                    loadingEl.style.display = 'block';
+                    contentEl.style.display = 'none';
+                    confirmBtn.disabled = true;
+                    modal.show();
+
+                    fetch('/admin/seats/' + seatId + '/affected-tickets')
+                        .then(res => {
+                            if (!res.ok) throw new Error('Không thể tải dữ liệu');
+                            return res.json();
+                        })
+                        .then(data => {
+                            loadingEl.style.display = 'none';
+                            contentEl.style.display = 'block';
+                            confirmBtn.disabled = false;
+
+                            if (!data.tickets || data.tickets.length === 0) {
+                                hasTicketsAlert.style.display = 'none';
+                                tableWrapper.style.display = 'none';
+                                summaryEl.style.display = 'none';
+                                noTicketsAlert.style.display = 'block';
+                                confirmBtn.classList.remove('btn-danger');
+                                confirmBtn.classList.add('btn-warning');
+                            } else {
+                                noTicketsAlert.style.display = 'none';
+                                hasTicketsAlert.style.display = 'block';
+                                tableWrapper.style.display = 'block';
+                                summaryEl.style.display = 'flex';
+                                confirmBtn.classList.remove('btn-warning');
+                                confirmBtn.classList.add('btn-danger');
+
+                                warningHeading.textContent = `Ghế ${seatNumber} đang có ${data.totalTickets} vé đặt trước trên các chuyến sắp khởi hành.`;
+
+                                tbody.innerHTML = '';
+                                data.tickets.forEach(t => {
+                                    const tr = document.createElement('tr');
+
+                                    const statusBadge = t.status === 'CONFIRMED'
+                                        ? '<span class="badge bg-success">Đã thanh toán</span>'
+                                        : '<span class="badge bg-secondary">Giữ chỗ</span>';
+
+                                    const price = t.refundAmount ? Number(t.refundAmount).toLocaleString('vi-VN') + ' đ' : '0 đ';
+
+                                    tr.innerHTML = `
+                                        <td><strong>#${t.ticketCode || t.ticketId}</strong><br><small class="text-muted">Đơn: ${t.bookingNumber || '-'}</small></td>
+                                        <td><strong>${t.trainCode || ''}</strong><br><small class="text-muted">${t.departureTimeFormatted || ''}</small></td>
+                                        <td><small>${t.departureStationName || ''} &rarr; ${t.arrivalStationName || ''}</small></td>
+                                        <td><strong>${t.passengerName || t.customerName || '-'}</strong><br><small class="text-muted">${t.customerPhone || ''}</small></td>
+                                        <td class="text-end fw-semibold text-danger">${price}</td>
+                                        <td>${statusBadge}</td>
+                                    `;
+                                    tbody.appendChild(tr);
+                                });
+
+                                const totalStr = data.totalRefundAmount ? Number(data.totalRefundAmount).toLocaleString('vi-VN') + ' đ' : '0 đ';
+                                totalAmountEl.textContent = totalStr;
+                            }
+                        })
+                        .catch(err => {
+                            loadingEl.style.display = 'none';
+                            contentEl.style.display = 'block';
+                            noTicketsAlert.style.display = 'none';
+                            hasTicketsAlert.style.display = 'block';
+                            hasTicketsAlert.className = 'alert alert-danger mb-3';
+                            warningHeading.textContent = 'Lỗi khi kiểm tra thông tin vé: ' + err.message;
+                            tableWrapper.style.display = 'none';
+                            summaryEl.style.display = 'none';
+                        });
+                });
+            });
+
+            confirmBtn.addEventListener('click', function () {
+                if (currentForm) {
+                    const confirmInput = currentForm.querySelector('input[name="confirmRefund"]');
+                    if (confirmInput) {
+                        confirmInput.value = 'true';
+                    }
+                    modal.hide();
+                    currentForm.submit();
+                }
+            });
+        });
+    </script>
 </section>
 </html>

@@ -79,4 +79,22 @@ public class Ticket {
             ticketStatus = TicketStatus.BOOKED;
         }
     }
+
+    public java.time.LocalDateTime getDepartureTime() {
+        if (booking != null && booking.getDepartureTime() != null) {
+            return booking.getDepartureTime();
+        }
+        return trainTrip != null ? trainTrip.getDepartureTime() : null;
+    }
+
+    public java.time.LocalDateTime getArrivalTime() {
+        if (booking != null && booking.getArrivalTime() != null) {
+            return booking.getArrivalTime();
+        }
+        return trainTrip != null ? trainTrip.getArrivalTime() : null;
+    }
+
+    public BigDecimal getPrice() {
+        return ticketPrice;
+    }
 }

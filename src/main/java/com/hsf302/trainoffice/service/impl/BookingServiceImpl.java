@@ -232,6 +232,8 @@ public class BookingServiceImpl implements com.hsf302.trainoffice.service.Bookin
         booking.setTrainTrip(trainTrip);
         booking.setDepartureStation(departureStation);
         booking.setArrivalStation(arrivalStation);
+        booking.setDepartureTime(segment.getDepartureTime());
+        booking.setArrivalTime(segment.getArrivalTime());
         booking.setBookerName(request.getBookerName().trim());
         booking.setBookerPhone(request.getBookerPhone().trim());
         booking.setBookerEmail(request.getBookerEmail().trim());
@@ -310,8 +312,12 @@ public class BookingServiceImpl implements com.hsf302.trainoffice.service.Bookin
         }
 
         Set<String> identities = new HashSet<>();
+        boolean hasAdult = false;
+        boolean hasMinor = false;
+        LocalDate today = LocalDate.now();
 
-        for (PassengerBookingRequest passenger : request.getPassengers()) {
+        for (int i = 0; i < request.getPassengers().size(); i++) {
+            PassengerBookingRequest passenger = request.getPassengers().get(i);
             if (passenger.getFullName() == null || passenger.getFullName().isBlank()) {
                 throw new IllegalArgumentException(I18n.t("err.passengerFullNameIsRequired"));
             }
@@ -319,9 +325,14 @@ public class BookingServiceImpl implements com.hsf302.trainoffice.service.Bookin
             validatePassengerAgeAndRelationship(passenger);
 
             if (passenger.getDateOfBirth() != null) {
-                int age = Period.between(passenger.getDateOfBirth(), LocalDate.now()).getYears();
+                int age = Period.between(passenger.getDateOfBirth(), today).getYears();
+
+                if (i == 0 && age < 16) {
+                    throw new IllegalArgumentException(I18n.t("err.passenger1MustBeAtLeast16"));
+                }
 
                 if (age >= 16) {
+                    hasAdult = true;
                     if (passenger.getIdentityNumber() == null || passenger.getIdentityNumber().isBlank()) {
                         throw new IllegalArgumentException(I18n.t("err.passengersFrom16YearsOldMustHave"));
                     }
@@ -331,8 +342,14 @@ public class BookingServiceImpl implements com.hsf302.trainoffice.service.Bookin
                     if (!identities.add(identity)) {
                         throw new IllegalArgumentException(I18n.t("err.passengerIdentityNumberCannotDuplicateWithinThe"));
                     }
+                } else if (age >= 0) {
+                    hasMinor = true;
                 }
             }
+        }
+
+        if (hasMinor && !hasAdult) {
+            throw new IllegalArgumentException(I18n.t("err.minorCannotTravelAlone"));
         }
     }
 

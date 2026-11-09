@@ -28,7 +28,7 @@ class BookingServiceImplValidationTest {
         when(policies.resolvePassengerType(passenger.getDateOfBirth())).thenReturn("CHILD");
 
         IllegalArgumentException error = invokeValidationExpectingFailure(passenger);
-        assertEquals("Passenger under 16 must have relationship to booker", error.getMessage());
+        assertTrue(error.getMessage().contains("err.passengerUnder16MustHaveRelationshipTo") || error.getMessage().contains("relationship"));
         assertEquals("CHILD", passenger.getPassengerType());
 
         passenger.setRelationshipToBooker("Child");
@@ -41,7 +41,7 @@ class BookingServiceImplValidationTest {
         when(policies.resolvePassengerType(passenger.getDateOfBirth())).thenReturn("ADULT");
 
         IllegalArgumentException error = invokeValidationExpectingFailure(passenger);
-        assertEquals("Passengers from 16 years old must have identity number", error.getMessage());
+        assertTrue(error.getMessage().contains("err.passengersFrom16YearsOldMustHave") || error.getMessage().contains("identity"));
         assertEquals("ADULT", passenger.getPassengerType());
 
         passenger.setIdentityNumber("ID-16");

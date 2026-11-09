@@ -83,4 +83,86 @@ public class Seat {
             underMaintenance = false;
         }
     }
+
+    /**
+     * Tầng của giường: 1, 2, 3 (dựa theo seatNumber L1/L2/L3 hoặc coach berthsPerCompartment).
+     */
+    public int getTierLevel() {
+        if (seatNumber != null) {
+            if (seatNumber.contains("L1") || seatNumber.contains("-1") || seatNumber.endsWith("1A") || seatNumber.endsWith("1B")) {
+                return 1;
+            }
+            if (seatNumber.contains("L2") || seatNumber.contains("-2") || seatNumber.endsWith("2A") || seatNumber.endsWith("2B")) {
+                return 2;
+            }
+            if (seatNumber.contains("L3") || seatNumber.contains("-3") || seatNumber.endsWith("3A") || seatNumber.endsWith("3B")) {
+                return 3;
+            }
+        }
+        if ("LOWER".equalsIgnoreCase(berthLevel)) {
+            return 1;
+        }
+        if ("MIDDLE".equalsIgnoreCase(berthLevel)) {
+            return 2;
+        }
+        if ("UPPER".equalsIgnoreCase(berthLevel)) {
+            if (coach != null && coach.getBerthsPerCompartment() != null && coach.getBerthsPerCompartment() == 6) {
+                return 3;
+            }
+            return 2;
+        }
+        return 1;
+    }
+
+    public String getBerthLevelKey() {
+        if (berthLevel == null) {
+            return null;
+        }
+        int tier = getTierLevel();
+        return switch (tier) {
+            case 1 -> "booking.level1";
+            case 2 -> "booking.level2";
+            case 3 -> "booking.level3";
+            default -> "booking.level" + tier;
+        };
+    }
+
+    public String getBerthFullLabelKey() {
+        if (berthLevel == null) {
+            return null;
+        }
+        int tier = getTierLevel();
+        if (tier == 1) {
+            return "booking.level1LowerBerth";
+        }
+        if (tier == 2) {
+            if (coach != null && coach.getBerthsPerCompartment() != null && coach.getBerthsPerCompartment() == 4) {
+                return "booking.level2UpperBerth";
+            }
+            if ("UPPER".equalsIgnoreCase(berthLevel)) {
+                return "booking.level2UpperBerth";
+            }
+            return "booking.level2MiddleBerth";
+        }
+        if (tier == 3) {
+            return "booking.level3UpperBerth";
+        }
+        return "booking.level1LowerBerth";
+    }
+    public String getBerthCssClass() {
+        if (berthLevel == null) {
+            return "";
+        }
+        int tier = getTierLevel();
+        if (tier == 1) {
+            return "lower";
+        }
+        if (tier == 2) {
+            if ("MIDDLE".equalsIgnoreCase(berthLevel)) {
+                return "middle";
+            }
+            return "upper";
+        }
+        return "upper";
+    }
 }

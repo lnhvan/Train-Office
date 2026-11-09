@@ -71,30 +71,37 @@
     background: repeating-linear-gradient(90deg, var(--rj-line-strong) 0 3px, transparent 3px 22px);
     opacity: .7;
 }
-.rj-hero-title { display: grid; margin: 0; font-size: clamp(2.3rem, 1.2rem + 4vw, 4.2rem); font-weight: 800; letter-spacing: -.035em; line-height: 1.02; color: #fff; max-width: 20ch; }
+.rj-hero-title { display: grid; gap: 8px; margin: 0; font-size: clamp(2.3rem, 1.2rem + 4vw, 4.2rem); font-weight: 800; letter-spacing: .01em; line-height: 1.18; color: #fff; max-width: 20ch; }
 .rj-hero-lead { margin: 18px 0 36px; max-width: 56ch; font-size: 1.06rem; color: var(--rj-text-2); }
 
 .rj-searchbar {
     background: var(--rj-surface); border: 1px solid var(--rj-line-strong); border-radius: var(--rj-radius-lg);
     padding: 18px; box-shadow: var(--rj-shadow);
 }
-.rj-searchbar-top { display: flex; align-items: center; justify-content: space-between; gap: 12px 20px; flex-wrap: wrap; margin-bottom: 16px; }
+.rj-searchbar-top { display: flex; align-items: center; justify-content: flex-end; gap: 12px 20px; flex-wrap: wrap; margin-bottom: 16px; }
 .rj-searchbar-note { display: inline-flex; gap: 8px; align-items: center; font-size: .84rem; color: var(--rj-text-2); }
 .rj-searchbar-note i { color: var(--rj-accent); }
-.rj-searchbar-fields { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) minmax(150px, .45fr) auto; gap: 12px; align-items: end; }
-.rj-searchbar-route { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: end; gap: 0; }
-.rj-searchbar-dates { display: grid; grid-template-columns: 1fr; gap: 12px; }
-.rj-searchbar.is-round .rj-searchbar-dates, .rj-searchbar:has(#roundTrip:checked) .rj-searchbar-dates { grid-template-columns: 1fr 1fr; }
+.rj-searchbar-fields {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(200px, 1fr) minmax(115px, auto) auto;
+    gap: 12px;
+    align-items: end;
+}
+.rj-searchbar-route { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: end; gap: 0; min-width: 0; }
+.rj-searchbar-dates { display: grid; grid-template-columns: 1fr; min-width: 0; }
+.rj-searchbar-field { min-width: 0; }
 .rj-searchbar-field .form-label { color: var(--rj-text-2); font-weight: 500; }
 .rj-searchbar-field .form-select, .rj-searchbar-field .form-control { min-height: 52px; font-weight: 600; }
-.rj-searchbar-submit { min-height: 52px; }
-.rj-searchbar-pax .rj-stepper { min-height: 52px; }
+.rj-searchbar-submit { min-height: 52px; white-space: nowrap; }
+.rj-searchbar-pax .rj-stepper { min-height: 52px; max-width: 140px; }
 @media (min-width: 1200px) {
     /* nút Tìm luôn nằm hàng đầu, khung gợi ý xuống hàng dưới */
     .rj-searchbar-submit { grid-row: 1; grid-column: 4; }
 }
 @media (min-width: 992px) and (max-width: 1199.98px) {
-    .rj-searchbar-fields { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+    .rj-searchbar-fields {
+        grid-template-columns: minmax(0, 1fr) minmax(120px, auto);
+    }
     .rj-searchbar-route, .rj-searchbar-submit { grid-column: 1 / -1; }
 }
 
@@ -142,15 +149,17 @@
 .rj-segmented input:focus-visible + label { outline: 2px solid var(--rj-accent); outline-offset: 2px; }
 
 @media (max-width: 991.98px) {
-    .rj-searchbar-fields { grid-template-columns: 1fr; }
+    .rj-searchbar-fields {
+        grid-template-columns: 1fr;
+    }
     .rj-hero { padding: 48px 0 40px; }
+    .rj-searchbar-pax .rj-stepper { max-width: 180px; }
 }
 @media (max-width: 560px) {
     .rj-searchbar-route { grid-template-columns: 1fr; gap: 10px; }
     .rj-swap { margin: -4px auto; transform: rotate(90deg); }
     .rj-swap.is-flipped { transform: rotate(270deg); }
     .rj-searchbar-route .rj-searchbar-field .form-select { border-radius: var(--rj-radius-sm) !important; padding-left: .85rem; }
-    .rj-searchbar:has(#roundTrip:checked) .rj-searchbar-dates { grid-template-columns: 1fr; }
 }
 
 .rj-features { padding-block: 64px 80px; }
@@ -383,6 +392,10 @@
 .rj-seat-map.is-sleeper .rj-seat-option[data-berth-level="UPPER"] { order: 1; }
 .rj-seat-map.is-sleeper .rj-seat-option[data-berth-level="MIDDLE"] { order: 2; }
 .rj-seat-map.is-sleeper .rj-seat-option[data-berth-level="LOWER"] { order: 3; }
+.rj-seat-map.is-sleeper .rj-seat-option[data-tier-level="3"] { order: 1; }
+.rj-seat-map.is-sleeper .rj-seat-option[data-tier-level="2"] { order: 2; }
+.rj-seat-map.is-sleeper .rj-seat-option[data-tier-level="1"] { order: 3; }
+
 .rj-seat-number { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 4px; }
 
 /* thanh cuộn ngang của danh sách toa gọn hơn */
@@ -540,10 +553,80 @@ fieldset.rj-card { margin: 0; min-width: 0; }
 .rj-card-flush { padding: 0; overflow: hidden; }
 .rj-card-flush > .rj-card-head { padding: 20px 22px 0; margin-bottom: 14px; }
 .rj-card-flush .rj-empty { padding: 28px 20px; }
-.rj-person-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
-.rj-person-grid li { display: flex; gap: 12px; align-items: center; padding: 12px; border-radius: var(--rj-radius-sm); background: var(--rj-surface-2); border: 1px solid var(--rj-line); }
-.rj-person-grid strong { display: block; font-size: .92rem; }
-.rj-person-grid small { display: block; font-size: .78rem; color: var(--rj-text-2); }
+.rj-person-grid {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.rj-person-grid li,
+.rj-person-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 14px 24px;
+    padding: 16px 20px;
+    border-radius: var(--rj-radius-sm);
+    background: var(--rj-surface-2);
+    border: 1px solid var(--rj-line);
+}
+.rj-person-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.rj-person-name-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.rj-person-name {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #fff;
+    white-space: nowrap;
+}
+.rj-person-info-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px 28px;
+}
+.rj-info-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: .88rem;
+    white-space: nowrap;
+}
+.rj-info-label {
+    color: var(--rj-text-2);
+}
+.rj-info-value {
+    color: #fff;
+    font-weight: 600;
+}
+@media (max-width: 820px) {
+    .rj-person-grid li,
+    .rj-person-card {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+    .rj-person-header {
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--rj-line);
+    }
+    .rj-person-info-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 8px 16px;
+    }
+}
 .rj-summary-code { display: grid; gap: 6px; justify-items: start; padding: 14px; margin-bottom: 12px; border-radius: var(--rj-radius-sm); background: var(--rj-surface-2); border: 1px solid var(--rj-line); }
 .rj-summary-code small { color: var(--rj-text-2); font-size: .78rem; }
 .rj-summary-code strong { font-size: 1.3rem; color: #fff; }
@@ -669,4 +752,15 @@ fieldset.rj-card { margin: 0; min-width: 0; }
 .rj-seat-chips small { color: var(--rj-text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 @media (max-width: 575.98px) {
     .rj-passenger-seat { margin-left: 0; }
+}
+
+/* Loại bỏ biểu tượng dropdown cho ô Loại hành khách (tự động áp dụng) */
+select.passenger-type-display,
+.passenger-type-display {
+    background-image: none !important;
+    padding-right: 0.75rem !important;
+    cursor: default !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    appearance: none !important;
 }

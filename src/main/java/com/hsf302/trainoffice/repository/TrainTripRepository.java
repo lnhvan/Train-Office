@@ -12,6 +12,7 @@ import org.springframework.data.repository.query.Param;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Collection;
 
 public interface TrainTripRepository extends JpaRepository<TrainTrip, Long> {
 
@@ -35,6 +36,18 @@ public interface TrainTripRepository extends JpaRepository<TrainTrip, Long> {
                                                  @Param("startOfDay") LocalDateTime startOfDay,
                                                  @Param("endOfDay") LocalDateTime endOfDay,
                                                  @Param("status") TripStatus status);
+
+    @EntityGraph(attributePaths = {"train", "route"})
+    List<TrainTrip> findByTrain_TrainIdAndStatusOrderByDepartureTimeAsc(Long trainId, TripStatus status);
+
+    @EntityGraph(attributePaths = {"train", "route"})
+    List<TrainTrip> findByTrain_TrainIdAndStatusInOrderByDepartureTimeAsc(Long trainId, Collection<TripStatus> statuses);
+
+    @EntityGraph(attributePaths = {"train", "route"})
+    List<TrainTrip> findByStatusIn(Collection<TripStatus> statuses);
+
+    @EntityGraph(attributePaths = {"train", "route"})
+    List<TrainTrip> findByStatusInOrderByDepartureTimeAsc(Collection<TripStatus> statuses);
 
     @EntityGraph(attributePaths = {"train", "route"})
     List<TrainTrip> findAll();

@@ -17,6 +17,8 @@ public interface TrainService {
 
     List<Train> getAllTrains();
 
+    List<Train> getAvailableTrains();
+
     Page<Train> listAll(int pageNumber, String keyword);
 
     Optional<Train> getTrainById(Long id);

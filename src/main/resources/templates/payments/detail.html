@@ -2,7 +2,7 @@
 <html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org" th:replace="~{layouts/admin-layout :: layout(#{payment.paymentDetail}, ~{::section}, 'payments')}">
 <section>
     <div class="admin-page-hero">
-        <a class="btn rj-btn-quiet" th:href="@{/admin/payments}">
+        <a class="btn rj-btn-quiet" th:href="@{${returnUrl != null and !#strings.isEmpty(returnUrl) ? returnUrl : '/admin/payments'}}">
             <i class="bi bi-arrow-left"></i> [[#{common.back}]]
         </a>
         <div>

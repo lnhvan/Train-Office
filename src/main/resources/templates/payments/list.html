@@ -123,7 +123,7 @@
                             <td><span th:replace="~{fragments/status-badge :: statusBadge(${payment.paymentStatus})}"></span></td>
                             <td class="rj-num" th:text="${payment.paidAt != null ? #temporals.format(payment.paidAt, 'HH:mm dd/MM/yyyy') : '-'}">Paid At</td>
                             <td class="text-end">
-                                <a class="rj-icon-btn is-info" th:href="@{/admin/payments/detail/{id}(id=${payment.paymentId})}" th:title="#{common.view}">
+                                <a class="rj-icon-btn is-info" th:href="@{/admin/payments/detail/{id}(id=${payment.paymentId}, returnUrl='/admin/payments?tab=payments')}" th:title="#{common.view}">
                                     <i class="bi bi-eye" aria-hidden="true"></i><span class="visually-hidden">[[#{common.view}]]</span>
                                 </a>
                                 <a class="rj-icon-btn is-warning" th:href="@{/admin/payments/edit/{id}(id=${payment.paymentId})}" th:title="#{common.edit}">
@@ -203,7 +203,7 @@
                         <tbody>
                         <tr th:each="b : ${bookings}">
                             <td>
-                                <strong class="rj-code" th:text="${b.bookingNumber}">RJ0001</strong>
+                                <a th:href="@{/admin/bookings/{id}(id=${b.bookingId}, returnUrl='/admin/payments?tab=bookings')}" class="rj-code fw-bold text-decoration-none" th:text="${b.bookingNumber}">RJ0001</a>
                                 <small class="d-block text-muted" th:text="'#' + ${b.bookingId}"></small>
                             </td>
                             <td>
@@ -230,7 +230,7 @@
                                 <span th:replace="~{fragments/status-badge :: statusBadge(${b.bookingStatus})}"></span>
                             </td>
                             <td class="text-end">
-                                <a class="rj-icon-btn is-info" th:href="@{/booking/{id}(id=${b.bookingId})}" target="_blank" title="Xem chi tiết đơn">
+                                <a class="rj-icon-btn is-info" th:href="@{/admin/bookings/{id}(id=${b.bookingId}, returnUrl='/admin/payments?tab=bookings')}" title="Xem chi tiết đơn">
                                     <i class="bi bi-eye" aria-hidden="true"></i>
                                     <span class="visually-hidden">Xem chi tiết</span>
                                 </a>

@@ -18,7 +18,10 @@ import com.hsf302.trainoffice.repository.RefundRepository;
 import com.hsf302.trainoffice.repository.TicketRepository;
 import com.hsf302.trainoffice.repository.TripStationRepository;
 import com.hsf302.trainoffice.service.AdminWalletService;
+import com.hsf302.trainoffice.entity.Seat;
 import com.hsf302.trainoffice.service.RefundService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,6 +38,9 @@ import java.util.Set;
 
 @Service
 public class RefundServiceImpl implements RefundService {
+
+    private static final Logger log = LoggerFactory.getLogger(RefundServiceImpl.class);
+
 
     private final RefundRepository refundRepository;
     private final TicketRepository ticketRepository;
@@ -242,6 +248,49 @@ public class RefundServiceImpl implements RefundService {
         touchedBookings.values().forEach(this::updateBookingStatusIfAllTicketsRefunded);
 
         return new TripCancellationResult(count, total, 0);
+    }
+
+    @Override
+    @Transactional
+    public TripCancellationResult refundTicketsForSeatMaintenance(Seat seat, List<Ticket> tickets) {
+        if (seat == null || tickets == null || tickets.isEmpty()) {
+            return new TripCancellationResult(0, BigDecimal.ZERO, 0);
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        int refundedCount = 0;
+        BigDecimal totalRefundAmount = BigDecimal.ZERO;
+        int cancelledHoldsCount = 0;
+        Set<Long> handledTicketIds = new HashSet<>();
+        Map<Long, Booking> touchedBookings = new LinkedHashMap<>();
+        String reason = I18n.t("refund.reason.seatUnderMaintenance", seat.getSeatNumber());
+
+        for (int i = 0; i < tickets.size(); i++) {
+            Ticket ticket = tickets.get(i);
+            if (!handledTicketIds.add(ticket.getTicketId())) {
+                continue;
+            }
+
+            if (ticket.getTicketStatus() == TicketStatus.CONFIRMED) {
+                BigDecimal amount = paidAmount(ticket);
+                Refund refund = newSystemRefund(ticket, amount, reason, i);
+                completeAutomatically(refund, ticket, now, true);
+                touchedBookings.put(ticket.getBooking().getBookingId(), ticket.getBooking());
+                refundedCount++;
+                totalRefundAmount = totalRefundAmount.add(amount);
+
+
+            } else if (ticket.getTicketStatus() == TicketStatus.BOOKED) {
+                ticket.setTicketStatus(TicketStatus.CANCELLED);
+                ticketRepository.save(ticket);
+                touchedBookings.put(ticket.getBooking().getBookingId(), ticket.getBooking());
+                cancelledHoldsCount++;
+            }
+        }
+
+        touchedBookings.values().forEach(this::updateBookingStatusIfAllTicketsRefunded);
+
+        return new TripCancellationResult(refundedCount, totalRefundAmount, cancelledHoldsCount);
     }
 
     @Override

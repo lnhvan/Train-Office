@@ -85,6 +85,24 @@
                             <option th:each="s : ${allTrainStatus}" th:value="${s}" th:text="${#messages.msgOrNull('enum.' + s) ?: s.description}"></option>
                         </select>
                     </div>
+                    <div class="col-12 mt-2" id="maintenanceTripWarning"
+                         th:if="${scheduledTrips != null and !#lists.isEmpty(scheduledTrips)}"
+                         style="display: none;">
+                        <div class="alert alert-warning d-flex align-items-start gap-2 mb-0">
+                            <i class="bi bi-exclamation-triangle-fill fs-5 flex-shrink-0 text-warning"></i>
+                            <div>
+                                <strong class="d-block mb-1">Cảnh báo: Tàu đang có chuyến tàu đã lên lịch</strong>
+                                <div>Tàu này hiện có <span class="badge bg-danger" th:text="${#lists.size(scheduledTrips)}">0</span> chuyến tàu đang ở trạng thái đã lên lịch. Nếu lưu trạng thái <strong>Đang bảo trì</strong>, các chuyến tàu sau sẽ <strong>bị hủy tương ứng</strong> và tiền vé sẽ được tự động hoàn trả cho hành khách:</div>
+                                <ul class="mb-0 mt-2 ps-3">
+                                    <li th:each="trip : ${scheduledTrips}">
+                                        <strong th:text="'Chuyến #' + ${trip.tripId}"></strong>
+                                        <span th:text="' - Tuyến: ' + (${trip.route != null ? (trip.route.routeCode != null ? trip.route.routeCode : trip.route.routeName) : '-'})"></span>
+                                        <span th:text="' | Khởi hành: ' + ${#temporals.format(trip.departureTime, 'HH:mm dd/MM/yyyy')}"></span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="card-footer d-flex justify-content-end gap-2">
@@ -97,6 +115,15 @@
     </div>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            const statusSelect = document.getElementById('status');
+            const maintenanceWarning = document.getElementById('maintenanceTripWarning');
+            if (statusSelect && maintenanceWarning) {
+                function checkMaintenanceStatus() {
+                    maintenanceWarning.style.display = statusSelect.value === 'MAINTENANCE' ? 'block' : 'none';
+                }
+                statusSelect.addEventListener('change', checkMaintenanceStatus);
+                checkMaintenanceStatus();
+            }
             const typeSelect = document.getElementById('selectedTrainType');
             const newTypeGroup = document.getElementById('newTrainTypeGroup');
             const newTypeInput = document.getElementById('newTrainType');

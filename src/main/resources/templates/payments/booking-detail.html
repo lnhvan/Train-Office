@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/admin-layout :: layout(#{booking.bookingInformation}, ~{::section}, 'payments')}">
+<section>
+    <div class="admin-page-hero">
+        <a class="btn rj-btn-quiet" th:href="@{${returnUrl != null and !#strings.isEmpty(returnUrl) ? returnUrl : '/admin/payments?tab=bookings'}}">
+            <i class="bi bi-arrow-left"></i> [[#{common.back}]]
+        </a>
+        <div>
+            <span class="admin-page-kicker">
+                <i class="bi bi-ticket-perforated"></i> [[#{booking.bookingCode}]]: <span class="rj-code" th:text="${booking.bookingNumber}">RJ0001</span>
+            </span>
+            <h1>[[#{booking.bookingInformation}]]</h1>
+            <p>[[#{booking.reviewTripRoutePassengersTicketsSelected}]]</p>
+        </div>
+        <div class="admin-page-actions d-flex align-items-center gap-2">
+            <span th:replace="~{fragments/status-badge :: statusBadge(${booking.bookingStatus})}"></span>
+            <a class="btn btn-outline-primary d-inline-flex align-items-center gap-2 px-3 py-2 fw-semibold"
+               th:href="@{/admin/payments(bookingId=${booking.bookingId}, tab='payments')}">
+                <i class="bi bi-receipt"></i> [[#{payment.paymentList}]]
+            </a>
+        </div>
+    </div>
+
+    <div class="alert alert-success alert-dismissible fade show" th:if="${successMessage}">
+        <i class="bi bi-check-circle me-2"></i><span th:text="${successMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <div class="alert alert-danger alert-dismissible fade show" th:if="${errorMessage}">
+        <i class="bi bi-exclamation-triangle me-2"></i><span th:text="${errorMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <div class="row g-4">
+        <!-- Cột trái: Hành trình, Hành khách (FULL THÔNG TIN & SỬA TẠI CHỖ), Ghế đã chọn -->
+        <div class="col-lg-8">
+            <div class="d-flex flex-column gap-4">
+                <!-- 1. HÀNH TRÌNH -->
+                <div class="card admin-detail-card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span class="admin-card-title">
+                            <i class="bi bi-train-front me-2 text-primary"></i>[[#{booking.journey}]]
+                        </span>
+                        <span class="rj-badge is-info no-dot"
+                              th:text="${booking.trainTrip != null and booking.trainTrip.train != null ? booking.trainTrip.train.trainName : 'RailJet'}">
+                            RailJet
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        <div class="rj-route is-large p-2">
+                            <div class="rj-route-stop">
+                                <span class="rj-route-time"
+                                      th:text="${booking.trainTrip != null and booking.trainTrip.departureTime != null ? #temporals.format(booking.trainTrip.departureTime, 'HH:mm') : '--:--'}">06:00</span>
+                                <span class="rj-route-station" th:text="${booking.departureStation != null ? booking.departureStation.stationName : '-'}">Ga đi</span>
+                                <span class="rj-route-date rj-num"
+                                      th:text="${booking.trainTrip != null and booking.trainTrip.departureTime != null ? #temporals.format(booking.trainTrip.departureTime, 'dd/MM/yyyy') : '-'}">01/01/2026</span>
+                            </div>
+                            <div class="rj-route-track" aria-hidden="true">
+                                <span class="rj-route-dot is-start"></span>
+                                <span class="rj-route-meta"><i class="bi bi-train-front"></i></span>
+                                <span class="rj-route-dot is-end"></span>
+                            </div>
+                            <div class="rj-route-stop is-end">
+                                <span class="rj-route-time"
+                                      th:text="${booking.trainTrip != null and booking.trainTrip.arrivalTime != null ? #temporals.format(booking.trainTrip.arrivalTime, 'HH:mm') : '--:--'}">18:00</span>
+                                <span class="rj-route-station" th:text="${booking.arrivalStation != null ? booking.arrivalStation.stationName : '-'}">Ga đến</span>
+                                <span class="rj-route-date rj-num"
+                                      th:text="${booking.trainTrip != null and booking.trainTrip.arrivalTime != null ? #temporals.format(booking.trainTrip.arrivalTime, 'dd/MM/yyyy') : '-'}">01/01/2026</span>
+                            </div>
+                        </div>
+
+                        <div class="row pt-3 mt-2 border-top text-muted small">
+                            <div class="col-md-4">
+                                <span class="d-block">[[#{common.train}]]:</span>
+                                <strong class="text-dark" th:text="${booking.trainTrip != null and booking.trainTrip.train != null ? (booking.trainTrip.train.trainCode + ' - ' + booking.trainTrip.train.trainName) : '-'}">-</strong>
+                            </div>
+                            <div class="col-md-4">
+                                <span class="d-block">[[#{common.route}]]:</span>
+                                <strong class="text-dark" th:text="${booking.trainTrip != null and booking.trainTrip.route != null ? (booking.trainTrip.route.routeCode + ' - ' + booking.trainTrip.route.routeName) : '-'}">-</strong>
+                            </div>
+                            <div class="col-md-4">
+                                <span class="d-block">[[#{common.tripId}]]:</span>
+                                <strong class="text-dark rj-code" th:text="${booking.trainTrip != null ? '#' + booking.trainTrip.tripId : '-'}">-</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. HÀNH KHÁCH (FULL THÔNG TIN & CHO SỬA TẠI ĐÂY) -->
+                <div class="card admin-detail-card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span class="admin-card-title">
+                            <i class="bi bi-people me-2 text-primary"></i>[[#{common.passengers}]]
+                        </span>
+                        <span class="badge bg-secondary-subtle text-secondary-emphasis"
+                              th:if="${passengers != null}"
+                              th:text="${#lists.size(passengers)} + ' ' + #{common.passengers}">
+                            1 Hành khách
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3" th:if="${passengers != null and !#lists.isEmpty(passengers)}">
+                            <div class="col-12" th:each="p : ${passengers}">
+                                <div class="p-3 border rounded bg-body-tertiary d-flex flex-wrap align-items-center justify-content-between gap-3">
+                                    <div class="d-flex align-items-center gap-3" style="min-width: 220px;">
+                                        <span class="rj-avatar bg-primary text-white"><i class="bi bi-person"></i></span>
+                                        <div>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <strong class="fs-6 text-dark" th:text="${p.fullName}">Vũ Phạm</strong>
+                                                <span class="rj-badge is-info"
+                                                      th:if="${p.passengerType != null and p.passengerType != 'DEFAULT'}"
+                                                      th:text="${p.passengerType}">NGƯỜI LỚN</span>
+                                                <span class="rj-badge is-neutral no-dot"
+                                                      th:if="${p.passengerType == null or p.passengerType == 'DEFAULT'}">
+                                                    [[#{passenger.adult}]]
+                                                </span>
+                                            </div>
+                                            <small class="text-muted d-block" th:text="'Mã HK: #' + ${p.passengerId}">#1</small>
+                                        </div>
+                                    </div>
+
+                                    <div class="d-flex align-items-center flex-wrap gap-3 gap-md-4 small">
+                                        <div>
+                                            <span class="text-muted d-block">[[#{booking.identity}]]:</span>
+                                            <strong class="text-dark" th:text="${p.identityNumber ?: '-'}">-</strong>
+                                        </div>
+                                        <div>
+                                            <span class="text-muted d-block">[[#{common.dateOfBirth}]]:</span>
+                                            <strong class="text-dark" th:text="${p.dateOfBirth != null ? #temporals.format(p.dateOfBirth, 'dd/MM/yyyy') : '-'}">-</strong>
+                                        </div>
+                                        <div>
+                                            <span class="text-muted d-block">[[#{common.gender}]]:</span>
+                                            <strong class="text-dark" th:text="${p.gender != null ? (#messages.msgOrNull('enum.' + p.gender) ?: p.gender) : '-'}">-</strong>
+                                        </div>
+                                        <div th:if="${p.relationshipToBooker != null and !#strings.isEmpty(p.relationshipToBooker)}">
+                                            <span class="text-muted d-block">[[#{passenger.relationship}]]:</span>
+                                            <strong class="text-dark" th:text="${p.relationshipToBooker}">-</strong>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <button type="button" class="btn btn-sm btn-outline-warning d-inline-flex align-items-center gap-1"
+                                                data-bs-toggle="modal"
+                                                th:data-bs-target="'#editPassengerModal-' + ${p.passengerId}">
+                                            <i class="bi bi-pencil-square"></i> [[#{common.edit}]]
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Modal Sửa thông tin hành khách -->
+                                <div class="modal fade" th:id="'editPassengerModal-' + ${p.passengerId}" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered">
+                                        <div class="modal-content">
+                                            <form th:action="@{/admin/bookings/{bId}/passengers/{pId}/edit(bId=${booking.bookingId}, pId=${p.passengerId})}" method="post">
+                                                <input type="hidden" name="returnUrl" th:value="${returnUrl}">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">
+                                                        <i class="bi bi-person-gear me-2 text-warning"></i>Sửa thông tin hành khách
+                                                    </h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body text-start">
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-semibold">[[#{common.fullName}]] <span class="text-danger">*</span></label>
+                                                        <input type="text" class="form-control" name="fullName" th:value="${p.fullName}" required maxlength="100">
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-semibold">[[#{common.identityNumber}]] (CCCD / Hộ chiếu)</label>
+                                                        <input type="text" class="form-control" name="identityNumber" th:value="${p.identityNumber}" maxlength="30">
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-md-6 mb-3">
+                                                            <label class="form-label fw-semibold">[[#{common.dateOfBirth}]]</label>
+                                                            <input type="date" class="form-control" name="dateOfBirth" th:value="${p.dateOfBirth}">
+                                                        </div>
+                                                        <div class="col-md-6 mb-3">
+                                                            <label class="form-label fw-semibold">[[#{common.gender}]]</label>
+                                                            <select class="form-select" name="gender">
+                                                                <option value="">-- Chọn giới tính --</option>
+                                                                <option th:each="g : ${genders}"
+                                                                        th:value="${g}"
+                                                                        th:text="${#messages.msgOrNull('enum.' + g) ?: g}"
+                                                                        th:selected="${p.gender == g}">Nam</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-semibold">[[#{booking.passengerType}]]</label>
+                                                        <select class="form-select" name="passengerType">
+                                                            <option value="DEFAULT" th:selected="${p.passengerType == null or p.passengerType == 'DEFAULT'}">Người lớn (DEFAULT)</option>
+                                                            <option value="CHILD" th:selected="${p.passengerType == 'CHILD'}">Trẻ em (CHILD)</option>
+                                                            <option value="STUDENT" th:selected="${p.passengerType == 'STUDENT'}">Sinh viên (STUDENT)</option>
+                                                            <option value="ELDERLY" th:selected="${p.passengerType == 'ELDERLY'}">Người cao tuổi (ELDERLY)</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-semibold">Quan hệ với người đặt vé</label>
+                                                        <input type="text" class="form-control" name="relationshipToBooker" th:value="${p.relationshipToBooker}" placeholder="Bản thân, Vợ/Chồng, Con...">
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                                                    <button type="submit" class="btn btn-primary">
+                                                        <i class="bi bi-check2 me-1"></i>Lưu thay đổi
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="admin-empty-state py-4 text-center text-muted" th:if="${passengers == null or #lists.isEmpty(passengers)}">
+                            <i class="bi bi-people fs-2 d-block mb-2"></i>
+                            [[#{booking.noPassengerData}]]
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. GHẾ ĐÃ CHỌN / VÉ -->
+                <div class="card admin-table-card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span class="admin-card-title">
+                            <i class="bi bi-grid-3x3-gap me-2 text-primary"></i>[[#{booking.reservedSeats}]] / [[#{booking.tickets}]]
+                        </span>
+                        <span class="badge bg-secondary-subtle text-secondary-emphasis"
+                              th:if="${tickets != null}"
+                              th:text="${#lists.size(tickets)} + ' vé'">
+                            1 vé
+                        </span>
+                    </div>
+                    <div class="card-body table-responsive p-0">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                            <tr>
+                                <th>[[#{common.passenger}]]</th>
+                                <th>[[#{common.ticketCode}]]</th>
+                                <th>[[#{common.coach}]]</th>
+                                <th>[[#{common.compartment}]]</th>
+                                <th>[[#{common.seat}]]</th>
+                                <th class="text-end">[[#{common.price}]]</th>
+                                <th class="text-end">[[#{common.status}]]</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="t : ${tickets}">
+                                <td>
+                                    <strong th:text="${t.passenger != null ? t.passenger.fullName : '-'}">Hành khách</strong>
+                                </td>
+                                <td>
+                                    <span class="rj-code" th:text="${t.ticketCode ?: '-'}">RJ-T001</span>
+                                </td>
+                                <td class="rj-num" th:text="${t.seat != null and t.seat.coach != null ? t.seat.coach.coachNumber : '-'}">1</td>
+                                <td class="rj-num" th:text="${t.seat != null and t.seat.compartment != null ? t.seat.compartment.compartmentNumber : '-'}">K01</td>
+                                <td class="rj-num">
+                                    <strong class="text-primary" th:text="${t.seat != null ? t.seat.seatNumber : '-'}">01A</strong>
+                                </td>
+                                <td class="text-end rj-num">
+                                    <span th:text="${t.ticketPrice != null ? #numbers.formatDecimal(t.ticketPrice, 0, 'COMMA', 0, 'POINT') + ' VND' : (t.price != null ? #numbers.formatDecimal(t.price, 0, 'COMMA', 0, 'POINT') + ' VND' : '-')}">0 VND</span>
+                                </td>
+                                <td class="text-end">
+                                    <span th:replace="~{fragments/status-badge :: statusBadge(${t.ticketStatus})}"></span>
+                                </td>
+                            </tr>
+                            <tr th:if="${tickets == null or #lists.isEmpty(tickets)}">
+                                <td colspan="7" class="text-center py-4 text-muted">
+                                    [[#{booking.noTicketData}]]
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cột phải: Tóm tắt đặt chỗ & Thông tin người đặt -->
+        <div class="col-lg-4">
+            <div class="d-flex flex-column gap-4">
+                <!-- 4. TÓM TẮT ĐẶT CHỖ -->
+                <div class="card admin-detail-card">
+                    <div class="card-header">
+                        <strong class="admin-card-title">[[#{booking.bookingSummary}]]</strong>
+                    </div>
+                    <div class="card-body">
+                        <div class="p-3 mb-3 rounded bg-body-tertiary border text-center">
+                            <small class="text-muted d-block mb-1">[[#{booking.bookingCode}]]</small>
+                            <h3 class="rj-code mb-2 text-primary" th:text="${booking.bookingNumber}">RJ0001</h3>
+                            <span th:replace="~{fragments/status-badge :: statusBadge(${booking.bookingStatus})}"></span>
+                        </div>
+
+                        <dl class="admin-detail-grid">
+                            <dt>[[#{booking.bookingDate}]]</dt>
+                            <dd class="rj-num" th:text="${booking.bookingDate != null ? #temporals.format(booking.bookingDate, 'dd/MM/yyyy HH:mm') : '-'}">01/01/2026</dd>
+
+                            <dt>[[#{common.customer}]]</dt>
+                            <dd>
+                                <strong th:text="${booking.bookerName ?: '-'}">Khách</strong>
+                                <small class="d-block text-muted" th:text="${booking.bookerPhone}">0900000000</small>
+                                <small class="d-block text-muted" th:text="${booking.bookerEmail}">email@domain.com</small>
+                            </dd>
+
+                            <dt>[[#{common.train}]]</dt>
+                            <dd th:text="${booking.trainTrip != null and booking.trainTrip.train != null ? booking.trainTrip.train.trainName : '-'}">-</dd>
+
+                            <dt>[[#{common.departure}]]</dt>
+                            <dd th:text="${booking.departureStation != null ? booking.departureStation.stationName : '-'}">-</dd>
+
+                            <dt>[[#{common.arrival}]]</dt>
+                            <dd th:text="${booking.arrivalStation != null ? booking.arrivalStation.stationName : '-'}">-</dd>
+
+                            <dt>[[#{booking.tickets}]]</dt>
+                            <dd class="rj-num" th:text="${tickets != null ? #lists.size(tickets) : 0}">0</dd>
+
+                            <dt>[[#{common.totalAmount}]]</dt>
+                            <dd class="rj-num fs-5 fw-bold text-primary"
+                                th:text="${booking.totalAmount != null ? #numbers.formatDecimal(booking.totalAmount, 0, 'COMMA', 0, 'POINT') + ' VND' : '0 VND'}">
+                                0 VND
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <!-- 5. LỊCH SỬ THANH TOÁN -->
+                <div class="card admin-detail-card" th:if="${payments != null and !#lists.isEmpty(payments)}">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <strong class="admin-card-title">[[#{common.payments}]]</strong>
+                        <span class="badge bg-secondary-subtle text-secondary-emphasis" th:text="${#lists.size(payments)}">1</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex justify-content-between align-items-center p-3" th:each="pay : ${payments}">
+                                <div>
+                                    <div class="fw-semibold rj-code" th:text="${pay.transactionCode ?: pay.paymentId}">TXN-01</div>
+                                    <small class="text-muted" th:text="${#messages.msgOrNull('enum.' + pay.paymentMethod) ?: pay.paymentMethod}">VNPAY</small>
+                                    <small class="text-muted d-block" th:if="${pay.paidAt != null}" th:text="${#temporals.format(pay.paidAt, 'HH:mm dd/MM/yyyy')}">-</small>
+                                </div>
+                                <div class="text-end">
+                                    <div class="fw-bold rj-num" th:text="${#numbers.formatDecimal(pay.amount, 0, 'COMMA', 0, 'POINT')} + ' VND'">0 VND</div>
+                                    <span th:replace="~{fragments/status-badge :: statusBadge(${pay.paymentStatus})}"></span>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+</html>

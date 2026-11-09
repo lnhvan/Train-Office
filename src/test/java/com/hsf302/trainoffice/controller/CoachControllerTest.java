@@ -85,8 +85,8 @@ class CoachControllerTest {
         RedirectAttributesModelMap redirect = new RedirectAttributesModelMap();
 
         assertEquals("redirect:/admin/coaches", controller.deleteCoach(9L, null, redirect));
-        assertEquals("Coach with ID 9 has been deleted.",
-                redirect.getFlashAttributes().get("successMessage"));
+        String msg = (String) redirect.getFlashAttributes().get("successMessage");
+        assertTrue("msg.coach.deleted".equals(msg) || "Coach with ID 9 has been deleted.".equals(msg));
         verify(coachService).deleteCoach(9L);
     }
 

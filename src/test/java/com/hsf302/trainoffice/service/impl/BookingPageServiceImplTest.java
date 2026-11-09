@@ -6,6 +6,7 @@ import com.hsf302.trainoffice.entity.Seat;
 import com.hsf302.trainoffice.entity.Booking;
 import com.hsf302.trainoffice.entity.TrainTrip;
 import com.hsf302.trainoffice.entity.TripStation;
+import com.hsf302.trainoffice.entity.RouteStation;
 import com.hsf302.trainoffice.entity.User;
 import com.hsf302.trainoffice.service.*;
 import com.hsf302.trainoffice.security.CurrentUser;
@@ -62,9 +63,14 @@ class BookingPageServiceImplTest {
         httpSession.setAttribute("bookingSession", bookingSession);
 
         TripStation departure = new TripStation();
-        departure.setStationOrder(1);
+        RouteStation rsDep = new RouteStation();
+        rsDep.setStationOrder(1);
+        departure.setRouteStation(rsDep);
+
         TripStation arrival = new TripStation();
-        arrival.setStationOrder(2);
+        RouteStation rsArr = new RouteStation();
+        rsArr.setStationOrder(2);
+        arrival.setRouteStation(rsArr);
         when(trips.getTripById(10L)).thenReturn(Optional.of(new TrainTrip()));
         when(trips.getValidSegment(10L, 20L, 30L)).thenReturn(new TripSegment(departure, arrival));
         when(tickets.getSeatsForTrip(10L)).thenReturn(List.of(

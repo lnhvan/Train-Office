@@ -270,6 +270,8 @@ public class AuthController {
     private void addResetModel(Model model, String email) {
         model.addAttribute("resetEmail", maskEmail(email));
         model.addAttribute("resetCodeMinutes", PasswordResetService.CODE_TTL_MINUTES);
+        model.addAttribute("resetCodeRemainingSeconds", passwordResetService.getRemainingTtlSeconds(email));
+        model.addAttribute("cooldownRemainingSeconds", passwordResetService.getCooldownRemainingSeconds(email));
     }
 
     /** nguyenvana@gmail.com -> ng*******@gmail.com */

@@ -2,13 +2,13 @@ package com.hsf302.trainoffice.service;
 
 public interface PasswordResetService {
 
-    /** Thời gian mã còn hiệu lực. */
-    int CODE_TTL_MINUTES = 10;
+    /** Thời gian mã còn hiệu lực trên Redis (5 phút). */
+    int CODE_TTL_MINUTES = 5;
 
-    /** Số lần nhập sai tối đa cho một mã. */
+    /** Số lần nhập sai tối đa cho một mã trước khi bị hủy. */
     int MAX_ATTEMPTS = 5;
 
-    /** Thời gian chờ giữa hai lần gửi mã. */
+    /** Thời gian chờ giữa hai lần gửi mã (giây). */
     int RESEND_COOLDOWN_SECONDS = 60;
 
     /**
@@ -19,6 +19,12 @@ public interface PasswordResetService {
 
     /** Kiểm tra mã và đặt mật khẩu mới. */
     ResetResult resetPassword(String email, String code, String newPassword);
+
+    /** Lấy số giây còn lại của mã OTP trong Redis (nếu hết hạn hoặc không tồn tại trả về 0). */
+    long getRemainingTtlSeconds(String email);
+
+    /** Lấy số giây cooldown còn lại trước khi được bấm gửi lại mã. */
+    long getCooldownRemainingSeconds(String email);
 
     enum RequestResult {
         SENT,

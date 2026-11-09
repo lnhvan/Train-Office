@@ -10,6 +10,12 @@ import com.hsf302.trainoffice.entity.Payment;
 import com.hsf302.trainoffice.entity.User;
 import com.hsf302.trainoffice.repository.BookingRepository;
 import com.hsf302.trainoffice.service.PaymentService;
+import com.hsf302.trainoffice.entity.Passenger;
+import com.hsf302.trainoffice.entity.Ticket;
+import com.hsf302.trainoffice.service.BookingService;
+import com.hsf302.trainoffice.service.TicketService;
+import com.hsf302.trainoffice.common.enums.Gender;
+import com.hsf302.trainoffice.service.PassengerService;
 import com.hsf302.trainoffice.service.SeatHoldService;
 import com.hsf302.trainoffice.dto.SeatHold;
 import com.hsf302.trainoffice.exception.SeatHoldException;
@@ -35,13 +41,22 @@ public class PaymentController {
     private final PaymentService paymentService;
     private final BookingRepository bookingRepository;
     private final SeatHoldService seatHoldService;
+    private final BookingService bookingService;
+    private final TicketService ticketService;
+    private final PassengerService passengerService;
 
     public PaymentController(PaymentService paymentService,
                              BookingRepository bookingRepository,
-                             SeatHoldService seatHoldService) {
+                             SeatHoldService seatHoldService,
+                             BookingService bookingService,
+                             TicketService ticketService,
+                             PassengerService passengerService) {
         this.paymentService = paymentService;
         this.bookingRepository = bookingRepository;
         this.seatHoldService = seatHoldService;
+        this.bookingService = bookingService;
+        this.ticketService = ticketService;
+        this.passengerService = passengerService;
     }
 
     // =========================================================
@@ -84,6 +99,75 @@ public class PaymentController {
         model.addAttribute("activeTab", "bookings".equalsIgnoreCase(activeTab) ? "bookings" : "payments");
 
         return "payments/list";
+    }
+
+    @GetMapping({"/admin/bookings/{id}", "/admin/payments/bookings/{id}"})
+    public String showAdminBookingDetail(
+            @PathVariable("id") Long bookingId,
+            @RequestParam(value = "returnUrl", required = false) String returnUrl,
+            HttpServletRequest request,
+            Model model,
+            RedirectAttributes redirectAttributes
+    ) {
+        try {
+            Booking booking = bookingService.getBookingById(bookingId);
+            List<Passenger> passengers = bookingService.getPassengersForBooking(bookingId);
+            List<Ticket> tickets = ticketService.getTicketsByBookingId(bookingId);
+            List<Payment> payments = paymentService.getPaymentsByBookingId(bookingId);
+
+            model.addAttribute("booking", booking);
+            model.addAttribute("passengers", passengers);
+            model.addAttribute("tickets", tickets);
+            model.addAttribute("payments", payments);
+            model.addAttribute("genders", Gender.values());
+
+            String safeReturnUrl = resolveSafeReturnUrl(returnUrl, request, "/admin/payments?tab=bookings");
+            model.addAttribute("returnUrl", safeReturnUrl);
+
+            return "payments/booking-detail";
+        } catch (IllegalArgumentException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+            return "redirect:/admin/payments?tab=bookings";
+        }
+    }
+
+    @PostMapping("/admin/bookings/{bookingId}/passengers/{passengerId}/edit")
+    public String updateBookingPassenger(
+            @PathVariable Long bookingId,
+            @PathVariable Long passengerId,
+            @RequestParam(value = "returnUrl", required = false) String returnUrl,
+            @ModelAttribute Passenger passengerForm,
+            RedirectAttributes redirectAttributes
+    ) {
+        try {
+            Passenger existing = passengerService.getPassengerById(passengerId)
+                    .orElseThrow(() -> new IllegalArgumentException(I18n.t("msg.passenger.notFound")));
+
+            if (passengerForm.getFullName() == null || passengerForm.getFullName().isBlank()) {
+                throw new IllegalArgumentException(I18n.t("err.passengerFullNameIsRequired2"));
+            }
+
+            existing.setFullName(passengerForm.getFullName().trim());
+            existing.setIdentityNumber(passengerForm.getIdentityNumber() != null && !passengerForm.getIdentityNumber().isBlank()
+                    ? passengerForm.getIdentityNumber().trim() : null);
+            existing.setDateOfBirth(passengerForm.getDateOfBirth());
+            existing.setGender(passengerForm.getGender());
+            if (passengerForm.getPassengerType() != null && !passengerForm.getPassengerType().isBlank()) {
+                existing.setPassengerType(passengerForm.getPassengerType().trim());
+            }
+            existing.setRelationshipToBooker(passengerForm.getRelationshipToBooker() != null && !passengerForm.getRelationshipToBooker().isBlank()
+                    ? passengerForm.getRelationshipToBooker().trim() : null);
+
+            passengerService.savePassenger(existing);
+            redirectAttributes.addFlashAttribute("successMessage", I18n.t("msg.passenger.saved"));
+        } catch (Exception ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+
+        if (returnUrl != null && !returnUrl.isBlank() && returnUrl.startsWith("/") && !returnUrl.startsWith("//")) {
+            redirectAttributes.addAttribute("returnUrl", returnUrl);
+        }
+        return "redirect:/admin/bookings/" + bookingId;
     }
 
     @GetMapping("/admin/payments/edit/{id}")
@@ -155,6 +239,8 @@ public class PaymentController {
     @GetMapping("/admin/payments/detail/{id}")
     public String showPaymentDetail(
             @PathVariable("id") UUID id,
+            @RequestParam(value = "returnUrl", required = false) String returnUrl,
+            HttpServletRequest request,
             Model model,
             RedirectAttributes redirectAttributes
     ) {
@@ -166,6 +252,8 @@ public class PaymentController {
         }
 
         model.addAttribute("payment", paymentOpt.get());
+        String safeReturnUrl = resolveSafeReturnUrl(returnUrl, request, "/admin/payments");
+        model.addAttribute("returnUrl", safeReturnUrl);
 
         return "payments/detail";
     }
@@ -348,4 +436,29 @@ public class PaymentController {
 
         return remote == null || remote.isBlank() ? "127.0.0.1" : remote;
     }
+
+    private String resolveSafeReturnUrl(String returnUrl, HttpServletRequest request, String fallbackUrl) {
+        if (returnUrl != null && !returnUrl.isBlank() && returnUrl.startsWith("/") && !returnUrl.startsWith("//")) {
+            return returnUrl;
+        }
+        if (request != null) {
+            String referer = request.getHeader("Referer");
+            if (referer != null && !referer.isBlank()) {
+                try {
+                    java.net.URI uri = java.net.URI.create(referer);
+                    String path = uri.getPath();
+                    String query = uri.getQuery();
+                    String relative = path + (query != null ? "?" + query : "");
+                    if (relative.startsWith("/admin/")
+                            && !relative.contains("/admin/bookings/")
+                            && !relative.contains("/admin/payments/bookings/")) {
+                        return relative;
+                    }
+                } catch (Exception ignored) {
+                }
+            }
+        }
+        return fallbackUrl;
+    }
+
 }

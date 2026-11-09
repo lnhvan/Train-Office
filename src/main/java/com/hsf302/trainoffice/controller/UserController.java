@@ -6,6 +6,15 @@ import com.hsf302.trainoffice.common.enums.UserRole;
 import com.hsf302.trainoffice.common.enums.UserStatus;
 import com.hsf302.trainoffice.entity.User;
 import com.hsf302.trainoffice.service.UserService;
+import com.hsf302.trainoffice.common.enums.BookingStatus;
+import com.hsf302.trainoffice.common.enums.PaymentStatus;
+import com.hsf302.trainoffice.entity.Booking;
+import com.hsf302.trainoffice.entity.Payment;
+import com.hsf302.trainoffice.repository.BookingRepository;
+import com.hsf302.trainoffice.repository.PaymentRepository;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
 import jakarta.validation.Valid;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Controller;
@@ -23,9 +32,15 @@ import org.springframework.validation.BindingResult;
 public class UserController {
 
     private final UserService userService;
+    private final BookingRepository bookingRepository;
+    private final PaymentRepository paymentRepository;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService,
+                          BookingRepository bookingRepository,
+                          PaymentRepository paymentRepository) {
         this.userService = userService;
+        this.bookingRepository = bookingRepository;
+        this.paymentRepository = paymentRepository;
     }
 
     @GetMapping
@@ -72,6 +87,34 @@ public class UserController {
         return userService.getUserById(id)
                 .map(user -> {
                     model.addAttribute("user", user);
+
+                    String email = (user.getEmail() != null && !user.getEmail().isBlank()) ? user.getEmail().trim() : null;
+                    List<Booking> bookings = bookingRepository.findByUserOrEmailOrderByBookingDateDesc(id, email);
+                    List<Payment> payments = paymentRepository.findByUserOrEmail(id, email);
+
+                    // Sắp xếp payments mới nhất lên đầu
+                    payments.sort((p1, p2) -> {
+                        LocalDateTime d1 = p1.getPaidAt() != null ? p1.getPaidAt() : (p1.getBooking() != null ? p1.getBooking().getBookingDate() : null);
+                        LocalDateTime d2 = p2.getPaidAt() != null ? p2.getPaidAt() : (p2.getBooking() != null ? p2.getBooking().getBookingDate() : null);
+                        if (d1 == null && d2 == null) return 0;
+                        if (d1 == null) return 1;
+                        if (d2 == null) return -1;
+                        return d2.compareTo(d1);
+                    });
+
+                    long paidBookingsCount = bookings.stream()
+                            .filter(b -> b.getBookingStatus() == BookingStatus.PAID)
+                            .count();
+                    BigDecimal totalSpent = payments.stream()
+                            .filter(p -> p.getPaymentStatus() == PaymentStatus.SUCCESS && p.getAmount() != null)
+                            .map(Payment::getAmount)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+                    model.addAttribute("bookings", bookings);
+                    model.addAttribute("payments", payments);
+                    model.addAttribute("paidBookingsCount", paidBookingsCount);
+                    model.addAttribute("totalSpent", totalSpent);
+
                     return "users/detail";
                 })
                 .orElseGet(() -> {

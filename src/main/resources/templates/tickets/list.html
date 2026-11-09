@@ -47,9 +47,7 @@
                                 <span th:text="${ticket.seat != null ? ticket.seat.seatNumber : '-'}">01A</span>
                                 <small class="d-block"
                                        th:if="${ticket.seat != null and ticket.seat.berthLevel != null}"
-                                       th:text="${ticket.seat.berthLevel == 'LOWER' ? #messages.msg('booking.level1LowerBerth') :
-          (ticket.seat.berthLevel == 'MIDDLE' ? #messages.msg('booking.level2MiddleBerth') :
-          (ticket.seat.berthLevel == 'UPPER' ? #messages.msg('booking.level3UpperBerth') : ticket.seat.berthLevel))}">LOWER</small>
+                                       th:text="${#messages.msg(ticket.seat.berthFullLabelKey)}">LOWER</small>
                             </dd>
                         </div>
                         <div>

@@ -42,9 +42,9 @@ body.rj-auth { min-height: 100vh; background: var(--rj-bg); }
 .rj-auth-aside-copy { max-width: 420px; margin: auto 0 48px; }
 .rj-auth-aside-title {
     font-size: clamp(2rem, 3.2vw, 2.9rem);
-    line-height: 1.12;
+    line-height: 1.22;
     font-weight: 800;
-    letter-spacing: -.02em;
+    letter-spacing: .01em;
     color: #fff;
     margin-bottom: 16px;
 }
@@ -258,4 +258,35 @@ body.rj-auth { min-height: 100vh; background: var(--rj-bg); }
 }
 .rj-google-btn svg {
     flex-shrink: 0;
+}
+
+.rj-resend .btn-link:disabled { opacity: .6; pointer-events: none; text-decoration: none; cursor: not-allowed; }
+
+/* Timer đếm ngược mã OTP Redis (5 phút) */
+.rj-otp-timer-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-size: .88rem;
+    background: rgba(255, 255, 255, .05);
+    border: 1px solid var(--rj-line-strong);
+    color: var(--rj-text-2);
+    margin: 0 auto 1.25rem;
+    width: fit-content;
+}
+.rj-otp-timer-badge strong {
+    color: var(--rj-accent);
+    font-weight: 700;
+    letter-spacing: .05em;
+}
+.rj-otp-timer-badge.rj-otp-expired {
+    background: rgba(239, 68, 68, .12);
+    border-color: rgba(239, 68, 68, .4);
+    color: #fca5a5;
+}
+.rj-otp-timer-badge.rj-otp-expired strong {
+    color: #ef4444;
 }

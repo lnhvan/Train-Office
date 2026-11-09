@@ -27,4 +27,66 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     });
+
+    // Countdown timer cho OTP đặt lại mật khẩu (TTL 5 phút trong Redis)
+    const timerBox = document.getElementById('otpTimerBox');
+    const otpClock = document.getElementById('otpClock');
+    const btnResend = document.getElementById('btnResendOtp');
+
+    if (timerBox && otpClock) {
+        let remainingSeconds = parseInt(timerBox.dataset.remainingSeconds, 10) || 0;
+        let cooldownSeconds = parseInt(timerBox.dataset.cooldownSeconds, 10) || 0;
+
+        function formatTime(sec) {
+            const m = Math.floor(sec / 60);
+            const s = sec % 60;
+            return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+        }
+
+        function updateOtpClock() {
+            if (remainingSeconds > 0) {
+                otpClock.textContent = formatTime(remainingSeconds);
+                remainingSeconds--;
+            } else {
+                otpClock.textContent = '00:00';
+                timerBox.classList.add('rj-otp-expired');
+                const label = timerBox.querySelector('.rj-otp-timer-text');
+                if (label && timerBox.dataset.expiredText) {
+                    label.textContent = timerBox.dataset.expiredText;
+                }
+            }
+        }
+
+        const originalResendText = btnResend ? btnResend.textContent.trim() : '';
+
+        function updateResendCooldown() {
+            if (!btnResend) return;
+            if (cooldownSeconds > 0) {
+                btnResend.disabled = true;
+                btnResend.setAttribute('disabled', 'disabled');
+                btnResend.textContent = originalResendText + ' (' + cooldownSeconds + 's)';
+                cooldownSeconds--;
+            } else {
+                btnResend.disabled = false;
+                btnResend.removeAttribute('disabled');
+                btnResend.textContent = originalResendText;
+            }
+        }
+
+        if (remainingSeconds > 0) {
+            timerBox.style.display = 'inline-flex';
+            updateOtpClock();
+            setInterval(updateOtpClock, 1000);
+        }
+
+        if (cooldownSeconds > 0) {
+            updateResendCooldown();
+            const cdInterval = setInterval(function () {
+                updateResendCooldown();
+                if (cooldownSeconds < 0) {
+                    clearInterval(cdInterval);
+                }
+            }, 1000);
+        }
+    }
 });

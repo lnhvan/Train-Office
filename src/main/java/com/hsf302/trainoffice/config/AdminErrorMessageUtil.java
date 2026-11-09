@@ -76,10 +76,6 @@ public final class AdminErrorMessageUtil {
             return I18n.t("msg.delete.linkedRefunds");
         }
 
-        if (message.contains("invoices") || message.contains("invoice")) {
-            return I18n.t("msg.delete.linkedInvoices");
-        }
-
         return I18n.t("msg.delete.inUse", localizedEntityName(entityName));
     }
 

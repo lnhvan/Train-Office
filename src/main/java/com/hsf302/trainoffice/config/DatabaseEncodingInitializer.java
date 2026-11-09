@@ -9,6 +9,7 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 
 import java.util.List;
+import java.util.Map;
 
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
@@ -32,6 +33,12 @@ public class DatabaseEncodingInitializer implements ApplicationRunner {
         convertColumnToNvarchar("routes", "route_name", "NVARCHAR(120) NOT NULL");
         convertColumnToNvarchar("trains", "train_name", "NVARCHAR(100) NOT NULL");
         convertColumnToNvarchar("trains", "train_type", "NVARCHAR(50) NOT NULL");
+        try {
+            jdbcTemplate.update("UPDATE trains SET status = 'AVAILABLE' WHERE status = 'ON_TRIP'");
+        } catch (DataAccessException ignored) {
+        }
+                backfillBookingTimes();
+        updateTripStatusCheckConstraint();
     }
 
     private void convertColumnToNvarchar(String tableName, String columnName, String definition) {
@@ -86,5 +93,62 @@ public class DatabaseEncodingInitializer implements ApplicationRunner {
                 FROM INFORMATION_SCHEMA.COLUMNS
                 WHERE TABLE_NAME = ? AND COLUMN_NAME = ?
                 """, (resultSet, rowNumber) -> resultSet.getString("DATA_TYPE"), tableName, columnName);
+    }
+
+    private void updateTripStatusCheckConstraint() {
+        try {
+            List<Map<String, Object>> rows = jdbcTemplate.queryForList("""
+                    SELECT cc.name, cc.definition
+                    FROM sys.check_constraints cc
+                    JOIN sys.tables t ON cc.parent_object_id = t.object_id
+                    WHERE t.name = 'train_trips'
+                      AND (cc.definition LIKE '%status%' OR cc.name LIKE '%statu%')
+                    """);
+
+            boolean needsNewConstraint = false;
+            for (Map<String, Object> row : rows) {
+                String name = (String) row.get("name");
+                String def = (String) row.get("definition");
+                if (def == null || !def.contains("ONGOING")) {
+                    try {
+                        jdbcTemplate.execute("ALTER TABLE train_trips DROP CONSTRAINT [" + name + "]");
+                        needsNewConstraint = true;
+                    } catch (DataAccessException ignored) {
+                    }
+                }
+            }
+
+            if (needsNewConstraint || rows.isEmpty()) {
+                try {
+                    jdbcTemplate.execute("""
+                            ALTER TABLE train_trips
+                            ADD CONSTRAINT CK_train_trips_status
+                            CHECK (status IN ('SCHEDULED', 'ONGOING', 'COMPLETED', 'CANCELLED'))
+                            """);
+                } catch (DataAccessException ignored) {
+                }
+            }
+        } catch (DataAccessException ignored) {
+            // Non-SQL-Server DB or sys catalog not available
+        }
+    }
+
+
+    private void backfillBookingTimes() {
+        try {
+            jdbcTemplate.update("""
+                UPDATE b
+                SET b.departure_time = COALESCE(dep_ts.departure_time, dep_ts.arrival_time, tt.departure_time),
+                    b.arrival_time = COALESCE(arr_ts.arrival_time, arr_ts.departure_time, tt.arrival_time)
+                FROM bookings b
+                JOIN train_trips tt ON b.trip_id = tt.trip_id
+                LEFT JOIN trip_stations dep_ts ON dep_ts.trip_id = b.trip_id
+                    AND dep_ts.route_station_id IN (SELECT route_station_id FROM route_stations WHERE station_id = b.departure_station_id)
+                LEFT JOIN trip_stations arr_ts ON arr_ts.trip_id = b.trip_id
+                    AND arr_ts.route_station_id IN (SELECT route_station_id FROM route_stations WHERE station_id = b.arrival_station_id)
+                WHERE b.departure_time IS NULL OR b.arrival_time IS NULL
+            """);
+        } catch (Exception ignored) {
+        }
     }
 }

@@ -84,12 +84,8 @@
                                     <span th:text="${seat.seatType}">First Class</span>
                                     <span class="rj-berth-tag"
                                           th:if="${seat.berthLevel != null}"
-                                          th:classappend="${seat.berthLevel == 'LOWER'} ? ' lower' :
-          (${seat.berthLevel == 'MIDDLE'} ? ' middle' :
-          (${seat.berthLevel == 'UPPER'} ? ' upper' : ''))"
-                                          th:text="${seat.berthLevel == 'LOWER' ? #messages.msg('booking.level1LowerBerth') :
-          (seat.berthLevel == 'MIDDLE' ? #messages.msg('booking.level2MiddleBerth') :
-          (seat.berthLevel == 'UPPER' ? #messages.msg('booking.level3UpperBerth') : seat.berthLevel))}">Level 1 / Lower berth</span>
+                                          th:classappend="${seat.tierLevel == 1} ? ' lower' : (${seat.tierLevel == 2} ? ' middle' : ' upper')"
+                                          th:text="${#messages.msg(seat.berthFullLabelKey)}">Level 1 / Lower berth</span>
                                 </span>
                             </div>
                         </li>
@@ -141,7 +137,8 @@
                                         class="rj-select-menu-item"
                                         th:each="policy : ${availableGroupDiscountPolicies}"
                                         th:classappend="${selectedGroupDiscountPolicyId != null and selectedGroupDiscountPolicyId == policy.policyId} ? ' active'"
-                                        th:onclick="|document.getElementById('groupDiscountPolicyInput').value='${policy.policyId}'|">
+                                        th:attr="data-policy-id=${policy.policyId}"
+                                        onclick="document.getElementById('groupDiscountPolicyInput').value=this.getAttribute('data-policy-id')">
                                     <span>
                                         <strong th:text="${policy.policyName + ' - ' + policy.discountPercent + '%'}">Family Combo - 10%</strong>
                                         <small>

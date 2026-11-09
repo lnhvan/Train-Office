@@ -14,27 +14,7 @@
                   th:action="@{/booking/trips}"
                   th:data-availability-url="@{/api/booking/station-availability}"
                   method="post">
-                <div class="rj-searchbar-top">
-                    <div class="rj-segmented" role="radiogroup" th:aria-label="#{booking.tripType}">
-                        <input id="oneWay"
-                               type="radio"
-                               name="roundTrip"
-                               value="false"
-                               checked>
-                        <label for="oneWay"><i class="bi bi-arrow-right"></i>[[#{booking.oneWay}]]</label>
-
-                        <input id="roundTrip"
-                               type="radio"
-                               name="roundTrip"
-                               value="true"
-                               th:checked="${tripSearchForm != null and tripSearchForm.roundTrip == true}">
-                        <label for="roundTrip"><i class="bi bi-arrow-left-right"></i>[[#{booking.roundTrip}]]</label>
-                    </div>
-                    <span class="rj-searchbar-note">
-                        <i class="bi bi-info-circle"></i>
-                        [[#{booking.oneSeatPerPassengerNextStep}]]
-                    </span>
-                </div>
+                <input type="hidden" name="roundTrip" value="false">
 
                 <div class="alert alert-danger"
                      th:if="${error}"
@@ -98,15 +78,6 @@
                                    th:value="${tripSearchForm != null ? tripSearchForm.departureDate : ''}"
                                    required>
                         </div>
-
-                        <div class="rj-searchbar-field rj-return-date" id="returnDateGroup">
-                            <label class="form-label" for="returnDate">[[#{booking.returnDate}]]</label>
-                            <input id="returnDate"
-                                   name="returnDate"
-                                   class="form-control"
-                                   type="date"
-                                   th:value="${tripSearchForm != null ? tripSearchForm.returnDate : ''}">
-                        </div>
                     </div>
 
                     <div class="rj-searchbar-field rj-searchbar-pax">
@@ -146,10 +117,7 @@
                             <span class="rj-avail-label">[[#{booking.datesWithTrips}]]</span>
                             <div class="rj-avail-chips" id="departureDateChips"></div>
                         </div>
-                        <div class="rj-avail-row" id="returnDateRow" hidden>
-                            <span class="rj-avail-label">[[#{booking.returnDatesWithTrips}]]</span>
-                            <div class="rj-avail-chips" id="returnDateChips"></div>
-                        </div>
+
                     </div>
 
                     <button class="btn btn-primary btn-lg rj-searchbar-submit" type="submit">

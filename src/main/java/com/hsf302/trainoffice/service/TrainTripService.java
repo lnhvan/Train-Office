@@ -1,6 +1,8 @@
 package com.hsf302.trainoffice.service;
 
 import com.hsf302.trainoffice.dto.TripCancellationResult;
+import com.hsf302.trainoffice.dto.TrainTimelineDto;
+import com.hsf302.trainoffice.dto.TripTimelineItemDto;
 import com.hsf302.trainoffice.common.enums.TripStatus;
 import com.hsf302.trainoffice.dto.CustomerTripView;
 import com.hsf302.trainoffice.dto.StationAvailability;
@@ -42,4 +44,10 @@ public interface TrainTripService {
 
     /** Xem trước giờ đến/đi từng ga (không lưu) khi admin chọn tàu, tuyến và giờ khởi hành. */
     TripSchedulePreview previewSchedule(Long trainId, Long routeId, LocalDateTime departureTime);
+
+    /** Timeline các chuyến của một tàu (SCHEDULED và ONGOING). */
+    TrainTimelineDto getTrainTimeline(Long trainId);
+
+    /** Timeline các chuyến tàu trong đội tàu (hoặc theo trainId nếu khác null). */
+    List<TripTimelineItemDto> getFleetTimeline(Long trainId);
 }

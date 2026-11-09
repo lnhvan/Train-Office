@@ -203,8 +203,8 @@ public class BookingPricingServiceImpl implements BookingPricingService {
                     seat.getSeatNumber(),
                     seat.getSeatType(),
                     seat.getBerthLevel(),
-                    formatBerthLevel(seat.getBerthLevel()),
-                    berthLevelCssClass(seat.getBerthLevel()),
+                    formatBerthLevel(seat),
+                    berthLevelCssClass(seat),
                     originalPrice.setScale(0, RoundingMode.HALF_UP),
                     passengerDiscountPercent,
                     passengerDiscountAmount.setScale(0, RoundingMode.HALF_UP),
@@ -313,6 +313,13 @@ public class BookingPricingServiceImpl implements BookingPricingService {
         return seat.getCompartment().getCompartmentNumber();
     }
 
+    private String formatBerthLevel(Seat seat) {
+        if (seat == null || seat.getBerthLevel() == null || seat.getBerthLevel().isBlank()) {
+            return null;
+        }
+        return I18n.t(seat.getBerthFullLabelKey());
+    }
+
     private String formatBerthLevel(String berthLevel) {
         if (berthLevel == null || berthLevel.isBlank()) {
             return null;
@@ -325,6 +332,19 @@ public class BookingPricingServiceImpl implements BookingPricingService {
             case "MIDDLE" -> I18n.t("js.berthMiddle");
             case "UPPER" -> I18n.t("js.berthUpper");
             default -> normalized.replace("_", " ");
+        };
+    }
+
+    private String berthLevelCssClass(Seat seat) {
+        if (seat == null || seat.getBerthLevel() == null || seat.getBerthLevel().isBlank()) {
+            return "";
+        }
+        int tier = seat.getTierLevel();
+        return switch (tier) {
+            case 1 -> "lower";
+            case 2 -> "middle";
+            case 3 -> "upper";
+            default -> "";
         };
     }
 

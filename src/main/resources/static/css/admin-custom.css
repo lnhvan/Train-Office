@@ -474,3 +474,5 @@ label,.form-label{font-weight:800;color:var(--navy-dark)}
   .trip-timeline-item{grid-template-columns:44px minmax(0,1fr);align-items:flex-start}
   .trip-time-block{grid-column:2;align-items:flex-start}
 }
+
+.trip-status-ongoing{background:#fef3c7;color:#b45309}

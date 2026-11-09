@@ -58,12 +58,12 @@
                 <div class="rj-route is-large">
                     <div class="rj-route-stop">
                         <span class="rj-route-time"
-                              th:text="${ticket.trainTrip != null and ticket.trainTrip.departureTime != null ? #temporals.format(ticket.trainTrip.departureTime, 'HH:mm') : '--:--'}">23:45</span>
+                              th:text="${ticket.departureTime != null ? #temporals.format(ticket.departureTime, 'HH:mm') : '--:--'}">23:45</span>
                         <span class="rj-route-station"
                               th:text="${ticket.booking != null and ticket.booking.departureStation != null ? ticket.booking.departureStation.stationName : '-'}">Ha Noi</span>
                         <span class="rj-route-date">
                             [[#{common.departureStation}]],
-                            <span class="rj-num" th:text="${ticket.trainTrip != null and ticket.trainTrip.departureTime != null ? #temporals.format(ticket.trainTrip.departureTime, 'dd MMM yyyy') : '-'}">14 Oct 2026</span>
+                            <span class="rj-num" th:text="${ticket.departureTime != null ? #temporals.format(ticket.departureTime, 'dd MMM yyyy') : '-'}">14 Oct 2026</span>
                         </span>
                     </div>
                     <div class="rj-route-track" aria-hidden="true">
@@ -74,12 +74,12 @@
                     </div>
                     <div class="rj-route-stop is-end">
                         <span class="rj-route-time"
-                              th:text="${ticket.trainTrip != null and ticket.trainTrip.arrivalTime != null ? #temporals.format(ticket.trainTrip.arrivalTime, 'HH:mm') : '--:--'}">08:00</span>
+                              th:text="${ticket.arrivalTime != null ? #temporals.format(ticket.arrivalTime, 'HH:mm') : '--:--'}">08:00</span>
                         <span class="rj-route-station"
                               th:text="${ticket.booking != null and ticket.booking.arrivalStation != null ? ticket.booking.arrivalStation.stationName : '-'}">Sai Gon</span>
                         <span class="rj-route-date">
                             [[#{common.arrivalStation}]],
-                            <span class="rj-num" th:text="${ticket.trainTrip != null and ticket.trainTrip.arrivalTime != null ? #temporals.format(ticket.trainTrip.arrivalTime, 'dd MMM yyyy') : '-'}">15 Oct 2026</span>
+                            <span class="rj-num" th:text="${ticket.arrivalTime != null ? #temporals.format(ticket.arrivalTime, 'dd MMM yyyy') : '-'}">15 Oct 2026</span>
                         </span>
                     </div>
                 </div>
@@ -118,9 +118,7 @@
                 </div>
                 <span class="rj-berth-tag"
                       th:if="${ticket.seat != null and ticket.seat.berthLevel != null}"
-                      th:text="${ticket.seat.berthLevel == 'LOWER' ? #messages.msg('booking.level1LowerBerth') :
-          (ticket.seat.berthLevel == 'MIDDLE' ? #messages.msg('booking.level2MiddleBerth') :
-          (ticket.seat.berthLevel == 'UPPER' ? #messages.msg('booking.level3UpperBerth') : ticket.seat.berthLevel))}">LOWER</span>
+                      th:text="${#messages.msg(ticket.seat.berthFullLabelKey)}">LOWER</span>
                 <span class="rj-pass-code rj-code" th:text="${ticket.ticketCode}">RJ-T001</span>
             </div>
         </article>

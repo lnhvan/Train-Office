@@ -18,14 +18,15 @@
         </div>
     </div>
 
+    <!-- Thông tin cơ bản người dùng -->
     <div class="row">
         <div class="col-lg-4">
-            <div class="card admin-profile-card">
-                <div class="card-body text-center">
+            <div class="card admin-profile-card h-100">
+                <div class="card-body text-center d-flex flex-column align-items-center justify-content-center">
                     <span class="admin-profile-avatar"><i class="bi bi-person"></i></span>
                     <h3 th:text="${user.fullName ?: #messages.msg('user.unnamedUser')}">User</h3>
                     <p th:text="${user.email}">user@example.com</p>
-                    <div class="d-flex justify-content-center gap-2">
+                    <div class="d-flex justify-content-center gap-2 mb-3">
                         <span class="rj-badge admin-badge-soft"
                               th:classappend="${user.role != null and user.role.toString() == 'ADMIN'} ? ' is-danger' : ' is-info'"
                               th:text="${#messages.msgOrNull('enum.' + (user.role)) ?: (user.role)}">CUSTOMER</span>
@@ -33,28 +34,211 @@
                               th:classappend="${user.status != null and user.status.toString() == 'ACTIVE'} ? ' is-success' : ' is-neutral'"
                               th:text="${#messages.msgOrNull('enum.' + (user.status)) ?: (user.status)}">ACTIVE</span>
                     </div>
+
+                    <!-- Phím tắt điều hướng nhanh -->
+                    <div class="d-flex justify-content-center gap-2 flex-wrap pt-3 border-top w-100">
+                        <a href="#userBookingsCard" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-ticket-perforated"></i> [[#{common.bookings}]] (<span class="rj-num" th:text="${#lists.size(bookings)}">0</span>)
+                        </a>
+                        <a href="#userPaymentsCard" class="btn btn-sm btn-outline-success">
+                            <i class="bi bi-credit-card"></i> [[#{common.payments}]] (<span class="rj-num" th:text="${#lists.size(payments)}">0</span>)
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
         <div class="col-lg-8">
-            <div class="card admin-detail-card">
+            <div class="card admin-detail-card h-100">
                 <div class="card-header">
                     <span class="admin-card-title">[[#{user.userInformation}]]</span>
                     <small>[[#{user.profileAndAuditFields}]]</small>
                 </div>
                 <div class="card-body">
                     <dl class="admin-detail-grid">
-                        <dt>ID</dt><dd th:text="${user.userId}">1</dd>
-                        <dt>Email</dt><dd th:text="${user.email}">user@example.com</dd>
-                        <dt>[[#{common.fullName}]]</dt><dd th:text="${user.fullName ?: '-'}">User</dd>
-                        <dt>[[#{common.identityNumber}]]</dt><dd th:text="${user.identityNumber ?: '-'}">-</dd>
-                        <dt>[[#{common.dateOfBirth}]]</dt><dd th:text="${user.dateOfBirth != null ? #temporals.format(user.dateOfBirth, 'dd/MM/yyyy') : '-'}">-</dd>
+                        <dt>ID</dt><dd class="rj-num fw-bold" th:text="'#' + ${user.userId}">#1</dd>
+                        <dt>Email</dt><dd class="fw-semibold" th:text="${user.email}">user@example.com</dd>
+                        <dt>[[#{common.fullName}]]</dt><dd class="fw-semibold" th:text="${user.fullName ?: '-'}">User</dd>
+                        <dt>[[#{common.identityNumber}]]</dt><dd class="rj-code" th:text="${user.identityNumber ?: '-'}">-</dd>
+                        <dt>[[#{common.dateOfBirth}]]</dt><dd class="rj-num" th:text="${user.dateOfBirth != null ? #temporals.format(user.dateOfBirth, 'dd/MM/yyyy') : '-'}">-</dd>
                         <dt>[[#{common.gender}]]</dt><dd th:text="${#messages.msgOrNull('enum.' + (user.gender ?: '-')) ?: (user.gender ?: '-')}">-</dd>
-                        <dt>[[#{user.createdAt}]]</dt><dd th:text="${#temporals.format(user.createdAt, 'dd/MM/yyyy HH:mm')}">01/01/2026</dd>
-                        <dt>[[#{user.updatedAt}]]</dt><dd th:text="${#temporals.format(user.updatedAt, 'dd/MM/yyyy HH:mm')}">01/01/2026</dd>
+                        <dt>[[#{user.createdAt}]]</dt><dd class="rj-num text-muted" th:text="${#temporals.format(user.createdAt, 'dd/MM/yyyy HH:mm')}">01/01/2026</dd>
+                        <dt>[[#{user.updatedAt}]]</dt><dd class="rj-num text-muted" th:text="${#temporals.format(user.updatedAt, 'dd/MM/yyyy HH:mm')}">01/01/2026</dd>
                     </dl>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Thống kê hoạt động của người dùng (KPIs) -->
+    <div class="rj-kpis mt-4">
+        <div class="rj-kpi is-bookings">
+            <span class="rj-kpi-label"><i class="bi bi-ticket-perforated"></i>[[#{user.totalBookings}]]</span>
+            <strong class="rj-num" th:text="${#lists.size(bookings)}">0</strong>
+            <small>Tất cả đơn đặt chỗ</small>
+        </div>
+        <div class="rj-kpi is-revenue">
+            <span class="rj-kpi-label"><i class="bi bi-cash-stack"></i>[[#{user.totalSpent}]]</span>
+            <strong class="rj-num" th:text="${totalSpent != null ? #numbers.formatDecimal(totalSpent, 0, 'COMMA', 0, 'POINT') + ' VND' : '0 VND'}">0 VND</strong>
+            <small>Đã thanh toán thành công</small>
+        </div>
+        <div class="rj-kpi is-occupancy">
+            <span class="rj-kpi-label"><i class="bi bi-check-circle"></i>[[#{user.successfulBookings}]]</span>
+            <strong class="rj-num" th:text="${paidBookingsCount + ' / ' + #lists.size(bookings)}">0 / 0</strong>
+            <small>Đơn thanh toán hoàn tất</small>
+        </div>
+        <div class="rj-kpi is-refunds">
+            <span class="rj-kpi-label"><i class="bi bi-credit-card"></i>[[#{user.totalPayments}]]</span>
+            <strong class="rj-num" th:text="${#lists.size(payments)}">0</strong>
+            <small>Giao dịch ghi nhận</small>
+        </div>
+    </div>
+
+    <!-- DANH SÁCH ĐƠN ĐẶT CHỖ CỦA USER -->
+    <div class="card admin-table-card mt-4" id="userBookingsCard">
+        <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <div>
+                <span class="admin-card-title"><i class="bi bi-ticket-perforated text-primary"></i> [[#{user.bookingsList}]]</span>
+                <small class="d-block text-muted">Tất cả các đơn đặt chỗ thuộc về tài khoản này</small>
+            </div>
+            <span class="rj-badge is-info no-dot" th:text="${#lists.size(bookings) + ' đơn đặt chỗ'}">0 đơn</span>
+        </div>
+        <div class="card-body table-responsive p-0">
+            <table class="table table-hover mb-0">
+                <thead>
+                <tr>
+                    <th>[[#{common.booking}]]</th>
+                    <th>[[#{common.train}]] / [[#{common.route}]]</th>
+                    <th>[[#{user.journeySchedule}]]</th>
+                    <th>[[#{booking.bookingDate}]]</th>
+                    <th class="text-end">[[#{common.total}]]</th>
+                    <th>[[#{common.status}]]</th>
+                    <th class="text-end">[[#{common.actions}]]</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="b : ${bookings}">
+                    <td>
+                        <a th:href="@{/admin/bookings/{id}(id=${b.bookingId}, returnUrl='/admin/users/' + ${user.userId})}" class="rj-code fw-bold text-decoration-none" th:text="${b.bookingNumber}">RJ0001</a>
+                        <small class="d-block text-muted rj-num" th:text="'#' + ${b.bookingId}"></small>
+                    </td>
+                    <td>
+                        <div class="fw-semibold" th:text="${b.trainTrip != null and b.trainTrip.train != null ? b.trainTrip.train.trainCode + ' - ' + b.trainTrip.train.trainName : '-'}">Tàu</div>
+                        <small class="text-muted">
+                            <span th:text="${b.departureStation != null ? b.departureStation.stationName : '-'}">Hà Nội</span>
+                            <span> → </span>
+                            <span th:text="${b.arrivalStation != null ? b.arrivalStation.stationName : '-'}">Sài Gòn</span>
+                        </small>
+                    </td>
+                    <td>
+                        <div class="d-flex align-items-center gap-1">
+                            <i class="bi bi-play-circle text-primary"></i>
+                            <span class="fw-semibold rj-num"
+                                  th:text="${b.departureTime != null ? #temporals.format(b.departureTime, 'HH:mm dd/MM/yyyy') : (b.trainTrip != null and b.trainTrip.departureTime != null ? #temporals.format(b.trainTrip.departureTime, 'HH:mm dd/MM/yyyy') : '-')}">08:00</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-1 text-muted">
+                            <i class="bi bi-flag text-success"></i>
+                            <span class="rj-num"
+                                  th:text="${b.arrivalTime != null ? #temporals.format(b.arrivalTime, 'HH:mm dd/MM/yyyy') : (b.trainTrip != null and b.trainTrip.arrivalTime != null ? #temporals.format(b.trainTrip.arrivalTime, 'HH:mm dd/MM/yyyy') : '-')}">14:30</span>
+                        </div>
+                    </td>
+                    <td class="rj-num text-muted" th:text="${b.bookingDate != null ? #temporals.format(b.bookingDate, 'HH:mm dd/MM/yyyy') : '-'}">01/01/2026</td>
+                    <td class="text-end rj-num">
+                        <strong class="text-primary" th:text="${b.totalAmount != null ? #numbers.formatDecimal(b.totalAmount, 0, 'COMMA', 0, 'POINT') + ' VND' : '0 VND'}">0 VND</strong>
+                    </td>
+                    <td>
+                        <span th:replace="~{fragments/status-badge :: statusBadge(${b.bookingStatus})}"></span>
+                    </td>
+                    <td class="text-end">
+                        <a class="rj-icon-btn is-info" th:href="@{/admin/bookings/{id}(id=${b.bookingId}, returnUrl='/admin/users/' + ${user.userId})}" title="Xem chi tiết đơn">
+                            <i class="bi bi-eye" aria-hidden="true"></i>
+                            <span class="visually-hidden">Xem chi tiết</span>
+                        </a>
+                        <a class="rj-icon-btn is-warning" th:href="@{/admin/payments(bookingId=${b.bookingId}, tab='payments')}" title="Xem giao dịch thanh toán">
+                            <i class="bi bi-credit-card" aria-hidden="true"></i>
+                            <span class="visually-hidden">Xem thanh toán</span>
+                        </a>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(bookings)}">
+                    <td colspan="7">
+                        <div class="admin-empty-state">
+                            <i class="bi bi-ticket-perforated"></i>
+                            <strong>[[#{user.noBookingsFound}]]</strong>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- DANH SÁCH GIAO DỊCH THANH TOÁN CỦA USER -->
+    <div class="card admin-table-card mt-4 mb-5" id="userPaymentsCard">
+        <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <div>
+                <span class="admin-card-title"><i class="bi bi-credit-card text-success"></i> [[#{user.paymentsList}]]</span>
+                <small class="d-block text-muted">Lịch sử các giao dịch thanh toán cho các đơn hàng của người dùng</small>
+            </div>
+            <span class="rj-badge is-success no-dot" th:text="${#lists.size(payments) + ' giao dịch'}">0 giao dịch</span>
+        </div>
+        <div class="card-body table-responsive p-0">
+            <table class="table table-hover mb-0">
+                <thead>
+                <tr>
+                    <th>Mã GD (ID)</th>
+                    <th>[[#{common.booking}]]</th>
+                    <th>[[#{payment.method}]]</th>
+                    <th class="text-end">[[#{common.amount}]]</th>
+                    <th>[[#{payment.transaction}]]</th>
+                    <th>[[#{common.status}]]</th>
+                    <th>[[#{payment.paidAt}]]</th>
+                    <th class="text-end">[[#{common.actions}]]</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="p : ${payments}">
+                    <td class="text-muted small font-monospace"
+                        th:text="${p.paymentId != null ? #strings.substring(p.paymentId.toString(), 0, 8) + '...' : '-'}"
+                        th:title="${p.paymentId}">UUID</td>
+                    <td>
+                        <a th:if="${p.booking != null}"
+                           th:href="@{/admin/bookings/{id}(id=${p.booking.bookingId}, returnUrl='/admin/users/' + ${user.userId})}"
+                           class="rj-code fw-bold text-decoration-none"
+                           th:text="${p.booking.bookingNumber}">RJ0001</a>
+                        <small th:if="${p.booking != null}" class="d-block text-muted rj-num" th:text="'#' + ${p.booking.bookingId}"></small>
+                        <span th:if="${p.booking == null}" class="text-muted">-</span>
+                    </td>
+                    <td>
+                        <span class="rj-badge is-neutral no-dot"
+                              th:text="${#messages.msgOrNull('enum.' + (p.paymentMethod)) ?: (p.paymentMethod)}">VNPAY</span>
+                    </td>
+                    <td class="text-end rj-num">
+                        <strong class="text-success" th:text="${p.amount != null ? #numbers.formatDecimal(p.amount, 0, 'COMMA', 0, 'POINT') + ' VND' : '0 VND'}">0 VND</strong>
+                    </td>
+                    <td>
+                        <span class="rj-code" th:text="${p.transactionCode != null ? p.transactionCode : '-'}">TXN</span>
+                    </td>
+                    <td>
+                        <span th:replace="~{fragments/status-badge :: statusBadge(${p.paymentStatus})}"></span>
+                    </td>
+                    <td class="rj-num" th:text="${p.paidAt != null ? #temporals.format(p.paidAt, 'HH:mm dd/MM/yyyy') : '-'}">-</td>
+                    <td class="text-end">
+                        <a class="rj-icon-btn is-info" th:href="@{/admin/payments/detail/{id}(id=${p.paymentId}, returnUrl='/admin/users/' + ${user.userId})}" title="Xem chi tiết thanh toán">
+                            <i class="bi bi-eye" aria-hidden="true"></i>
+                            <span class="visually-hidden">Xem chi tiết</span>
+                        </a>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(payments)}">
+                    <td colspan="8">
+                        <div class="admin-empty-state">
+                            <i class="bi bi-credit-card"></i>
+                            <strong>[[#{user.noPaymentsFound}]]</strong>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
         </div>
     </div>
 </section>

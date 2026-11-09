@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 48" width="180" height="48">
+    <!-- Brand Mark: Rounded Square Badge -->
+    <rect x="2" y="4" width="40" height="40" rx="11" fill="#38bdf8"/>
+    <!-- Train Front Fill Icon -->
+    <g transform="translate(10, 12) scale(1.5)">
+        <path fill="#041523" d="M10.621.515C8.647.02 7.353.02 5.38.515c-.924.23-1.982.766-2.28 1.68-.36 1.102-.5 2.738-.5 5.055 0 2.778.287 4.648.86 5.223.373.365.99.57 1.69.661l-.814 1.22a.75.75 0 0 0 1.248.832L6.86 13.5h2.28l1.276 1.686a.75.75 0 0 0 1.248-.832l-.814-1.22c.7-.09 1.317-.296 1.69-.661.573-.575.86-2.445.86-5.223 0-2.317-.14-3.953-.5-5.055-.298-.914-1.355-1.45-2.279-1.68ZM4.5 5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1-.5-.5zm4.5 0a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1-.5-.5zm-3 5.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0m5 1a1 1 0 1 1 0-2 1 1 0 0 1 0 2"/>
+    </g>
+    <!-- Brand Name -->
+    <text x="54" y="33" fill="#ffffff" font-family="'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="800" font-size="28" letter-spacing="-0.5">RailJet</text>
+</svg>

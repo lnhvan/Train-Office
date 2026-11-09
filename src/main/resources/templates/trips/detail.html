@@ -23,8 +23,9 @@
                 <i class="bi bi-arrow-left"></i> [[#{common.back}]]
             </a>
 
-            <!-- JS mở form ngay trong trang; không có JS thì link vẫn mở chế độ sửa (?edit=true) -->
+            <!-- JS mở form ngay trong trang; chỉ cho phép sửa khi chuyến tàu ở trạng thái SCHEDULED -->
             <a class="btn btn-warning"
+               th:if="${trip.status != null and trip.status.toString() == 'SCHEDULED'}"
                th:href="@{/admin/trips/{id}(id=${trip.tripId}, edit=true)}"
                th:classappend="${editing} ? ' d-none'"
                data-inline-edit-open="tripSchedule"
@@ -64,6 +65,12 @@
                     SCHEDULED
                 </span>
 
+                <span class="trip-status-pill trip-status-ongoing"
+                      th:if="${trip.status != null and trip.status.toString() == 'ONGOING'}"
+                      th:text="${#messages.msgOrNull('enum.' + (trip.status)) ?: (trip.status)}">
+                    ONGOING
+                </span>
+
                 <span class="trip-status-pill trip-status-cancelled"
                       th:if="${trip.status != null and trip.status.toString() == 'CANCELLED'}"
                       th:text="${#messages.msgOrNull('enum.' + (trip.status)) ?: (trip.status)}">
@@ -71,8 +78,8 @@
                 </span>
 
                 <span class="trip-status-pill trip-status-completed"
-                      th:if="${trip.status == null or (trip.status.toString() != 'SCHEDULED' and trip.status.toString() != 'CANCELLED')}"
-                      th:text="${#messages.msgOrNull('enum.' + (trip.status != null ? trip.status : 'N/A')) ?: (trip.status != null ? trip.status : 'N/A')}">
+                      th:if="${trip.status != null and trip.status.toString() == 'COMPLETED'}"
+                      th:text="${#messages.msgOrNull('enum.' + (trip.status)) ?: (trip.status)}">
                     COMPLETED
                 </span>
             </strong>

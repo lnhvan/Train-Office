@@ -4,8 +4,13 @@ package com.hsf302.trainoffice.service.impl;
 import com.hsf302.trainoffice.config.I18n;
 import com.hsf302.trainoffice.common.enums.BookingStatus;
 import com.hsf302.trainoffice.common.enums.TicketStatus;
+import com.hsf302.trainoffice.common.enums.TrainStatus;
 import com.hsf302.trainoffice.common.enums.TripStatus;
 import com.hsf302.trainoffice.dto.CustomerTripView;
+import com.hsf302.trainoffice.dto.TrainTimelineDto;
+import com.hsf302.trainoffice.dto.TripTimelineItemDto;
+import java.time.Duration;
+import java.time.format.DateTimeFormatter;
 import com.hsf302.trainoffice.dto.StationAvailability;
 import com.hsf302.trainoffice.dto.TripCancellationResult;
 import com.hsf302.trainoffice.dto.TripSearchForm;
@@ -27,6 +32,7 @@ import com.hsf302.trainoffice.repository.TripStationRepository;
 import com.hsf302.trainoffice.service.BookingPricingService;
 import com.hsf302.trainoffice.event.SeatHoldReleaseEvent;
 import com.hsf302.trainoffice.service.RefundService;
+import com.hsf302.trainoffice.service.TripLifecycleRedisService;
 import org.springframework.context.ApplicationEventPublisher;
 import com.hsf302.trainoffice.service.TrainTripService;
 import org.springframework.stereotype.Service;
@@ -51,6 +57,32 @@ public class TrainTripServiceImpl implements TrainTripService {
     private final TicketRepository ticketRepository;
     private final RefundService refundService;
     private final ApplicationEventPublisher eventPublisher;
+    private final TripLifecycleRedisService tripLifecycleRedisService;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public TrainTripServiceImpl(TrainTripRepository trainTripRepository,
+                                TripStationRepository tripStationRepository,
+                                TrainRepository trainRepository,
+                                RouteRepository routeRepository,
+                                BookingRepository bookingRepository,
+                                TripScheduleBuilder tripScheduleBuilder,
+                                BookingPricingService bookingPricingService,
+                                TicketRepository ticketRepository,
+                                RefundService refundService,
+                                ApplicationEventPublisher eventPublisher,
+                                TripLifecycleRedisService tripLifecycleRedisService) {
+        this.trainTripRepository = trainTripRepository;
+        this.tripStationRepository = tripStationRepository;
+        this.trainRepository = trainRepository;
+        this.routeRepository = routeRepository;
+        this.bookingRepository = bookingRepository;
+        this.tripScheduleBuilder = tripScheduleBuilder;
+        this.bookingPricingService = bookingPricingService;
+        this.ticketRepository = ticketRepository;
+        this.refundService = refundService;
+        this.eventPublisher = eventPublisher;
+        this.tripLifecycleRedisService = tripLifecycleRedisService;
+    }
 
     public TrainTripServiceImpl(TrainTripRepository trainTripRepository,
                                 TripStationRepository tripStationRepository,
@@ -62,16 +94,8 @@ public class TrainTripServiceImpl implements TrainTripService {
                                 TicketRepository ticketRepository,
                                 RefundService refundService,
                                 ApplicationEventPublisher eventPublisher) {
-        this.trainTripRepository = trainTripRepository;
-        this.tripStationRepository = tripStationRepository;
-        this.trainRepository = trainRepository;
-        this.routeRepository = routeRepository;
-        this.bookingRepository = bookingRepository;
-        this.tripScheduleBuilder = tripScheduleBuilder;
-        this.bookingPricingService = bookingPricingService;
-        this.ticketRepository = ticketRepository;
-        this.refundService = refundService;
-        this.eventPublisher = eventPublisher;
+        this(trainTripRepository, tripStationRepository, trainRepository, routeRepository, bookingRepository,
+             tripScheduleBuilder, bookingPricingService, ticketRepository, refundService, eventPublisher, null);
     }
 
     @Override
@@ -102,6 +126,12 @@ public class TrainTripServiceImpl implements TrainTripService {
         attachTrainAndRoute(trainTrip);
         requireDepartureTime(trainTrip);
 
+        if (trainTrip.getTrain().getStatus() == TrainStatus.MAINTENANCE) {
+            throw new IllegalArgumentException(I18n.t("err.trainUnderMaintenanceCannotCreateTrip"));
+        }
+
+        validateTripSchedule(trainTrip, isNew);
+
         // Giờ đến được tính từ lịch dừng; tạm đặt bằng giờ đi để lưu được chuyến trước.
         if (trainTrip.getArrivalTime() == null) {
             trainTrip.setArrivalTime(trainTrip.getDepartureTime());
@@ -113,6 +143,10 @@ public class TrainTripServiceImpl implements TrainTripService {
         if (isNew) {
             tripScheduleBuilder.addMissingStops(saved);
             saved = trainTripRepository.save(saved);
+        }
+
+        if (tripLifecycleRedisService != null) {
+            tripLifecycleRedisService.scheduleTrip(saved);
         }
 
         return saved;
@@ -140,6 +174,12 @@ public class TrainTripServiceImpl implements TrainTripService {
         attachTrainAndRoute(existing);
         requireDepartureTime(existing);
 
+        if (existing.getTrain().getStatus() == TrainStatus.MAINTENANCE && !existing.getTrain().getTrainId().equals(oldTrainId)) {
+            throw new IllegalArgumentException(I18n.t("err.trainUnderMaintenanceCannotCreateTrip"));
+        }
+
+        validateTripSchedule(existing, false);
+
         boolean routeChanged = !existing.getRoute().getRouteId().equals(oldRouteId);
         boolean trainChanged = !existing.getTrain().getTrainId().equals(oldTrainId);
         boolean departureChanged = !existing.getDepartureTime().equals(oldDeparture);
@@ -163,7 +203,11 @@ public class TrainTripServiceImpl implements TrainTripService {
             tripScheduleBuilder.recalculateSchedule(saved);
         }
 
-        return trainTripRepository.save(saved);
+        TrainTrip finalSaved = trainTripRepository.save(saved);
+        if (tripLifecycleRedisService != null) {
+            tripLifecycleRedisService.scheduleTrip(finalSaved);
+        }
+        return finalSaved;
     }
 
     @Override
@@ -181,6 +225,9 @@ public class TrainTripServiceImpl implements TrainTripService {
 
         Train train = trainRepository.findById(trainId)
                 .orElseThrow(() -> new IllegalArgumentException(I18n.t("err.trainDoesNotExist")));
+        if (train.getStatus() == TrainStatus.MAINTENANCE) {
+            throw new IllegalArgumentException(I18n.t("err.trainUnderMaintenanceCannotCreateTrip"));
+        }
         Route route = routeRepository.findById(routeId)
                 .orElseThrow(() -> new IllegalArgumentException(I18n.t("err.routeDoesNotExist")));
 
@@ -231,6 +278,10 @@ public class TrainTripServiceImpl implements TrainTripService {
         // Sau khi commit: xóa mọi khóa ghế của chuyến trong Redis (khách đang chọn ghế, đơn đang thanh toán).
         eventPublisher.publishEvent(SeatHoldReleaseEvent.trip(id, List.copyOf(pendingBookings.keySet())));
 
+        if (tripLifecycleRedisService != null) {
+            tripLifecycleRedisService.cancelTripKey(id);
+        }
+
         return new TripCancellationResult(refunds.refundedTickets(), refunds.refundedAmount(), heldTickets.size());
     }
 
@@ -251,7 +302,10 @@ public class TrainTripServiceImpl implements TrainTripService {
         }
 
         LocalDateTime start = form.getDepartureDate().atStartOfDay();
-        LocalDateTime end = start.plusDays(1);
+        if (form.getDepartureDate().equals(LocalDate.now())) {
+            start = LocalDateTime.now();
+        }
+        LocalDateTime end = form.getDepartureDate().plusDays(1).atStartOfDay();
         return trainTripRepository.findScheduledTripsForSegment(
                         form.getDepartureStationId(),
                         form.getArrivalStationId(),
@@ -305,6 +359,9 @@ public class TrainTripServiceImpl implements TrainTripService {
         LocalDate date = departureDate != null ? departureDate : LocalDate.now();
 
         LocalDateTime start = date.atStartOfDay();
+        if (date.equals(LocalDate.now())) {
+            start = LocalDateTime.now();
+        }
         LocalDateTime end = start.plusDays(1);
 
         return trainTripRepository
@@ -374,6 +431,187 @@ public class TrainTripServiceImpl implements TrainTripService {
                 departureStop.getStation().getStationId(),
                 arrivalStop.getStation().getStationId(),
                 true
+        );
+    }
+
+    private void validateTripSchedule(TrainTrip trainTrip, boolean isNew) {
+        if (trainTrip.getTrain() == null || trainTrip.getTrain().getTrainId() == null) {
+            return;
+        }
+        if (trainTrip.getDepartureTime() == null) {
+            return;
+        }
+
+        Long trainId = trainTrip.getTrain().getTrainId();
+        Train train = trainTrip.getTrain();
+        LocalDateTime departure = trainTrip.getDepartureTime();
+
+        // Ước tính giờ đến của chuyến này
+        LocalDateTime estimatedArrival = departure;
+        if (trainTrip.getRoute() != null && trainTrip.getRoute().getRouteId() != null) {
+            try {
+                TripSchedulePreview preview = tripScheduleBuilder.preview(train, trainTrip.getRoute(), departure);
+                if (preview != null && preview.totalMinutes() > 0) {
+                    estimatedArrival = departure.plusMinutes(preview.totalMinutes());
+                }
+            } catch (Exception ignored) {
+            }
+        }
+
+        List<TrainTrip> activeTrips = trainTripRepository
+                .findByTrain_TrainIdAndStatusInOrderByDepartureTimeAsc(trainId, List.of(TripStatus.SCHEDULED, TripStatus.ONGOING));
+
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy");
+
+        // Khi tạo chuyến mới: ngày khởi hành phải sau giờ kết thúc của chuyến cuối cùng
+        if (isNew && !activeTrips.isEmpty()) {
+            TrainTrip latestTrip = activeTrips.get(activeTrips.size() - 1);
+            LocalDateTime latestArrival = latestTrip.getArrivalTime() != null ? latestTrip.getArrivalTime() : latestTrip.getDepartureTime();
+            if (departure.isBefore(latestArrival)) {
+                throw new IllegalArgumentException(I18n.t(
+                        "err.tripDepartureMustBeAfterLatest",
+                        departure.format(dtf),
+                        latestArrival.format(dtf),
+                        latestTrip.getTripId()
+                ));
+            }
+        }
+
+        // Kiểm tra không được trùng với khung giờ các chuyến đang schedule hoặc ongoing
+        for (TrainTrip existing : activeTrips) {
+            if (trainTrip.getTripId() != null && trainTrip.getTripId().equals(existing.getTripId())) {
+                continue;
+            }
+
+            LocalDateTime exDep = existing.getDepartureTime();
+            LocalDateTime exArr = existing.getArrivalTime() != null ? existing.getArrivalTime() : exDep;
+
+            boolean overlap = departure.isBefore(exArr) && estimatedArrival.isAfter(exDep);
+            if (overlap) {
+                String routeName = existing.getRoute() != null
+                        ? (existing.getRoute().getRouteCode() != null ? existing.getRoute().getRouteCode() : existing.getRoute().getRouteName())
+                        : "-";
+                throw new IllegalArgumentException(I18n.t(
+                        "err.tripOverlapExistingTrip",
+                        existing.getTripId(),
+                        train.getTrainCode(),
+                        existing.getStatus().toString(),
+                        routeName,
+                        exDep.format(dtf),
+                        exArr.format(dtf)
+                ));
+            }
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public TrainTimelineDto getTrainTimeline(Long trainId) {
+        if (trainId == null) {
+            return new TrainTimelineDto(null, null, null, null, null, null, false, List.of());
+        }
+
+        Train train = trainRepository.findById(trainId)
+                .orElseThrow(() -> new IllegalArgumentException(I18n.t("err.trainDoesNotExist")));
+
+        List<TrainTrip> activeTrips = trainTripRepository
+                .findByTrain_TrainIdAndStatusInOrderByDepartureTimeAsc(trainId, List.of(TripStatus.ONGOING, TripStatus.SCHEDULED));
+
+        List<TripTimelineItemDto> items = activeTrips.stream()
+                .map(this::toTimelineItemDto)
+                .toList();
+
+        if (activeTrips.isEmpty()) {
+            return new TrainTimelineDto(
+                    train.getTrainId(),
+                    train.getTrainCode(),
+                    train.getTrainName(),
+                    null,
+                    null,
+                    null,
+                    false,
+                    items
+            );
+        }
+
+        TrainTrip latestTrip = activeTrips.get(activeTrips.size() - 1);
+        LocalDateTime latestArr = latestTrip.getArrivalTime() != null ? latestTrip.getArrivalTime() : latestTrip.getDepartureTime();
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy");
+        DateTimeFormatter iso = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
+
+        return new TrainTimelineDto(
+                train.getTrainId(),
+                train.getTrainCode(),
+                train.getTrainName(),
+                latestArr.format(iso),
+                latestArr.format(dtf),
+                latestTrip.getTripId(),
+                true,
+                items
+        );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<TripTimelineItemDto> getFleetTimeline(Long trainId) {
+        List<TrainTrip> trips;
+        if (trainId != null) {
+            trips = trainTripRepository.findByTrain_TrainIdAndStatusInOrderByDepartureTimeAsc(
+                    trainId, List.of(TripStatus.ONGOING, TripStatus.SCHEDULED));
+        } else {
+            trips = trainTripRepository.findByStatusInOrderByDepartureTimeAsc(
+                    List.of(TripStatus.ONGOING, TripStatus.SCHEDULED));
+        }
+
+        return trips.stream()
+                .map(this::toTimelineItemDto)
+                .toList();
+    }
+
+    private TripTimelineItemDto toTimelineItemDto(TrainTrip trip) {
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy");
+        DateTimeFormatter iso = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
+
+        LocalDateTime dep = trip.getDepartureTime();
+        LocalDateTime arr = trip.getArrivalTime() != null ? trip.getArrivalTime() : dep;
+
+        String durationFormatted = "-";
+        if (dep != null && arr != null && !arr.isBefore(dep)) {
+            long totalMinutes = Duration.between(dep, arr).toMinutes();
+            long hours = totalMinutes / 60;
+            long mins = totalMinutes % 60;
+            if (hours > 0) {
+                durationFormatted = hours + " giờ" + (mins > 0 ? " " + mins + " phút" : "");
+            } else {
+                durationFormatted = mins + " phút";
+            }
+        }
+
+        String statusLabel = "-";
+        if (trip.getStatus() != null) {
+            statusLabel = switch (trip.getStatus()) {
+                case SCHEDULED -> "Đã lên lịch";
+                case ONGOING -> "Đang chạy";
+                case COMPLETED -> "Hoàn tất";
+                case CANCELLED -> "Đã hủy";
+            };
+        }
+
+        return new TripTimelineItemDto(
+                trip.getTripId(),
+                trip.getTrain() != null ? trip.getTrain().getTrainId() : null,
+                trip.getTrain() != null ? trip.getTrain().getTrainCode() : "-",
+                trip.getTrain() != null ? trip.getTrain().getTrainName() : "-",
+                trip.getRoute() != null ? trip.getRoute().getRouteId() : null,
+                trip.getRoute() != null ? trip.getRoute().getRouteCode() : "-",
+                trip.getRoute() != null ? trip.getRoute().getRouteName() : "-",
+                dep != null ? dep.format(iso) : null,
+                dep != null ? dep.format(dtf) : "-",
+                arr != null ? arr.format(iso) : null,
+                arr != null ? arr.format(dtf) : "-",
+                durationFormatted,
+                trip.getStatus() != null ? trip.getStatus().name() : "-",
+                statusLabel
         );
     }
 }

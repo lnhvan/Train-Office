@@ -1,6 +1,7 @@
 package com.hsf302.trainoffice.service.impl;
 
 
+import com.hsf302.trainoffice.common.enums.TrainStatus;
 import com.hsf302.trainoffice.config.I18n;
 import com.hsf302.trainoffice.entity.Train;
 import com.hsf302.trainoffice.repository.TrainRepository;
@@ -31,6 +32,11 @@ public class TrainServiceImpl implements TrainService {
     @Override
     public List<Train> getAllTrains() {
         return trainRepository.findAll(Sort.by("trainCode").ascending());
+    }
+
+    @Override
+    public List<Train> getAvailableTrains() {
+        return trainRepository.findByStatusOrderByTrainCodeAsc(TrainStatus.AVAILABLE);
     }
 
     @Override

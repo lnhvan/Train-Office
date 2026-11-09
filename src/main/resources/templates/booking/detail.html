@@ -62,11 +62,9 @@
                     </div>
                     <div class="rj-route is-large">
                         <div class="rj-route-stop">
-                            <span class="rj-route-time"
-                                  th:text="${booking.trainTrip != null and booking.trainTrip.departureTime != null ? #temporals.format(booking.trainTrip.departureTime, 'HH:mm') : '--:--'}">06:00</span>
+                            <span class="rj-route-time" th:text="${booking.departureTime != null ? #temporals.format(booking.departureTime, 'HH:mm') : (booking.trainTrip != null and booking.trainTrip.departureTime != null ? #temporals.format(booking.trainTrip.departureTime, 'HH:mm') : '--:--')}">06:00</span>
                             <span class="rj-route-station" th:text="${booking.departureStation != null ? booking.departureStation.stationName : '-'}">Ha Noi</span>
-                            <span class="rj-route-date rj-num"
-                                  th:text="${booking.trainTrip != null and booking.trainTrip.departureTime != null ? #temporals.format(booking.trainTrip.departureTime, 'dd/MM/yyyy') : '-'}">03/07/2026</span>
+                            <span class="rj-route-date rj-num" th:text="${booking.departureTime != null ? #temporals.format(booking.departureTime, 'dd/MM/yyyy') : (booking.trainTrip != null and booking.trainTrip.departureTime != null ? #temporals.format(booking.trainTrip.departureTime, 'dd/MM/yyyy') : '-')}">03/07/2026</span>
                         </div>
                         <div class="rj-route-track" aria-hidden="true">
                             <span class="rj-route-dot is-start"></span>
@@ -74,11 +72,9 @@
                             <span class="rj-route-dot is-end"></span>
                         </div>
                         <div class="rj-route-stop is-end">
-                            <span class="rj-route-time"
-                                  th:text="${booking.trainTrip != null and booking.trainTrip.arrivalTime != null ? #temporals.format(booking.trainTrip.arrivalTime, 'HH:mm') : '--:--'}">18:30</span>
+                            <span class="rj-route-time" th:text="${booking.arrivalTime != null ? #temporals.format(booking.arrivalTime, 'HH:mm') : (booking.trainTrip != null and booking.trainTrip.arrivalTime != null ? #temporals.format(booking.trainTrip.arrivalTime, 'HH:mm') : '--:--')}">18:30</span>
                             <span class="rj-route-station" th:text="${booking.arrivalStation != null ? booking.arrivalStation.stationName : '-'}">Sai Gon</span>
-                            <span class="rj-route-date rj-num"
-                                  th:text="${booking.trainTrip != null and booking.trainTrip.arrivalTime != null ? #temporals.format(booking.trainTrip.arrivalTime, 'dd/MM/yyyy') : '-'}">04/07/2026</span>
+                            <span class="rj-route-date rj-num" th:text="${booking.arrivalTime != null ? #temporals.format(booking.arrivalTime, 'dd/MM/yyyy') : (booking.trainTrip != null and booking.trainTrip.arrivalTime != null ? #temporals.format(booking.trainTrip.arrivalTime, 'dd/MM/yyyy') : '-')}">04/07/2026</span>
                         </div>
                     </div>
                 </section>
@@ -89,11 +85,37 @@
                     </div>
                     <ul class="rj-person-grid"
                         th:if="${passengers != null and !#lists.isEmpty(passengers)}">
-                        <li th:each="passenger : ${passengers}">
-                            <span class="rj-avatar"><i class="bi bi-person"></i></span>
-                            <div>
-                                <strong th:text="${passenger.fullName}">Passenger</strong>
-                                <small>[[#{booking.identity}]]: <span th:text="${passenger.identityNumber != null ? passenger.identityNumber : '-'}">-</span></small>
+                        <li th:each="passenger : ${passengers}" class="rj-person-card">
+                            <div class="rj-person-header">
+                                <span class="rj-avatar"><i class="bi bi-person"></i></span>
+                                <div class="rj-person-name-group">
+                                    <strong class="rj-person-name" th:text="${passenger.fullName}">Passenger</strong>
+                                    <span class="rj-badge is-info"
+                                          th:if="${passenger.passengerType != null and passenger.passengerType != 'DEFAULT'}"
+                                          th:text="${passenger.passengerType}">NGƯỜI LỚN</span>
+                                    <span class="rj-badge is-neutral no-dot"
+                                          th:if="${passenger.passengerType == null or passenger.passengerType == 'DEFAULT'}">
+                                        [[#{passenger.adult}]]
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="rj-person-info-row">
+                                <div class="rj-info-item">
+                                    <span class="rj-info-label">[[#{booking.identity}]]:</span>
+                                    <span class="rj-info-value" th:text="${passenger.identityNumber ?: '-'}">-</span>
+                                </div>
+                                <div class="rj-info-item">
+                                    <span class="rj-info-label">[[#{common.dateOfBirth}]]:</span>
+                                    <span class="rj-info-value" th:text="${passenger.dateOfBirth != null ? #temporals.format(passenger.dateOfBirth, 'dd/MM/yyyy') : '-'}">-</span>
+                                </div>
+                                <div class="rj-info-item">
+                                    <span class="rj-info-label">[[#{common.gender}]]:</span>
+                                    <span class="rj-info-value" th:text="${passenger.gender != null ? (#messages.msgOrNull('enum.' + passenger.gender) ?: passenger.gender) : '-'}">-</span>
+                                </div>
+                                <div class="rj-info-item" th:if="${passenger.relationshipToBooker != null and !#strings.isEmpty(passenger.relationshipToBooker)}">
+                                    <span class="rj-info-label">[[#{passenger.relationship}]]:</span>
+                                    <span class="rj-info-value" th:text="${passenger.relationshipToBooker}">-</span>
+                                </div>
                             </div>
                         </li>
                     </ul>

@@ -2,6 +2,8 @@ package com.hsf302.trainoffice.service.impl;
 
 import com.hsf302.trainoffice.common.BookingHoldPolicy;
 import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.time.Period;
 
 import com.hsf302.trainoffice.config.I18n;
 import com.hsf302.trainoffice.dto.BookingConfirmationView;
@@ -240,12 +242,37 @@ public class BookingFlowServiceImpl implements BookingFlowService {
         if (bookingSession == null) {
             throw new IllegalArgumentException(I18n.t("err.bookingSessionIsRequired"));
         }
-        if (form.getPassengers().size() != bookingSession.getPassengerCount()) {
+        List<PassengerBookingRequest> passengers = form.getPassengers();
+        if (passengers.size() != bookingSession.getPassengerCount()) {
             throw new IllegalArgumentException(I18n.t("err.passengerCountMustMatchSelectedSeatCount"));
         }
-        form.getPassengers().forEach(passenger -> passenger.setPassengerType(
+        passengers.forEach(passenger -> passenger.setPassengerType(
                 discountPolicyService.resolvePassengerType(passenger.getDateOfBirth())
         ));
+
+        boolean hasAdult = false;
+        boolean hasMinor = false;
+        LocalDate today = LocalDate.now();
+
+        for (int i = 0; i < passengers.size(); i++) {
+            PassengerBookingRequest passenger = passengers.get(i);
+            if (passenger.getDateOfBirth() != null) {
+                int age = Period.between(passenger.getDateOfBirth(), today).getYears();
+                if (i == 0 && age < 16) {
+                    throw new IllegalArgumentException(I18n.t("err.passenger1MustBeAtLeast16"));
+                }
+                if (age >= 16) {
+                    hasAdult = true;
+                } else if (age >= 0) {
+                    hasMinor = true;
+                }
+            }
+        }
+
+        if (hasMinor && !hasAdult) {
+            throw new IllegalArgumentException(I18n.t("err.minorCannotTravelAlone"));
+        }
+
         bookingSession.setPassengerInfo(form);
     }
 

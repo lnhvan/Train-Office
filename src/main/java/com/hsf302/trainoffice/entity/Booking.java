@@ -77,6 +77,13 @@ public class Booking {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime bookingDate;
 
+    @Column(name = "departure_time")
+    private LocalDateTime departureTime;
+
+    @Column(name = "arrival_time")
+    private LocalDateTime arrivalTime;
+
+
     @Builder.Default
     @OneToMany(mappedBy = "booking", fetch = FetchType.LAZY)
     @ToString.Exclude
@@ -150,5 +157,32 @@ public class Booking {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.bookingDate = createdAt;
+    }
+    public LocalDateTime getDepartureTime() {
+        if (departureTime != null) {
+            return departureTime;
+        }
+        if (trainTrip != null && departureStation != null && trainTrip.getTripStations() != null) {
+            for (TripStation ts : trainTrip.getTripStations()) {
+                if (ts.getStation() != null && ts.getStation().getStationId().equals(departureStation.getStationId())) {
+                    return ts.getDepartureTime() != null ? ts.getDepartureTime() : ts.getArrivalTime();
+                }
+            }
+        }
+        return trainTrip != null ? trainTrip.getDepartureTime() : null;
+    }
+
+    public LocalDateTime getArrivalTime() {
+        if (arrivalTime != null) {
+            return arrivalTime;
+        }
+        if (trainTrip != null && arrivalStation != null && trainTrip.getTripStations() != null) {
+            for (TripStation ts : trainTrip.getTripStations()) {
+                if (ts.getStation() != null && ts.getStation().getStationId().equals(arrivalStation.getStationId())) {
+                    return ts.getArrivalTime() != null ? ts.getArrivalTime() : ts.getDepartureTime();
+                }
+            }
+        }
+        return trainTrip != null ? trainTrip.getArrivalTime() : null;
     }
 }

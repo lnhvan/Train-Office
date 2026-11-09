@@ -56,8 +56,7 @@
                         <span th:text="${booking.trainTrip != null and booking.trainTrip.train != null ? booking.trainTrip.train.trainName : #messages.msg('booking.trainTrip')}">SE1</span>
                         <i class="bi bi-clock ms-2"></i>
                         <span class="rj-num"
-                              th:if="${booking.trainTrip != null and booking.trainTrip.departureTime != null}"
-                              th:text="${#temporals.format(booking.trainTrip.departureTime, 'dd/MM/yyyy HH:mm')}">03/07/2026 06:00</span>
+                              th:if="${booking.departureTime != null}" th:text="${#temporals.format(booking.departureTime, 'dd/MM/yyyy HH:mm')}">03/07/2026 06:00</span>
                         <span th:if="${booking.trainTrip == null or booking.trainTrip.departureTime == null}">[[#{booking.departureTimeNotAvailable}]]</span>
                     </span>
                 </div>

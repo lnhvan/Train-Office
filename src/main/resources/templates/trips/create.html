@@ -44,6 +44,8 @@
                         <input class="form-control" type="datetime-local" id="tripDeparture" th:field="*{departureTime}"
                                th:min="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd''T''HH:mm')}"
                                required>
+                        <div id="departureTimelineError" class="text-danger small mt-1 fw-semibold" style="display: none;"></div>
+                        <div id="departureTimelineHint" class="text-muted small mt-1" style="display: none;"></div>
                     </div>
                     <div class="col-md-6 mb-3">
                         <label class="form-label">[[#{common.arrivalTime}]]</label>
@@ -57,6 +59,37 @@
 
                 </div>
 
+                <!-- Timeline lịch trình các chuyến của tàu đã chọn -->
+                <div class="card mb-3" id="trainTimelineCard" style="display: none;"
+                     th:data-timeline-url="@{/admin/trips/train-timeline}">
+                    <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
+                        <div>
+                            <span class="admin-card-title"><i class="bi bi-clock-history text-primary"></i> [[#{trip.timeline}]]: <strong id="timelineTrainName"></strong></span>
+                            <small class="d-block text-muted">Lịch trình các chuyến đang chạy hoặc đã lên lịch của tàu này</small>
+                        </div>
+                        <span id="timelineTripBadge" class="rj-badge is-info no-dot"></span>
+                    </div>
+                    <div class="card-body p-0">
+                        <!-- Alert thông báo rule ngày khởi hành -->
+                        <div id="timelineNoticeContainer" class="p-3 border-bottom"></div>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover mb-0" id="trainTimelineTable">
+                                <thead>
+                                <tr>
+                                    <th>[[#{common.trip}]]</th>
+                                    <th>[[#{common.route}]]</th>
+                                    <th>[[#{common.departureTime}]]</th>
+                                    <th>[[#{common.arrivalTime}]]</th>
+                                    <th>[[#{train.duration}]]</th>
+                                    <th>[[#{common.status}]]</th>
+                                </tr>
+                                </thead>
+                                <tbody id="trainTimelineTbody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="trip-schedule-preview" id="schedulePreview"
                      th:data-url="@{/admin/trips/schedule-preview}">
                     <div class="trip-schedule-preview-head">
@@ -68,7 +101,7 @@
             </div>
             <div class="card-footer d-flex justify-content-end gap-2">
                 <a class="btn btn-outline-secondary" th:href="@{/admin/trips}">[[#{common.cancel}]]</a>
-                <button type="submit" class="btn btn-primary">
+                <button type="submit" id="btnSaveTrip" class="btn btn-primary">
                     <i class="bi bi-check2-circle"></i> [[#{trip.saveTrip}]]
                 </button>
             </div>
@@ -199,6 +232,150 @@
             function schedule() {
                 clearTimeout(timer);
                 timer = setTimeout(refresh, 250);
+            }
+
+            const timelineCard = document.getElementById('trainTimelineCard');
+            const timelineTrainName = document.getElementById('timelineTrainName');
+            const timelineTripBadge = document.getElementById('timelineTripBadge');
+            const timelineNotice = document.getElementById('timelineNoticeContainer');
+            const timelineTbody = document.getElementById('trainTimelineTbody');
+            const depError = document.getElementById('departureTimelineError');
+            const depHint = document.getElementById('departureTimelineHint');
+            const btnSave = document.getElementById('btnSaveTrip');
+
+            let currentTimelineData = null;
+
+            function validateDepartureTime() {
+                if (!departure.value) {
+                    depError.style.display = 'none';
+                    departure.classList.remove('is-invalid');
+                    btnSave.disabled = false;
+                    return true;
+                }
+
+                if (!currentTimelineData) {
+                    depError.style.display = 'none';
+                    departure.classList.remove('is-invalid');
+                    btnSave.disabled = false;
+                    return true;
+                }
+
+                const depVal = departure.value;
+
+                // 1. Kiểm tra ngày khởi hành phải sau giờ kết thúc của chuyến cuối cùng
+                if (currentTimelineData.hasActiveTrips && currentTimelineData.latestArrivalTimeIso) {
+                    if (depVal < currentTimelineData.latestArrivalTimeIso) {
+                        depError.textContent = 'Thời gian khởi hành không hợp lệ: Phải sau giờ kết thúc của chuyến cuối cùng (' + currentTimelineData.latestArrivalTimeFormatted + ').';
+                        depError.style.display = 'block';
+                        departure.classList.add('is-invalid');
+                        btnSave.disabled = true;
+                        return false;
+                    }
+                }
+
+                // 2. Kiểm tra không trùng khung giờ bất kỳ chuyến nào đang chạy hoặc đã lên lịch
+                if (currentTimelineData.trips && currentTimelineData.trips.length > 0) {
+                    for (let i = 0; i < currentTimelineData.trips.length; i++) {
+                        const tr = currentTimelineData.trips[i];
+                        if (tr.departureTimeIso && tr.arrivalTimeIso) {
+                            if (depVal >= tr.departureTimeIso && depVal < tr.arrivalTimeIso) {
+                                depError.textContent = 'Giờ khởi hành trùng với chuyến #' + tr.tripId + ' (' + tr.routeCode + ', ' + tr.departureTimeFormatted + ' đến ' + tr.arrivalTimeFormatted + '). Tàu không thể chạy cùng lúc 2 chuyến.';
+                                depError.style.display = 'block';
+                                departure.classList.add('is-invalid');
+                                btnSave.disabled = true;
+                                return false;
+                            }
+                        }
+                    }
+                }
+
+                depError.style.display = 'none';
+                departure.classList.remove('is-invalid');
+                btnSave.disabled = false;
+                return true;
+            }
+
+            function fetchTrainTimeline() {
+                const trainId = train.value;
+                if (!trainId) {
+                    timelineCard.style.display = 'none';
+                    currentTimelineData = null;
+                    depError.style.display = 'none';
+                    depHint.style.display = 'none';
+                    departure.classList.remove('is-invalid');
+                    btnSave.disabled = false;
+                    return;
+                }
+
+                const timelineUrl = new URL(timelineCard.dataset.timelineUrl, window.location.origin);
+                timelineUrl.searchParams.set('trainId', trainId);
+
+                fetch(timelineUrl, { headers: { 'Accept': 'application/json' }, credentials: 'same-origin' })
+                    .then(function (res) { return res.json(); })
+                    .then(function (data) {
+                        currentTimelineData = data;
+                        timelineCard.style.display = 'block';
+                        timelineTrainName.textContent = data.trainCode + ' - ' + data.trainName;
+
+                        if (data.hasActiveTrips && data.trips && data.trips.length > 0) {
+                            timelineTripBadge.textContent = data.trips.length + ' chuyến đang hoạt động';
+                            timelineTripBadge.className = 'rj-badge is-warning no-dot';
+
+                            timelineNotice.innerHTML = '<div class="alert alert-warning d-flex align-items-start gap-2 mb-0">' +
+                                '<i class="bi bi-exclamation-triangle-fill text-warning fs-5 flex-shrink-0"></i>' +
+                                '<div><strong>Quy định lập lịch chuyến:</strong> Chuyến cuối cùng của tàu này (<strong>Chuyến #' + data.latestTripId + '</strong>) kết thúc lúc <strong>' + data.latestArrivalTimeFormatted + '</strong>.<br>' +
+                                'Thời gian khởi hành của chuyến mới <strong>bắt buộc phải sau thời điểm này</strong>.</div></div>';
+
+                            // Cập nhật min datetime
+                            departure.min = data.latestArrivalTimeIso;
+                            depHint.textContent = 'Giờ khởi hành sớm nhất cho phép: ' + data.latestArrivalTimeFormatted;
+                            depHint.style.display = 'block';
+
+                            // Render table rows
+                            timelineTbody.innerHTML = '';
+                            data.trips.forEach(function (tr) {
+                                const row = document.createElement('tr');
+                                const statusClass = tr.status === 'ONGOING' ? 'trip-status-ongoing' : 'trip-status-scheduled';
+                                const statusText = tr.status === 'ONGOING' ? 'Đang chạy' : 'Đã lên lịch';
+                                row.innerHTML = '<td><strong class="text-muted">#' + tr.tripId + '</strong></td>' +
+                                    '<td><strong>' + tr.routeName + '</strong> <span class="rj-badge is-neutral no-dot">' + tr.routeCode + '</span></td>' +
+                                    '<td><span class="fw-semibold rj-num">' + tr.departureTimeFormatted + '</span></td>' +
+                                    '<td><span class="fw-semibold rj-num">' + tr.arrivalTimeFormatted + '</span></td>' +
+                                    '<td><span class="badge bg-light text-dark border rj-num">' + tr.durationFormatted + '</span></td>' +
+                                    '<td><span class="trip-status-pill ' + statusClass + '">' + statusText + '</span></td>';
+                                timelineTbody.appendChild(row);
+                            });
+                        } else {
+                            timelineTripBadge.textContent = 'Sẵn sàng';
+                            timelineTripBadge.className = 'rj-badge is-success no-dot';
+
+                            timelineNotice.innerHTML = '<div class="alert alert-success d-flex align-items-center gap-2 mb-0">' +
+                                '<i class="bi bi-check-circle-fill text-success fs-5"></i>' +
+                                '<div>Tàu hiện đang sẵn sàng (chưa có chuyến nào đang chạy hoặc đã lên lịch). Bạn có thể chọn bất kỳ giờ khởi hành nào từ thời điểm hiện tại.</div></div>';
+
+                            // Khởi hành từ hiện tại
+                            const now = new Date();
+                            const nowIso = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+                            departure.min = nowIso;
+                            depHint.style.display = 'none';
+
+                            timelineTbody.innerHTML = '<tr><td colspan="6"><div class="admin-empty-state py-2"><span>Tàu chưa có chuyến nào.</span></div></td></tr>';
+                        }
+
+                        validateDepartureTime();
+                    })
+                    .catch(function (err) {
+                        console.error('Failed to load train timeline', err);
+                    });
+            }
+
+            train.addEventListener('change', fetchTrainTimeline);
+            departure.addEventListener('input', validateDepartureTime);
+            departure.addEventListener('change', validateDepartureTime);
+
+            // Kiểm tra ngay khi tải trang nếu train đã được chọn trước
+            if (train.value) {
+                fetchTrainTimeline();
             }
 
             [train, route].forEach(function (el) { el.addEventListener('change', schedule); });

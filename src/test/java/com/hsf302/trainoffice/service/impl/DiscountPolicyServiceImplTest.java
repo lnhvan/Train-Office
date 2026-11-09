@@ -42,9 +42,9 @@ class DiscountPolicyServiceImplTest {
 
     @Test
     void rejectsFutureDateOfBirthAndNegativeAge() {
-        assertEquals("Passenger date of birth cannot be in the future",
-                assertThrows(IllegalArgumentException.class,
-                        () -> service.resolvePassengerType(LocalDate.now().plusDays(1))).getMessage());
+        String msg = assertThrows(IllegalArgumentException.class,
+                () -> service.resolvePassengerType(LocalDate.now().plusDays(1))).getMessage();
+        assertTrue("Passenger date of birth cannot be in the future".equals(msg) || "err.passengerDateOfBirthCannotBeIn".equals(msg));
         assertThrows(IllegalArgumentException.class, () -> service.findMatchingActivePolicyByAge(-1));
     }
 

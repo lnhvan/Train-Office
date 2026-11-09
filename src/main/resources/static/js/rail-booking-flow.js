@@ -29,6 +29,9 @@ function setupPassengerValidation() {
 
         const today = new Date();
         const parts = dobString.split('-').map(Number);
+        if (parts.length !== 3 || isNaN(parts[0]) || isNaN(parts[1]) || isNaN(parts[2])) {
+            return -1;
+        }
         const birthDate = new Date(parts[0], parts[1] - 1, parts[2]);
 
         let age = today.getFullYear() - birthDate.getFullYear();
@@ -41,7 +44,71 @@ function setupPassengerValidation() {
         return age;
     }
 
+    function updateGlobalPassengerAlert() {
+        if (!form) return;
+
+        let existingAlert = form.querySelector('.minor-rule-alert');
+
+        // 1. Kiểm tra Hành khách 1: luôn phải từ 16 tuổi trở lên
+        const card1 = passengerCards[0];
+        const dobInput1 = card1 ? card1.querySelector('.dob-input') : null;
+        const p1Dob = dobInput1 && dobInput1.value ? dobInput1.value.trim() : '';
+        const p1Age = p1Dob ? getAge(p1Dob) : -1;
+
+        if (p1Dob && p1Age >= 0 && p1Age < 16) {
+            if (!existingAlert) {
+                existingAlert = document.createElement('div');
+                existingAlert.className = 'alert alert-danger minor-rule-alert mb-3';
+                const passengerList = form.querySelector('.rj-passenger-list');
+                if (passengerList) {
+                    form.insertBefore(existingAlert, passengerList);
+                } else {
+                    form.prepend(existingAlert);
+                }
+            }
+            existingAlert.innerHTML = '<i class="bi bi-exclamation-triangle-fill me-2"></i>' +
+                rjT('js.passenger1MustBeAtLeast16Alert', 'Hành khách dưới 16 tuổi cần có ít nhất 1 người giám hộ đi cùng, hãy nhập thông tin người giám hộ trước');
+            return;
+        }
+
+        // 2. Kiểm tra nếu có người dưới 16 tuổi mà không có bất kỳ người lớn nào
+        let hasAdult = false;
+        let hasMinor = false;
+        passengerCards.forEach(function (card) {
+            const dob = card.querySelector('.dob-input');
+            if (dob && dob.value) {
+                const a = getAge(dob.value.trim());
+                if (a >= 16) hasAdult = true;
+                else if (a >= 0 && a < 16) hasMinor = true;
+            }
+        });
+
+        if (hasMinor && !hasAdult) {
+            if (!existingAlert) {
+                existingAlert = document.createElement('div');
+                existingAlert.className = 'alert alert-danger minor-rule-alert mb-3';
+                const passengerList = form.querySelector('.rj-passenger-list');
+                if (passengerList) {
+                    form.insertBefore(existingAlert, passengerList);
+                } else {
+                    form.prepend(existingAlert);
+                }
+            }
+            existingAlert.innerHTML = '<i class="bi bi-exclamation-triangle-fill me-2"></i>' +
+                rjT('js.minorCannotTravelAlone', 'Hành khách dưới 16 tuổi cần có ít nhất 1 người giám hộ đi cùng, hãy nhập thông tin người giám hộ trước');
+            return;
+        }
+
+        // Nếu hợp lệ, gỡ bỏ alert banner
+        if (existingAlert) {
+            existingAlert.remove();
+        }
+    }
+
     function validateCard(card) {
+        const cardIndex = Number(card.dataset.index !== undefined ? card.dataset.index : Array.from(passengerCards).indexOf(card));
+        const isPassenger1 = cardIndex === 0;
+
         const dobInput = card.querySelector('.dob-input');
         const typeDisplay = card.querySelector('.passenger-type-display');
         const typeHidden = card.querySelector('.passenger-type-hidden');
@@ -57,11 +124,37 @@ function setupPassengerValidation() {
             return true;
         }
 
-        const age = getAge(dobInput.value);
-        const valid = !dobInput.value || age >= 0;
+        const dobValue = dobInput.value ? dobInput.value.trim() : '';
+        const age = getAge(dobValue);
 
+        let valid = true;
+        let specificError = '';
+
+        if (dobValue) {
+            if (age < 0) {
+                valid = false;
+                specificError = rjT('js.dobFuture', 'Ngày sinh không thể ở tương lai.');
+            } else if (isPassenger1 && age < 16) {
+                valid = false;
+                specificError = rjT('js.passenger1MustBeAtLeast16', 'Hành khách 1 luôn phải là người từ 16 tuổi trở lên.');
+            }
+        }
+
+        // Cập nhật thông báo lỗi ngay dưới ô Ngày sinh
+        if (errorMsg) {
+            if (!valid && specificError) {
+                errorMsg.textContent = specificError;
+                errorMsg.classList.add('show');
+            } else {
+                errorMsg.classList.remove('show');
+            }
+        }
+
+        dobInput.classList.toggle('is-invalid', !valid);
+
+        // Cập nhật loại hành khách theo ngày sinh
         let matchingOption = null;
-        if (valid && dobInput.value) {
+        if (dobValue && age >= 0) {
             matchingOption = Array.from(typeDisplay.options).find(function (option) {
                 if (!option.dataset.minAge && !option.dataset.maxAge) {
                     return false;
@@ -72,44 +165,57 @@ function setupPassengerValidation() {
             }) || null;
         }
 
-        if (!dobInput.value) {
-            typeDisplay.options[0].textContent = rjT('js.enterDob', 'Enter date of birth');
+        if (!dobValue) {
+            typeDisplay.options[0].textContent = rjT('js.enterDob', 'Theo ngày sinh');
             typeDisplay.value = 'DEFAULT';
             typeHidden.value = 'DEFAULT';
         } else if (matchingOption) {
             typeDisplay.value = matchingOption.value;
             typeHidden.value = matchingOption.value;
         } else {
-            typeDisplay.options[0].textContent = rjT('js.defaultZero', 'Default - 0%');
+            typeDisplay.options[0].textContent = rjT('js.defaultZero', 'Giá thường');
             typeDisplay.value = 'DEFAULT';
             typeHidden.value = 'DEFAULT';
         }
 
-        if (errorMsg) {
-            errorMsg.classList.toggle('show', !valid);
-        }
-
-        dobInput.classList.toggle('is-invalid', !valid);
-
-        if (identityWrapper && identityInput) {
-            if (age >= 16) {
+        // Hành khách 1: luôn là người lớn >= 16 tuổi -> luôn hiện CCCD, không có quan hệ người đặt
+        if (isPassenger1) {
+            if (identityWrapper && identityInput) {
                 identityWrapper.style.display = 'block';
                 identityInput.required = true;
-            } else {
-                identityWrapper.style.display = 'none';
-                identityInput.required = false;
+            }
+            if (relationshipWrapper && relationshipInput) {
+                relationshipWrapper.style.display = 'none';
+                relationshipInput.required = false;
+                relationshipInput.value = '';
+            }
+        } else {
+            // Từ Hành khách 2 trở đi:
+            // Nếu < 16 tuổi: hiện quan hệ với người đặt (bắt buộc), ẩn CCCD
+            // Nếu >= 16 tuổi: hiện CCCD, ẩn quan hệ
+            if (identityWrapper && identityInput) {
+                if (age >= 16) {
+                    identityWrapper.style.display = 'block';
+                    identityInput.required = true;
+                } else {
+                    identityWrapper.style.display = 'none';
+                    identityInput.required = false;
+                }
+            }
+
+            if (relationshipWrapper && relationshipInput) {
+                if (dobValue && age >= 0 && age < 16) {
+                    relationshipWrapper.style.display = 'block';
+                    relationshipInput.required = true;
+                } else {
+                    relationshipWrapper.style.display = 'none';
+                    relationshipInput.required = false;
+                    relationshipInput.value = '';
+                }
             }
         }
 
-        if (relationshipWrapper && relationshipInput) {
-            if (age >= 0 && age < 16) {
-                relationshipWrapper.style.display = 'block';
-                relationshipInput.required = true;
-            } else {
-                relationshipWrapper.style.display = 'none';
-                relationshipInput.required = false;
-            }
-        }
+        updateGlobalPassengerAlert();
 
         return valid;
     }
@@ -118,8 +224,10 @@ function setupPassengerValidation() {
         const dobInput = card.querySelector('.dob-input');
 
         if (dobInput) {
-            dobInput.addEventListener('change', function () {
-                validateCard(card);
+            ['input', 'change', 'blur'].forEach(function (evtName) {
+                dobInput.addEventListener(evtName, function () {
+                    validateCard(card);
+                });
             });
         }
 
@@ -128,14 +236,58 @@ function setupPassengerValidation() {
 
     if (form) {
         form.addEventListener('submit', function (event) {
-            let valid = true;
+            let allCardsValid = true;
+            let firstInvalidInput = null;
+
             passengerCards.forEach(function (card) {
-                if (!validateCard(card)) {
-                    valid = false;
+                const cardValid = validateCard(card);
+                if (!cardValid) {
+                    allCardsValid = false;
+                    if (!firstInvalidInput) {
+                        firstInvalidInput = card.querySelector('.dob-input.is-invalid, :invalid');
+                    }
                 }
             });
-            if (!valid) {
+
+            // Kiểm tra Hành khách 1
+            const card1 = passengerCards[0];
+            const dobInput1 = card1 ? card1.querySelector('.dob-input') : null;
+            const p1Dob = dobInput1 && dobInput1.value ? dobInput1.value.trim() : '';
+            const p1Age = p1Dob ? getAge(p1Dob) : -1;
+            if (p1Dob && p1Age >= 0 && p1Age < 16) {
                 event.preventDefault();
+                updateGlobalPassengerAlert();
+                if (dobInput1) {
+                    dobInput1.focus();
+                    dobInput1.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                return;
+            }
+
+            let hasAdult = false;
+            let hasMinor = false;
+            passengerCards.forEach(function (card) {
+                const dob = card.querySelector('.dob-input');
+                if (dob && dob.value) {
+                    const a = getAge(dob.value.trim());
+                    if (a >= 16) hasAdult = true;
+                    else if (a >= 0 && a < 16) hasMinor = true;
+                }
+            });
+
+            if (hasMinor && !hasAdult) {
+                event.preventDefault();
+                updateGlobalPassengerAlert();
+                return;
+            }
+
+            if (!allCardsValid) {
+                event.preventDefault();
+                updateGlobalPassengerAlert();
+                if (firstInvalidInput) {
+                    firstInvalidInput.focus();
+                    firstInvalidInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
             }
         });
     }
@@ -202,11 +354,15 @@ function setupSeatSelection() {
         return Number.isNaN(parsed) ? 0 : parsed;
     }
 
-    function formatBerthLevel(value) {
+    function formatBerthLevel(value, seatLabel) {
         const normalized = String(value || '').trim().toUpperCase();
 
-        if (normalized === 'LOWER') {
+        if (normalized === 'LOWER' || (seatLabel && (seatLabel.includes('1A') || seatLabel.includes('1B') || seatLabel.includes('L1')))) {
             return rjT('js.berthLower', 'Level 1 / Lower berth');
+        }
+
+        if (seatLabel && (seatLabel.includes('2A') || seatLabel.includes('2B') || seatLabel.includes('L2'))) {
+            return rjT('js.berthLevel2Upper', 'Level 2 / Upper berth');
         }
 
         if (normalized === 'MIDDLE') {
@@ -751,7 +907,7 @@ function setupSeatSelection() {
 
             const compartmentNumber = hasCompartment ? checkbox.dataset.compartmentNumber : '';
             const berthLevel = checkbox.dataset.berthLevel || '';
-            const berthLabel = checkbox.dataset.berthLabel || formatBerthLevel(berthLevel);
+            const berthLabel = checkbox.dataset.berthLabel || formatBerthLevel(berthLevel, checkbox.dataset.seatLabel);
             const item = document.createElement('div');
             item.className = 'rail-selected-item';
 

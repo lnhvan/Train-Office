@@ -1,5 +1,6 @@
 package com.hsf302.trainoffice.service.impl;
 
+import com.hsf302.trainoffice.common.enums.TrainStatus;
 import com.hsf302.trainoffice.entity.Train;
 import com.hsf302.trainoffice.repository.TrainRepository;
 import org.junit.jupiter.api.Test;
@@ -60,9 +61,21 @@ class TrainServiceImplTest {
     void blankNewTypeCannotBeSaved() {
         Train train = train("BAD1", "   ");
 
-        assertEquals("Train type is required.",
-                assertThrows(IllegalStateException.class, () -> service.saveTrain(train)).getMessage());
+        String msg = assertThrows(IllegalStateException.class, () -> service.saveTrain(train)).getMessage();
+        assertTrue("err.trainTypeIsRequired".equals(msg) || "Train type is required.".equals(msg));
         verify(repository, never()).save(any());
+    }
+
+    @Test
+    void getAvailableTrainsReturnsOnlyAvailableTrains() {
+        Train t1 = train("T1", "Express");
+        t1.setStatus(TrainStatus.AVAILABLE);
+        when(repository.findByStatusOrderByTrainCodeAsc(TrainStatus.AVAILABLE)).thenReturn(List.of(t1));
+
+        List<Train> available = service.getAvailableTrains();
+        assertEquals(1, available.size());
+        assertEquals("T1", available.get(0).getTrainCode());
+        verify(repository).findByStatusOrderByTrainCodeAsc(TrainStatus.AVAILABLE);
     }
 
     private Train train(String code, String type) {

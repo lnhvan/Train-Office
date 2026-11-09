@@ -8,6 +8,7 @@
         'js.enterDob': /*[[#{js.enterDob}]]*/ 'Enter date of birth',
         'js.defaultZero': /*[[#{js.defaultZero}]]*/ 'Default - 0%',
         'js.berthLower': /*[[#{js.berthLower}]]*/ 'Level 1 / Lower berth',
+        'js.berthLevel2Upper': /*[[#{js.berthLevel2Upper}]]*/ 'Level 2 / Upper berth',
         'js.berthMiddle': /*[[#{js.berthMiddle}]]*/ 'Level 2 / Middle berth',
         'js.berthUpper': /*[[#{js.berthUpper}]]*/ 'Level 3 / Upper berth',
         'js.included': /*[[#{js.included}]]*/ 'Included',
@@ -45,7 +46,11 @@
         'js.noTripsSoon': /*[[#{js.noTripsSoon}]]*/ 'No trains from {0} to {1} in the next 60 days.',
         'js.noDeparturesOnDate': /*[[#{js.noDeparturesOnDate}]]*/ 'No trains depart on {0}.',
         'js.noReturnOnDate': /*[[#{js.noReturnOnDate}]]*/ 'No return trains from {0} to {1} on {2}.',
-        'js.availabilityError': /*[[#{js.availabilityError}]]*/ 'Could not load train availability. You can still search.'
+        'js.availabilityError': /*[[#{js.availabilityError}]]*/ 'Could not load train availability. You can still search.',
+        'js.minorCannotTravelAlone': /*[[#{err.minorCannotTravelAlone}]]*/ 'Passengers under 16 years old must be accompanied by at least 1 guardian. Please enter the guardian\'s information first.',
+        'js.dobFuture': /*[[#{booking.dateOfBirthCannotBeIn}]]*/ 'Date of birth cannot be in the future.',
+        'js.passenger1MustBeAtLeast16': /*[[#{err.passenger1MustBeAtLeast16}]]*/ 'Passenger 1 must be at least 16 years old.',
+        'js.passenger1MustBeAtLeast16Alert': /*[[#{err.passenger1MustBeAtLeast16Alert}]]*/ 'Passengers under 16 years old must be accompanied by at least 1 guardian. Please enter the guardian\'s information first.'
     };
     window.railT = function (key, fallback) {
         var dict = window.RAILJET_I18N || {};

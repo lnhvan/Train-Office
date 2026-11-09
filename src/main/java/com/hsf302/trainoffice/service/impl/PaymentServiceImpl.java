@@ -15,7 +15,10 @@ import com.hsf302.trainoffice.repository.BookingRepository;
 import com.hsf302.trainoffice.repository.PaymentRepository;
 import com.hsf302.trainoffice.repository.TicketRepository;
 import com.hsf302.trainoffice.service.AdminWalletService;
+import com.hsf302.trainoffice.service.MailService;
 import com.hsf302.trainoffice.service.PaymentService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.hsf302.trainoffice.service.RefundService;
 import com.hsf302.trainoffice.service.SeatHoldService;
 import com.hsf302.trainoffice.event.SeatHoldReleaseEvent;
@@ -37,6 +40,10 @@ import java.util.UUID;
 
 @Service
 public class PaymentServiceImpl implements PaymentService {
+
+    private static final Logger log = LoggerFactory.getLogger(PaymentServiceImpl.class);
+
+    private final MailService mailService;
 
     private final PaymentRepository paymentRepository;
     private final BookingRepository bookingRepository;
@@ -64,7 +71,8 @@ public class PaymentServiceImpl implements PaymentService {
                               AdminWalletService adminWalletService,
                               RefundService refundService,
                               SeatHoldService seatHoldService,
-                              ApplicationEventPublisher eventPublisher) {
+                              ApplicationEventPublisher eventPublisher,
+                              MailService mailService) {
         this.paymentRepository = paymentRepository;
         this.bookingRepository = bookingRepository;
         this.ticketRepository = ticketRepository;
@@ -72,6 +80,7 @@ public class PaymentServiceImpl implements PaymentService {
         this.refundService = refundService;
         this.seatHoldService = seatHoldService;
         this.eventPublisher = eventPublisher;
+        this.mailService = mailService;
     }
 
     // =========================================================
@@ -343,6 +352,9 @@ public class PaymentServiceImpl implements PaymentService {
 
                 // Vé đã CONFIRMED trong DB: bỏ khóa tạm trong Redis sau khi commit.
                 eventPublisher.publishEvent(SeatHoldReleaseEvent.booking(booking.getBookingId()));
+
+                // Gửi email vé điện tử & xác nhận thanh toán thành công tới người đặt vé
+                sendPaymentSuccessEmailSafely(booking, payment);
             } else {
                 // Đơn đã bị hủy trong lúc khách thanh toán (vd. admin hủy chuyến): không xuất vé,
                 // tạo sẵn yêu cầu hoàn tiền đã duyệt để admin chuyển trả khách.
@@ -355,6 +367,16 @@ public class PaymentServiceImpl implements PaymentService {
         }
 
         return paymentRepository.save(payment);
+    }
+
+    private void sendPaymentSuccessEmailSafely(Booking booking, Payment payment) {
+        try {
+            List<Ticket> tickets = ticketRepository.findByBooking_BookingIdOrderByTicketIdAsc(booking.getBookingId());
+            mailService.sendPaymentSuccessEmail(booking, payment, tickets);
+        } catch (Exception ex) {
+            log.error("Lỗi khi gửi email xác nhận thanh toán cho booking #{}: {}",
+                    booking.getBookingNumber(), ex.getMessage(), ex);
+        }
     }
 
     private void confirmTicketsOfBooking(Long bookingId) {

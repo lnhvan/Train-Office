@@ -256,6 +256,18 @@ body.rj-admin { background: var(--rj-bg); min-height: 100vh; }
 .trip-status-scheduled { background: var(--rj-accent-soft); color: var(--rj-accent); }
 .trip-status-cancelled { background: var(--rj-danger-soft); color: var(--rj-danger); }
 .trip-status-completed { background: var(--rj-success-soft); color: var(--rj-success); }
+.trip-status-ongoing { background: #fef3c7; color: #b45309; }
+.trip-status-ongoing::before {
+    background: #f59e0b;
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7);
+    animation: pulse-orange 1.8s infinite;
+}
+@keyframes pulse-orange {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
+    70% { transform: scale(1); box-shadow: 0 0 0 5px rgba(245, 158, 11, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+}
+
 
 /* ---------- trips ---------- */
 .trip-summary-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; margin-bottom: 20px; background: var(--rj-surface); border: 1px solid var(--rj-line); border-radius: var(--rj-radius); overflow: hidden; }

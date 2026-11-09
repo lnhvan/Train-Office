@@ -1,6 +1,7 @@
 package com.hsf302.trainoffice.controller;
 
 import com.hsf302.trainoffice.dto.TripCancellationResult;
+import com.hsf302.trainoffice.dto.TrainTimelineDto;
 import java.math.RoundingMode;
 
 import com.hsf302.trainoffice.config.I18n;
@@ -60,7 +61,7 @@ public class TrainTripController {
         TrainTrip newTrip = new TrainTrip();
         newTrip.setStatus(TripStatus.SCHEDULED);
         model.addAttribute("trip", newTrip);
-        addFormOptions(model);
+        addCreateFormOptions(model);
         return "trips/create";
     }
 
@@ -87,6 +88,15 @@ public class TrainTripController {
         }
     }
 
+    /**
+     * Lấy timeline các chuyến của tàu (SCHEDULED và ONGOING) để hiển thị trên form tạo chuyến.
+     */
+    @GetMapping("/admin/trips/train-timeline")
+    @ResponseBody
+    public ResponseEntity<TrainTimelineDto> trainTimeline(@RequestParam("trainId") Long trainId) {
+        return ResponseEntity.ok(trainTripService.getTrainTimeline(trainId));
+    }
+
     @PostMapping("/admin/trips/save")
     public String save(@ModelAttribute("trip") TrainTrip trip, RedirectAttributes redirectAttributes, Model model) {
         try {
@@ -95,7 +105,7 @@ public class TrainTripController {
             return "redirect:/admin/trips";
         } catch (IllegalArgumentException ex) {
             model.addAttribute("error", ex.getMessage());
-            addFormOptions(model);
+            addCreateFormOptions(model);
             return "trips/create";
         }
     }
@@ -176,6 +186,12 @@ public class TrainTripController {
 
     private void addFormOptions(Model model) {
         model.addAttribute("trains", trainService.getAllTrains());
+        model.addAttribute("routes", routeService.getAllRoutes());
+        model.addAttribute("statuses", TripStatus.values());
+    }
+
+    private void addCreateFormOptions(Model model) {
+        model.addAttribute("trains", trainService.getAvailableTrains());
         model.addAttribute("routes", routeService.getAllRoutes());
         model.addAttribute("statuses", TripStatus.values());
     }

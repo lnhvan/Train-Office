@@ -3,6 +3,8 @@ package com.hsf302.trainoffice.service;
 import com.hsf302.trainoffice.dto.RefundQuote;
 import com.hsf302.trainoffice.dto.TripCancellationResult;
 import com.hsf302.trainoffice.entity.Booking;
+import com.hsf302.trainoffice.entity.Seat;
+import com.hsf302.trainoffice.entity.Ticket;
 import com.hsf302.trainoffice.dto.RefundRequestForm;
 import com.hsf302.trainoffice.entity.Refund;
 import com.hsf302.trainoffice.entity.User;
@@ -51,4 +53,9 @@ public interface RefundService {
      * để admin chuyển trả khách rồi bấm hoàn tất.
      */
     void createRefundsForLatePayment(Booking booking, BigDecimal paidAmount);
+
+    /**
+     * Tự động hoàn tiền cho các vé bị hủy do ghế đưa vào bảo trì kỹ thuật.
+     */
+    TripCancellationResult refundTicketsForSeatMaintenance(Seat seat, List<Ticket> tickets);
 }

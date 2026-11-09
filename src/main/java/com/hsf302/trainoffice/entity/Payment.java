@@ -53,9 +53,7 @@ public class Payment {
     @Column(name = "paid_at")
     private LocalDateTime paidAt;
 
-    @OneToOne(mappedBy = "payment", fetch = FetchType.LAZY)
-    @ToString.Exclude
-    private Invoice invoice;
+
 
     @PrePersist
     void onCreate() {

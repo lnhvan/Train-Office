@@ -6,6 +6,17 @@ import com.hsf302.trainoffice.common.enums.TrainStatus;
 import com.hsf302.trainoffice.config.AdminErrorMessageUtil;
 import com.hsf302.trainoffice.entity.Train;
 import com.hsf302.trainoffice.service.TrainService;
+import com.hsf302.trainoffice.common.enums.TripStatus;
+import com.hsf302.trainoffice.dto.TripCancellationResult;
+import com.hsf302.trainoffice.entity.TrainTrip;
+import com.hsf302.trainoffice.repository.TrainTripRepository;
+import com.hsf302.trainoffice.service.TrainTripService;
+
+import java.math.BigDecimal;
+import java.text.NumberFormat;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Locale;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -25,10 +36,20 @@ public class TrainController {
     private static final String OTHER_TRAIN_TYPE = "__OTHER__";
 
     private final TrainService trainService;
+    private final TrainTripService trainTripService;
+    private final TrainTripRepository trainTripRepository;
 
     @Autowired
-    public TrainController(TrainService trainService) {
+    public TrainController(TrainService trainService,
+                           TrainTripService trainTripService,
+                           TrainTripRepository trainTripRepository) {
         this.trainService = trainService;
+        this.trainTripService = trainTripService;
+        this.trainTripRepository = trainTripRepository;
+    }
+
+    public TrainController(TrainService trainService) {
+        this(trainService, null, null);
     }
 
     private void addCommonAttributes(Model model) {
@@ -67,6 +88,11 @@ public class TrainController {
         model.addAttribute("totalItems", trainPage.getTotalElements());
         model.addAttribute("keyword", cleanKeyword);
 
+        if (trainTripService != null) {
+            model.addAttribute("timelineTrips", trainTripService.getFleetTimeline(null));
+        }
+        model.addAttribute("allTrains", trainService.getAllTrains());
+
         return "trains/admin-list";
     }
 
@@ -78,6 +104,22 @@ public class TrainController {
         return "trains/form";
     }
 
+    @GetMapping("/{id}")
+    public String showTrainDetail(@PathVariable("id") Long id,
+                                  Model model,
+                                  RedirectAttributes redirectAttributes) {
+        Optional<Train> train = trainService.getTrainById(id);
+        if (train.isPresent()) {
+            model.addAttribute("detail", train.get());
+            if (trainTripService != null) {
+                model.addAttribute("trainTimeline", trainTripService.getTrainTimeline(id));
+            }
+            return "trains/detail";
+        }
+        redirectAttributes.addFlashAttribute("errorMessage", I18n.t("msg.train.notFound"));
+        return "redirect:/admin/trains";
+    }
+
     @GetMapping("/edit/{id}")
     public String showEditForm(@PathVariable("id") Long id,
                                Model model,
@@ -87,6 +129,11 @@ public class TrainController {
 
         if (train.isPresent()) {
             model.addAttribute("train", train.get());
+            if (trainTripRepository != null) {
+                List<TrainTrip> scheduledTrips = trainTripRepository
+                        .findByTrain_TrainIdAndStatusOrderByDepartureTimeAsc(id, TripStatus.SCHEDULED);
+                model.addAttribute("scheduledTrips", scheduledTrips);
+            }
             addCommonAttributes(model);
 
             return "trains/form";
@@ -126,12 +173,77 @@ public class TrainController {
         }
 
         if (result.hasErrors()) {
+            if (trainTripRepository != null && train.getTrainId() != null) {
+                model.addAttribute("scheduledTrips",
+                        trainTripRepository.findByTrain_TrainIdAndStatusOrderByDepartureTimeAsc(train.getTrainId(), TripStatus.SCHEDULED));
+            }
             addCommonAttributes(model);
 
             return "trains/form";
         }
 
         try {
+            if (trainTripRepository != null && trainTripService != null && train.getTrainId() != null) {
+                Optional<Train> oldTrainOpt = trainService.getTrainById(train.getTrainId());
+                if (oldTrainOpt.isPresent()) {
+                    Train oldTrain = oldTrainOpt.get();
+                    if (oldTrain.getStatus() == TrainStatus.AVAILABLE && train.getStatus() == TrainStatus.MAINTENANCE) {
+                        List<TrainTrip> scheduledTrips = trainTripRepository
+                                .findByTrain_TrainIdAndStatusOrderByDepartureTimeAsc(train.getTrainId(), TripStatus.SCHEDULED);
+
+                        if (!scheduledTrips.isEmpty()) {
+                            List<String> cancelledTripDescriptions = new ArrayList<>();
+                            int totalRefundedTickets = 0;
+                            BigDecimal totalRefundAmount = BigDecimal.ZERO;
+                            int totalCancelledHolds = 0;
+                            DateTimeFormatter dtf = DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy");
+
+                            for (TrainTrip trip : scheduledTrips) {
+                                TripCancellationResult cancelResult = trainTripService.cancelTrip(trip.getTripId());
+                                totalRefundedTickets += cancelResult.refundedTickets();
+                                if (cancelResult.refundedAmount() != null) {
+                                    totalRefundAmount = totalRefundAmount.add(cancelResult.refundedAmount());
+                                }
+                                totalCancelledHolds += cancelResult.cancelledHolds();
+
+                                String routeInfo = trip.getRoute() != null
+                                        ? (trip.getRoute().getRouteCode() != null ? trip.getRoute().getRouteCode() : trip.getRoute().getRouteName())
+                                        : "";
+                                String depInfo = trip.getDepartureTime() != null ? trip.getDepartureTime().format(dtf) : "";
+                                cancelledTripDescriptions.add(String.format("Chuyến #%d (%s, %s)", trip.getTripId(), routeInfo, depInfo));
+                            }
+
+                            trainService.saveTrain(train);
+
+                            String refundPart = "";
+                            if (totalRefundedTickets > 0) {
+                                refundPart += String.format(" (Đã hoàn %d vé với tổng tiền %s VNĐ)",
+                                        totalRefundedTickets,
+                                        NumberFormat.getInstance(new Locale("vi", "VN")).format(totalRefundAmount));
+                            }
+                            if (totalCancelledHolds > 0) {
+                                refundPart += String.format(" (Đã hủy %d đơn giữ chỗ)", totalCancelledHolds);
+                            }
+
+                            String msg = String.format("Cập nhật tàu [%s] thành công. Tàu chuyển sang Đang bảo trì. %d chuyến tàu sau đã bị hủy tương ứng: %s.%s",
+                                    train.getTrainCode(),
+                                    cancelledTripDescriptions.size(),
+                                    String.join("; ", cancelledTripDescriptions),
+                                    refundPart);
+
+                            redirectAttributes.addFlashAttribute("successMessage", msg);
+                            return "redirect:/admin/trains";
+                        } else {
+                            trainService.saveTrain(train);
+                            String msg = String.format("Cập nhật tàu [%s] thành công. Tàu chuyển sang Đang bảo trì (không có chuyến tàu nào bị ảnh hưởng).",
+                                    train.getTrainCode());
+                            redirectAttributes.addFlashAttribute("successMessage", msg);
+                            return "redirect:/admin/trains";
+                        }
+                    }
+                }
+            }
+
             trainService.saveTrain(train);
 
             redirectAttributes.addFlashAttribute(
@@ -141,8 +253,12 @@ public class TrainController {
 
             return "redirect:/admin/trains";
 
-        } catch (IllegalStateException e) {
+        } catch (IllegalStateException | IllegalArgumentException e) {
             model.addAttribute("errorMessage", e.getMessage());
+            if (trainTripRepository != null && train.getTrainId() != null) {
+                model.addAttribute("scheduledTrips",
+                        trainTripRepository.findByTrain_TrainIdAndStatusOrderByDepartureTimeAsc(train.getTrainId(), TripStatus.SCHEDULED));
+            }
             addCommonAttributes(model);
 
             return "trains/form";

@@ -36,5 +36,71 @@
             </dl>
         </div>
     </div>
+
+    <!-- Timeline lịch trình của tàu -->
+    <div class="card admin-table-card mt-4">
+        <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <div>
+                <span class="admin-card-title"><i class="bi bi-clock-history text-primary"></i> [[#{train.tripTimeline}]]</span>
+                <small class="d-block text-muted">Lịch trình các chuyến tàu của đoàn tàu này theo thời gian</small>
+            </div>
+            <span class="rj-badge is-info no-dot" th:if="${trainTimeline != null and trainTimeline.hasActiveTrips}"
+                  th:text="${#lists.size(trainTimeline.trips) + ' chuyến đang hoạt động'}">0 chuyến</span>
+        </div>
+        <div class="card-body table-responsive p-0">
+            <table class="table table-hover mb-0">
+                <thead>
+                <tr>
+                    <th>[[#{common.trip}]]</th>
+                    <th>[[#{common.route}]]</th>
+                    <th>[[#{common.departureTime}]]</th>
+                    <th>[[#{common.arrivalTime}]]</th>
+                    <th>[[#{train.duration}]]</th>
+                    <th>[[#{common.status}]]</th>
+                    <th class="text-end">[[#{common.actions}]]</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:if="${trainTimeline != null}" th:each="item : ${trainTimeline.trips}">
+                    <td><span class="text-muted fw-bold" th:text="'#' + ${item.tripId}">#1</span></td>
+                    <td>
+                        <strong class="d-block" th:text="${item.routeName}">Hà Nội - Sài Gòn</strong>
+                        <span class="rj-badge is-neutral no-dot" th:text="${item.routeCode}">HN-SG</span>
+                    </td>
+                    <td>
+                        <span class="fw-semibold rj-num" th:text="${item.departureTimeFormatted}">08:00 09/11/2026</span>
+                    </td>
+                    <td>
+                        <span class="fw-semibold rj-num" th:text="${item.arrivalTimeFormatted}">14:30 10/11/2026</span>
+                    </td>
+                    <td>
+                        <span class="badge bg-light text-dark border rj-num" th:text="${item.durationFormatted}">30 giờ 30 phút</span>
+                    </td>
+                    <td>
+                        <span class="trip-status-pill"
+                              th:classappend="${item.status == 'ONGOING'} ? ' trip-status-ongoing' : ' trip-status-scheduled'"
+                              th:text="${#messages.msgOrNull('enum.' + item.status) ?: (#messages.msgOrNull('enum.TripStatus.' + item.status) ?: item.statusLabel)}">SCHEDULED</span>
+                    </td>
+                    <td class="text-end">
+                        <a class="rj-icon-btn is-info" th:href="@{/admin/trips/{id}(id=${item.tripId})}" th:title="#{common.detail}">
+                            <i class="bi bi-eye"></i>
+                            <span class="visually-hidden">[[#{common.detail}]]</span>
+                        </a>
+                    </td>
+                </tr>
+                <tr th:if="${trainTimeline == null or !trainTimeline.hasActiveTrips}">
+                    <td colspan="7">
+                        <div class="admin-empty-state">
+                            <i class="bi bi-calendar-check"></i>
+                            <strong>[[#{train.noActiveTrips}]]</strong>
+                            <span>Tàu hiện đang sẵn sàng, chưa có chuyến nào đang chạy hoặc đã lên lịch.</span>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
 </section>
 </html>

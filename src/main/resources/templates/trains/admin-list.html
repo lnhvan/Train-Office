@@ -146,6 +146,13 @@
 
                     <td class="text-end">
                         <a class="rj-icon-btn is-info"
+                           th:href="@{/admin/trains/{id}(id=${train.trainId})}" th:title="#{common.detail}"><i class="bi bi-eye" aria-hidden="true"></i><span class="visually-hidden">[[#{common.detail}]]</span></a>
+
+                        <button type="button" class="rj-icon-btn is-neutral btn-timeline-filter"
+                                th:attr="data-train-code=${train.trainCode}"
+                                title="Xem timeline lịch chạy"><i class="bi bi-clock-history" aria-hidden="true"></i><span class="visually-hidden">Timeline</span></button>
+
+                        <a class="rj-icon-btn is-info"
                            th:href="@{/admin/coaches(trainId=${train.trainId})}" th:title="#{common.coaches}"><i class="bi bi-train-lightrail-front" aria-hidden="true"></i><span class="visually-hidden">[[#{common.coaches}]]</span></a>
 
                         <a class="rj-icon-btn is-warning"
@@ -209,5 +216,155 @@
             </nav>
         </div>
     </div>
+
+    <!-- Bảng Timeline giờ tàu chạy cụ thể theo thời gian -->
+    <div class="card admin-table-card mt-4" id="fleetTimelineCard">
+        <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <div>
+                <span class="admin-card-title"><i class="bi bi-clock-history text-primary"></i> [[#{train.tripTimeline}]]</span>
+                <small class="d-block text-muted">[[#{train.tripTimelineDesc}]]</small>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <label class="form-label mb-0 small text-muted text-nowrap" for="timelineTrainFilter">
+                    <i class="bi bi-filter"></i> [[#{train.filterByTrain}]]:
+                </label>
+                <select class="form-select form-select-sm" id="timelineTrainFilter" style="width: auto; min-width: 200px;">
+                    <option value="">-- [[#{train.allTrains}]] --</option>
+                    <option th:each="tr : ${allTrains}"
+                            th:value="${tr.trainCode}"
+                            th:text="${tr.trainCode + ' - ' + tr.trainName}"></option>
+                </select>
+            </div>
+        </div>
+        <div class="card-body table-responsive p-0">
+            <table class="table table-hover mb-0" id="fleetTimelineTable">
+                <thead>
+                <tr>
+                    <th>[[#{common.trip}]]</th>
+                    <th>[[#{common.train}]]</th>
+                    <th>[[#{common.route}]]</th>
+                    <th>[[#{common.departureTime}]]</th>
+                    <th>[[#{common.arrivalTime}]]</th>
+                    <th>[[#{train.duration}]]</th>
+                    <th>[[#{common.status}]]</th>
+                    <th class="text-end">[[#{common.actions}]]</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="item : ${timelineTrips}" th:attr="data-train-code=${item.trainCode}">
+                    <td>
+                        <span class="text-muted fw-bold" th:text="'#' + ${item.tripId}">#1</span>
+                    </td>
+                    <td>
+                        <div class="admin-identity">
+                            <span class="admin-avatar"><i class="bi bi-train-front"></i></span>
+                            <span>
+                                <strong th:text="${item.trainName}">SE1 Express</strong>
+                                <small th:text="${item.trainCode}">SE1</small>
+                            </span>
+                        </div>
+                    </td>
+                    <td>
+                        <div>
+                            <strong class="d-block" th:text="${item.routeName}">Hà Nội - Sài Gòn</strong>
+                            <span class="rj-badge is-neutral no-dot" th:text="${item.routeCode}">HN-SG</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="d-flex align-items-center gap-1">
+                            <i class="bi bi-calendar-event text-primary"></i>
+                            <span class="fw-semibold rj-num" th:text="${item.departureTimeFormatted}">08:00 09/11/2026</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="d-flex align-items-center gap-1">
+                            <i class="bi bi-flag text-success"></i>
+                            <span class="fw-semibold rj-num" th:text="${item.arrivalTimeFormatted}">14:30 10/11/2026</span>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="badge bg-light text-dark border rj-num" th:text="${item.durationFormatted}">30 giờ 30 phút</span>
+                    </td>
+                    <td>
+                        <span class="trip-status-pill"
+                              th:classappend="${item.status == 'ONGOING'} ? ' trip-status-ongoing' : ' trip-status-scheduled'"
+                              th:text="${#messages.msgOrNull('enum.' + item.status) ?: (#messages.msgOrNull('enum.TripStatus.' + item.status) ?: item.statusLabel)}">
+                            SCHEDULED
+                        </span>
+                    </td>
+                    <td class="text-end">
+                        <a class="rj-icon-btn is-info" th:href="@{/admin/trips/{id}(id=${item.tripId})}" th:title="#{common.detail}">
+                            <i class="bi bi-eye"></i>
+                            <span class="visually-hidden">[[#{common.detail}]]</span>
+                        </a>
+                    </td>
+                </tr>
+                <tr th:if="${timelineTrips == null or #lists.isEmpty(timelineTrips)}" id="timelineEmptyRow">
+                    <td colspan="8">
+                        <div class="admin-empty-state">
+                            <i class="bi bi-calendar-check"></i>
+                            <strong>[[#{train.noActiveTrips}]]</strong>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        function filterTimeline(trainCode) {
+            const filter = document.getElementById('timelineTrainFilter');
+            const card = document.getElementById('fleetTimelineCard');
+            if (filter && card) {
+                filter.value = trainCode || '';
+                filter.dispatchEvent(new Event('change'));
+                card.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        document.addEventListener('click', function (e) {
+            const btn = e.target.closest('.btn-timeline-filter');
+            if (btn) {
+                const trainCode = btn.getAttribute('data-train-code');
+                filterTimeline(trainCode);
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const filter = document.getElementById('timelineTrainFilter');
+            const table = document.getElementById('fleetTimelineTable');
+            if (!filter || !table) return;
+
+            filter.addEventListener('change', function () {
+                const selectedCode = this.value.trim().toLowerCase();
+                const rows = table.querySelectorAll('tbody tr[data-train-code]');
+                let visibleCount = 0;
+                rows.forEach(function (row) {
+                    const rowCode = (row.getAttribute('data-train-code') || '').trim().toLowerCase();
+                    if (!selectedCode || rowCode === selectedCode) {
+                        row.style.display = '';
+                        visibleCount++;
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+
+                let dynamicEmpty = document.getElementById('timelineDynamicEmpty');
+                if (visibleCount === 0 && rows.length > 0) {
+                    if (!dynamicEmpty) {
+                        dynamicEmpty = document.createElement('tr');
+                        dynamicEmpty.id = 'timelineDynamicEmpty';
+                        dynamicEmpty.innerHTML = '<td colspan="8"><div class="admin-empty-state"><i class="bi bi-calendar-x"></i><strong>Tàu được chọn không có chuyến nào đang chạy hoặc đã lên lịch.</strong></div></td>';
+                        table.querySelector('tbody').appendChild(dynamicEmpty);
+                    }
+                    dynamicEmpty.style.display = '';
+                } else if (dynamicEmpty) {
+                    dynamicEmpty.style.display = 'none';
+                }
+            });
+        });
+    </script>
+
 </section>
 </html>

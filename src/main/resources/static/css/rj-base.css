@@ -183,9 +183,14 @@ small, .small { font-size: .84rem; }
     --bs-btn-hover-bg: var(--rj-danger-soft); --bs-btn-hover-color: var(--rj-danger); --bs-btn-hover-border-color: var(--rj-danger);
     --bs-btn-active-bg: var(--rj-danger-soft); --bs-btn-active-color: var(--rj-danger); --bs-btn-active-border-color: var(--rj-danger);
 }
-.btn-success, .btn-outline-success {
+.btn-success {
     --bs-btn-bg: var(--rj-success); --bs-btn-border-color: var(--rj-success); --bs-btn-color: #fff;
     --bs-btn-hover-bg: color-mix(in srgb, var(--rj-success) 85%, #000); --bs-btn-hover-border-color: color-mix(in srgb, var(--rj-success) 85%, #000); --bs-btn-hover-color: #fff;
+}
+.btn-outline-success {
+    --bs-btn-bg: transparent; --bs-btn-color: var(--rj-success); --bs-btn-border-color: color-mix(in srgb, var(--rj-success) 45%, transparent);
+    --bs-btn-hover-bg: var(--rj-success-soft); --bs-btn-hover-color: var(--rj-success); --bs-btn-hover-border-color: var(--rj-success);
+    --bs-btn-active-bg: var(--rj-success-soft); --bs-btn-active-color: var(--rj-success); --bs-btn-active-border-color: var(--rj-success);
 }
 [data-bs-theme=dark] .btn-success { --bs-btn-color: #03251a; }
 .btn-link { --bs-btn-color: var(--rj-accent); --bs-btn-hover-color: var(--rj-accent-hover); text-decoration: none; padding-inline: 0; }
@@ -231,6 +236,7 @@ textarea.form-control { min-height: 110px; }
 .input-group-text { background: var(--rj-surface-2); border-color: var(--rj-line-strong); color: var(--rj-text-2); border-radius: var(--rj-radius-sm); }
 .invalid-feedback, .text-danger { color: var(--rj-danger) !important; }
 .is-invalid { border-color: var(--rj-danger) !important; }
+.form-control.is-invalid:focus, .form-select.is-invalid:focus { border-color: var(--rj-danger) !important; box-shadow: 0 0 0 .22rem var(--rj-danger-soft) !important; }
 .rj-field { margin-bottom: 1.1rem; }
 .rj-field-error { color: var(--rj-danger); font-size: .82rem; margin-top: .35rem; }
 .rj-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 20px; }
@@ -460,7 +466,7 @@ textarea.form-control { min-height: 110px; }
    Nút lịch phủ cả ô nên bấm chỗ nào cũng mở lịch. */
 .rj-date { position: relative; container-type: inline-size; }
 .rj-date > input[type="date"],
-.rj-date > input[type="datetime-local"] { color: transparent; padding-right: 3.4rem; cursor: pointer; }
+.rj-date > input[type="datetime-local"] { color: transparent; padding-right: 2.85rem; cursor: pointer; }
 .rj-date > input[type="date"]::-webkit-datetime-edit,
 .rj-date > input[type="datetime-local"]::-webkit-datetime-edit { opacity: 0; }
 .rj-date > input[type="date"]::-webkit-calendar-picker-indicator,
@@ -471,38 +477,49 @@ textarea.form-control { min-height: 110px; }
 .rj-date > input[type="date"].is-invalid,
 .rj-date > input[type="datetime-local"].is-invalid { background-image: none; }
 .rj-date-face {
-    position: absolute; inset: 0 3.4rem 0 0;
-    display: flex; align-items: center; gap: .55rem;
+    position: absolute; inset: 0 44px 0 0;
+    display: flex; align-items: center; gap: .45rem;
     padding: 0 0 0 calc(.75rem + 1px);
     pointer-events: none; overflow: hidden; white-space: nowrap;
     line-height: 1;
 }
-.rj-date-face strong { font-weight: 700; color: var(--rj-text); font-variant-numeric: tabular-nums; letter-spacing: .01em; }
-.rj-date-face small { font-size: .84em; font-weight: 500; color: var(--rj-text-2); }
+.rj-date-face strong { font-weight: 600; color: var(--rj-text); font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+.rj-date-face small { font-size: .84em; font-weight: 500; color: var(--rj-text-2); white-space: nowrap; }
 .rj-date-face small::first-letter { text-transform: uppercase; }
 .rj-date.is-empty .rj-date-face strong { font-weight: 500; color: var(--rj-text-3); }
 .rj-date-icon {
     position: absolute; top: 50%; right: 7px; transform: translateY(-50%);
-    width: 38px; height: min(38px, calc(100% - 10px));
+    width: 34px; height: min(34px, calc(100% - 10px));
     display: grid; place-items: center;
     border-radius: calc(var(--rj-radius-sm) - 2px);
     border: 1px solid color-mix(in srgb, var(--rj-accent) 45%, transparent);
     background: var(--rj-accent-soft);
     color: var(--rj-accent);
-    font-size: 1.02rem;
+    font-size: 1rem;
     pointer-events: none;
     transition: background-color .15s, color .15s;
 }
 .rj-date:hover .rj-date-icon,
 .rj-date:focus-within .rj-date-icon { background: var(--rj-accent); border-color: var(--rj-accent); color: var(--rj-accent-ink); }
 .rj-date.is-sm > input[type="date"],
-.rj-date.is-sm > input[type="datetime-local"] { padding-right: 2.6rem; }
-.rj-date.is-sm .rj-date-face { inset: 0 2.6rem 0 0; padding-left: calc(.5rem + 1px); }
+.rj-date.is-sm > input[type="datetime-local"] { padding-right: 2.4rem; }
+.rj-date.is-sm .rj-date-face { inset: 0 2.4rem 0 0; padding-left: calc(.5rem + 1px); }
 .rj-date.is-sm .rj-date-icon { width: 28px; right: 4px; font-size: .9rem; }
 .rj-date:has(input:disabled) { opacity: .6; }
 .rj-date:has(input:disabled) .rj-date-icon { background: transparent; }
 .rj-date:has(.is-invalid) ~ .invalid-feedback { display: block; }
-/* ô hẹp: bỏ chữ "thứ" để ngày không bị cắt / đè lên nút lịch */
-@container (max-width: 230px) {
+
+/* ô hẹp: ẩn thứ và co giãn chữ linh hoạt để ngày tháng luôn hiển thị trọn vẹn */
+@container (max-width: 220px) {
     .rj-date-face small { display: none; }
+}
+@container (max-width: 175px) {
+    .rj-date-face { inset: 0 40px 0 0; padding-left: .55rem; }
+    .rj-date-face strong { font-size: .92rem; letter-spacing: -.02em; }
+    .rj-date-icon { width: 30px; height: min(30px, calc(100% - 10px)); right: 5px; font-size: .92rem; }
+}
+@container (max-width: 140px) {
+    .rj-date-face { inset: 0 34px 0 0; padding-left: .45rem; }
+    .rj-date-face strong { font-size: .84rem; letter-spacing: -.03em; }
+    .rj-date-icon { width: 26px; height: min(26px, calc(100% - 10px)); right: 4px; font-size: .84rem; }
 }

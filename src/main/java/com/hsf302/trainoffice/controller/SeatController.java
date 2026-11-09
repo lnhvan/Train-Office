@@ -1,7 +1,8 @@
 package com.hsf302.trainoffice.controller;
 
-
 import com.hsf302.trainoffice.config.I18n;
+import com.hsf302.trainoffice.dto.SeatMaintenanceCheckResult;
+import com.hsf302.trainoffice.dto.SeatMaintenanceResult;
 import com.hsf302.trainoffice.entity.Coach;
 import com.hsf302.trainoffice.entity.Seat;
 import com.hsf302.trainoffice.entity.Train;
@@ -9,6 +10,7 @@ import com.hsf302.trainoffice.service.CoachService;
 import com.hsf302.trainoffice.service.SeatService;
 import com.hsf302.trainoffice.service.TrainService;
 import org.springframework.data.domain.Page;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -105,20 +107,40 @@ public class SeatController {
         return "seats/admin-list";
     }
 
+    @GetMapping("/{seatId}/affected-tickets")
+    @ResponseBody
+    public ResponseEntity<SeatMaintenanceCheckResult> checkAffectedTickets(@PathVariable Long seatId) {
+        try {
+            SeatMaintenanceCheckResult result = seatService.checkFutureTickets(seatId);
+            return ResponseEntity.ok(result);
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
     @PostMapping("/{seatId}/maintenance")
     public String updateMaintenance(@PathVariable Long seatId,
                                     @RequestParam("underMaintenance") boolean underMaintenance,
+                                    @RequestParam(value = "confirmRefund", defaultValue = "false") boolean confirmRefund,
                                     @RequestParam(value = "trainId", required = false) Long trainId,
                                     @RequestParam(value = "coachId", required = false) Long coachId,
                                     @RequestParam(value = "keyword", required = false) String keyword,
                                     @RequestParam(value = "page", required = false) Integer page,
                                     RedirectAttributes redirectAttributes) {
         try {
-            Seat seat = seatService.setUnderMaintenance(seatId, underMaintenance);
-            redirectAttributes.addFlashAttribute(
-                    "successMessage",
-                    I18n.t(underMaintenance ? "msg.seat.maintenanceOn" : "msg.seat.maintenanceOff", seat.getSeatNumber())
-            );
+            SeatMaintenanceResult result = seatService.updateMaintenance(seatId, underMaintenance, confirmRefund);
+            if (underMaintenance && result.getRefundedTicketsCount() > 0) {
+                String formattedAmount = String.format("%,d", result.getRefundedAmount().longValue());
+                redirectAttributes.addFlashAttribute(
+                        "successMessage",
+                        I18n.t("msg.seat.maintenanceOnWithRefund", result.getSeat().getSeatNumber(), result.getRefundedTicketsCount(), formattedAmount)
+                );
+            } else {
+                redirectAttributes.addFlashAttribute(
+                        "successMessage",
+                        I18n.t(underMaintenance ? "msg.seat.maintenanceOn" : "msg.seat.maintenanceOff", result.getSeat().getSeatNumber())
+                );
+            }
         } catch (IllegalArgumentException | IllegalStateException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         } catch (Exception ex) {

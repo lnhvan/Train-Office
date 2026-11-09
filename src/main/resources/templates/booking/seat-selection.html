@@ -95,10 +95,7 @@
                                    th:data-has-compartment="${item.seat.compartment != null}"
                                    th:data-compartment-id="${item.seat.compartment != null ? item.seat.compartment.compartmentId : ''}"
                                    th:data-compartment-number="${item.seat.compartment != null ? item.seat.compartment.compartmentNumber : ''}"
-                                   th:data-berth-label="${item.seat.berthLevel == null ? '' :
-    (item.seat.berthLevel == 'LOWER' ? #messages.msg('booking.level1LowerBerth') :
-    (item.seat.berthLevel == 'MIDDLE' ? #messages.msg('booking.level2MiddleBerth') :
-    (item.seat.berthLevel == 'UPPER' ? #messages.msg('booking.level3UpperBerth') : item.seat.berthLevel)))}"
+                                   th:data-berth-label="${item.seat.berthLevel == null ? '' : #messages.msg(item.seat.berthFullLabelKey)}"
                                    th:data-berth-level="${item.seat.berthLevel != null ? item.seat.berthLevel : ''}">
 
                                 <input class="rail-seat-checkbox"
@@ -117,10 +114,7 @@
                                        th:data-has-compartment="${item.seat.compartment != null}"
                                        th:data-compartment-id="${item.seat.compartment != null ? item.seat.compartment.compartmentId : ''}"
                                        th:data-compartment-number="${item.seat.compartment != null ? item.seat.compartment.compartmentNumber : ''}"
-                                       th:data-berth-label="${item.seat.berthLevel == null ? '' :
-    (item.seat.berthLevel == 'LOWER' ? #messages.msg('booking.level1LowerBerth') :
-    (item.seat.berthLevel == 'MIDDLE' ? #messages.msg('booking.level2MiddleBerth') :
-    (item.seat.berthLevel == 'UPPER' ? #messages.msg('booking.level3UpperBerth') : item.seat.berthLevel)))}"
+                                       th:data-berth-label="${item.seat.berthLevel == null ? '' : #messages.msg(item.seat.berthFullLabelKey)}"
                                        th:data-berth-level="${item.seat.berthLevel != null ? item.seat.berthLevel : ''}">
 
                                 <span class="rj-seat-box">
@@ -134,17 +128,11 @@
 
                    <span class="rj-seat-berth"
                          th:if="${item.seat.berthLevel != null}"
-                         th:classappend="${item.seat.berthLevel == 'LOWER'} ? ' lower' :
-          (${item.seat.berthLevel == 'MIDDLE'} ? ' middle' :
-          (${item.seat.berthLevel == 'UPPER'} ? ' upper' : ''))"
-                         th:title="${item.seat.berthLevel == 'LOWER' ? #messages.msg('booking.level1LowerBerth') :
-          (item.seat.berthLevel == 'MIDDLE' ? #messages.msg('booking.level2MiddleBerth') :
-          (item.seat.berthLevel == 'UPPER' ? #messages.msg('booking.level3UpperBerth') : item.seat.berthLevel))}"
-                         th:text="${item.seat.berthLevel == 'LOWER' ? #messages.msg('booking.level1') :
-          (item.seat.berthLevel == 'MIDDLE' ? #messages.msg('booking.level2') :
-          (item.seat.berthLevel == 'UPPER' ? #messages.msg('booking.level3') : item.seat.berthLevel))}">
-    Level 1
-</span>
+                         th:classappend="' ' + ${item.seat.berthCssClass}"
+                         th:title="${#messages.msg(item.seat.berthFullLabelKey)}"
+                         th:text="${#messages.msg(item.seat.berthLevelKey)}">
+                       Tầng 1
+                   </span>
 
                                     <i class="bi bi-check-circle-fill rj-seat-check"></i>
                                     <i class="bi bi-x-lg rj-seat-x"></i>

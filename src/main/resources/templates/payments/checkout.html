@@ -45,7 +45,7 @@
                     </div>
                     <div>
                         <dt>[[#{common.departureTime}]]</dt>
-                        <dd class="rj-num" th:text="${booking.trainTrip != null and booking.trainTrip.departureTime != null ? #temporals.format(booking.trainTrip.departureTime, 'HH:mm dd/MM/yyyy') : '-'}">08:00 30/06/2026</dd>
+                        <dd class="rj-num" th:text="${booking.departureTime != null ? #temporals.format(booking.departureTime, 'HH:mm dd/MM/yyyy') : (booking.trainTrip != null and booking.trainTrip.departureTime != null ? #temporals.format(booking.trainTrip.departureTime, 'HH:mm dd/MM/yyyy') : '-')}">08:00 30/06/2026</dd>
                     </div>
                 </dl>
 
@@ -64,19 +64,11 @@
                     <div class="rj-method is-selected">
                         <i class="bi bi-wallet2"></i>
                         <div>
-                            <strong>VNPay Sandbox</strong>
-                            <small>[[#{payment.secureTestPaymentGatewayForThis}]]</small>
+                            <strong>VNPAY</strong>
+                            <small>[[#{payment.vnpayGateway}]]</small>
                         </div>
                         <i class="bi bi-check-circle-fill rj-method-check"></i>
                     </div>
-
-                    <p class="rj-note is-compact">
-                        <i class="bi bi-info-circle"></i>
-                        <span>
-                            [[#{payment.thisIsAVnpaySandboxPayment}]]
-                            <strong>[[#{common.paid}]]</strong> [[#{payment.andYourTicketsWillBecome}]] <strong>[[#{payment.confirmed}]]</strong>.
-                        </span>
-                    </p>
 
                     <form th:if="${booking != null and booking.bookingStatus != null and booking.bookingStatus.name() == 'PENDING_PAYMENT'}"
                           th:action="@{/payments/bookings/{id}(id=${booking.bookingId})}"

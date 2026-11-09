@@ -17,7 +17,6 @@
         <a class="rj-auth-brand" th:href="@{/booking/search}"><i class="bi bi-train-front-fill"></i>RailJet</a>
         <div class="rj-auth-aside-copy">
             <p class="rj-auth-aside-title">[[#{booking.crossDistance}]]<br>[[#{booking.masterTime}]]</p>
-            <p>[[#{auth.technologicalElegance}]]</p>
         </div>
         <div class="rj-auth-track"><span></span><span></span></div>
     </aside>
@@ -28,8 +27,7 @@
             [[#{auth.bookingPage}]]
         </a>
         <div class="rj-auth-card">
-            <h1>[[#{auth.signIn}]]</h1>
-            <p class="rj-auth-sub">[[#{auth.technologicalElegance}]]</p>
+            <h1 class="mb-4">[[#{auth.signIn}]]</h1>
 
             <div class="alert alert-info"
                  th:if="${infoMessage}"

@@ -136,40 +136,6 @@
                                        readonly>
                             </div>
                         </div>
-                        <div class="rj-field">
-                            <label class="form-label" for="profileUserId">[[#{profile.userId}]]</label>
-                            <div class="rj-input-icon">
-                                <i class="bi bi-fingerprint"></i>
-                                <input id="profileUserId"
-                                       class="form-control"
-                                       type="text"
-                                       th:value="${currentUser != null ? 'USR-' + currentUser.userId : ''}"
-                                       readonly>
-                            </div>
-                        </div>
-                        <div class="rj-field">
-                            <label class="form-label" for="profilePassengerId">[[#{profile.passengerId}]]</label>
-                            <div class="rj-input-icon">
-                                <i class="bi bi-hash"></i>
-                                <input id="profilePassengerId"
-                                       class="form-control"
-                                       type="text"
-                                       th:field="*{passengerId}"
-                                       th:placeholder="#{profile.automaticallyGenerated}"
-                                       readonly>
-                            </div>
-                        </div>
-                        <div class="rj-field">
-                            <label class="form-label" for="profileUpdatedAt">[[#{profile.lastUpdated}]]</label>
-                            <div class="rj-input-icon">
-                                <i class="bi bi-clock-history"></i>
-                                <input id="profileUpdatedAt"
-                                       class="form-control"
-                                       type="text"
-                                       th:value="${currentUser != null and currentUser.updatedAt != null ? #temporals.format(currentUser.updatedAt, 'dd/MM/yyyy HH:mm') : #messages.msg('profile.notUpdatedYet')}"
-                                       readonly>
-                            </div>
-                        </div>
                         </div>
                     </div>
 

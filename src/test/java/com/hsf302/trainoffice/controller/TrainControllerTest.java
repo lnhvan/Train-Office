@@ -1,5 +1,11 @@
 package com.hsf302.trainoffice.controller;
 
+import com.hsf302.trainoffice.common.enums.TrainStatus;
+import com.hsf302.trainoffice.common.enums.TripStatus;
+import com.hsf302.trainoffice.dto.TripCancellationResult;
+import com.hsf302.trainoffice.entity.TrainTrip;
+import com.hsf302.trainoffice.repository.TrainTripRepository;
+import com.hsf302.trainoffice.service.TrainTripService;
 import com.hsf302.trainoffice.entity.Train;
 import com.hsf302.trainoffice.service.TrainService;
 import org.junit.jupiter.api.Test;
@@ -65,5 +71,45 @@ class TrainControllerTest {
         assertTrue(result.hasFieldErrors("trainType"));
         assertEquals("__OTHER__", model.get("selectedTrainType"));
         verify(trainService, never()).saveTrain(any());
+    }
+    @Test
+    void transitioningToMaintenanceCancelsScheduledTripsAndDisplaysMessage() {
+        TrainTripService tripService = mock(TrainTripService.class);
+        TrainTripRepository tripRepo = mock(TrainTripRepository.class);
+        TrainController ctrl = new TrainController(trainService, tripService, tripRepo);
+
+        when(trainService.getAvailableTrainTypes()).thenReturn(List.of("Express"));
+        Train oldTrain = new Train();
+        oldTrain.setTrainId(10L);
+        oldTrain.setTrainCode("CT01");
+        oldTrain.setStatus(TrainStatus.AVAILABLE);
+        when(trainService.getTrainById(10L)).thenReturn(Optional.of(oldTrain));
+
+        Train updatedTrain = new Train();
+        updatedTrain.setTrainId(10L);
+        updatedTrain.setTrainCode("CT01");
+        updatedTrain.setTrainName("Can Tho");
+        updatedTrain.setAverageSpeedKmh(60);
+        updatedTrain.setStatus(TrainStatus.MAINTENANCE);
+
+        TrainTrip scheduledTrip = new TrainTrip();
+        scheduledTrip.setTripId(101L);
+        when(tripRepo.findByTrain_TrainIdAndStatusOrderByDepartureTimeAsc(10L, TripStatus.SCHEDULED))
+                .thenReturn(List.of(scheduledTrip));
+        when(tripService.cancelTrip(101L))
+                .thenReturn(new TripCancellationResult(2, java.math.BigDecimal.valueOf(500000), 1));
+
+        BeanPropertyBindingResult result = new BeanPropertyBindingResult(updatedTrain, "train");
+        RedirectAttributesModelMap redirect = new RedirectAttributesModelMap();
+
+        String view = ctrl.saveTrain(updatedTrain, result, "Express", "", new ExtendedModelMap(), redirect);
+        assertEquals("redirect:/admin/trains", view);
+        verify(tripService).cancelTrip(101L);
+        verify(trainService).saveTrain(updatedTrain);
+        assertTrue(redirect.getFlashAttributes().containsKey("successMessage"));
+        String msg = (String) redirect.getFlashAttributes().get("successMessage");
+        assertTrue(msg.contains("CT01"));
+        assertTrue(msg.contains("Chuy\u1ebfn #101") || msg.contains("Chuyến #101"));
+        assertTrue(msg.contains("\u0110ang b\u1ea3o tr\u00ec") || msg.contains("Đang bảo trì"));
     }
 }

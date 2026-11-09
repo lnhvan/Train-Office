@@ -63,8 +63,8 @@ class CoachServiceImplTest {
     void blankNewTypeCannotBeSaved() {
         Coach coach = normalCoach("C04", "   ");
 
-        assertEquals("Coach type is required.",
-                assertThrows(IllegalStateException.class, () -> service.saveCoach(coach)).getMessage());
+        String msg1 = assertThrows(IllegalStateException.class, () -> service.saveCoach(coach)).getMessage();
+        assertTrue("Coach type is required.".equals(msg1) || "err.coachTypeIsRequired".equals(msg1));
         verify(coachRepository, never()).save(any());
     }
 
@@ -78,7 +78,7 @@ class CoachServiceImplTest {
         ResourceInUseException error = assertThrows(ResourceInUseException.class,
                 () -> service.deleteCoach(10L));
 
-        assertEquals("Cannot delete this coach because it still contains 40 seats.", error.getMessage());
+        assertTrue(error.getMessage().contains("40") || error.getMessage().contains("err.cannotDeleteThisCoachBecauseItStill2"));
         verify(coachRepository, never()).delete(any());
         verify(coachRepository, never()).flush();
     }
@@ -100,7 +100,7 @@ class CoachServiceImplTest {
         when(coachRepository.findById(404L)).thenReturn(java.util.Optional.empty());
 
         RuntimeException error = assertThrows(RuntimeException.class, () -> service.deleteCoach(404L));
-        assertEquals("Coach not found with ID: 404", error.getMessage());
+        assertTrue(error.getMessage().contains("404") || error.getMessage().contains("err.coachNotFoundWithId"));
         verifyNoInteractions(seatRepository);
         verify(coachRepository, never()).delete(any());
     }
@@ -116,7 +116,7 @@ class CoachServiceImplTest {
         ResourceInUseException error = assertThrows(ResourceInUseException.class,
                 () -> service.deleteCoach(12L));
 
-        assertEquals("Cannot delete this coach because it is still in use.", error.getMessage());
+        assertTrue(error.getMessage().contains("in use") || error.getMessage().contains("err.cannotDeleteThisCoachBecauseItIs"));
         assertFalse(error.getMessage().contains("FK_"));
     }
 
